@@ -20,6 +20,9 @@
     }
 
     footer {
+        position: fixed;
+        bottom: 0;
+        width: 100%;
         background-color: #ccc;
         color: #333;
         padding: 20px;
@@ -29,7 +32,7 @@
     nav {
         background-color: #0096c7;
         color: #fff;
-        height: 50px;
+        height: 70px;
         display: flex;
         justify-content: space-between;
         align-items: center;
@@ -88,9 +91,6 @@
         {% if user.is_authenticated %}
           <li><a href="{% url 'logout' %}">Sair</a></li>
         {% endif %}
-
-
-
       </ul>
     </nav>
   </header>
