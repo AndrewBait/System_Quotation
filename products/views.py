@@ -29,7 +29,7 @@ class NewProductCreateView(CreateView):
     model = Product
     form_class = ProductModelForm
     template_name = 'new_product.html'
-    success_url = '/products/'
+    success_url = '/products_list/'
 
 
 @method_decorator(login_required(login_url='login'), name='dispatch')#decorator
