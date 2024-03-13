@@ -1,108 +1,108 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{% block title %}{% endblock %}</title>
-  <style>
-    body {
-        font-family: 'Open Sans', sans-serif;
-        background-color: #f7f7f7;
-        color: #333;
-        margin: 0;
-        padding: 0;
-    }
+  <!DOCTYPE html>
+  <html lang="en">
+  <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+      <title>{% block title %}{% endblock %}</title>
+    <style>
+      body {
+          font-family: 'Open Sans', sans-serif;
+          background-color: #f7f7f7;
+          color: #333;
+          margin: 0;
+          padding: 0;
+          padding-left: 250px; /* Espaço para a sidebar */
+      }
 
-    header {
-        background-color: #0096c7;
-        color: #fff;
-        text-align: center;
-    }
+      .sidebar {
+          position: fixed;
+          top: 0;
+          bottom: 0;
+          left: 0;
+          width: 250px;
+          padding-top: 20px;
+          background-color: #007bff;
+          color: #fff;
+          transition: all 0.3s ease;
+      }
 
-    footer {
-        position: fixed;
-        bottom: 0;
-        width: 100%;
-        background-color: #ccc;
-        color: #333;
-        padding: 20px;
-        text-align: center;
-    }
+      .sidebar a, .dropdown-menu a {
+          color: #fff !important;
+          padding: 10px 15px;
+          text-decoration: none;
+          display: block;
+      }
 
-    nav {
-        background-color: #0096c7;
-        color: #fff;
-        height: 70px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
+      .sidebar a:hover, .dropdown-menu a:hover {
+          background-color: #0056b3;
+      }
 
-    nav ul {
-        list-style: none;
-        margin: 0;
-        padding: 0;
-        display: flex;
-    }
+      .dropdown-menu {
+          background-color: #007bff;
+      }
 
-    nav ul li {
-        margin: 0 10px;
-    }
+      footer {
+          background-color: #ccc;
+          color: #333;
+          padding: 20px;
+          text-align: center;
+          margin-top: 20px;
+      }
 
-    nav ul li a {
-        color: #fff;
-        text-decoration: none;
-        font-size: 16px;
-        padding: 15px;
-        transition: all 0.3s ease;
-    }
+      @media (max-width: 768px) {
+          body {
+              padding-left: 0;
+          }
+          .sidebar {
+              width: 100%;
+              height: auto;
+              position: relative;
+          }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="sidebar">
+      <a href="#">Sistema de Cotação</a>
+      {% if user.is_authenticated %}
+        <div>Olá, {{ user.username }}</div>
 
-    nav ul li a:hover {
-        background-color: #32bbe8;
-    }
+        <div class="menu-section">
+          <a class="nav-link" href="#">Produtos</a>
+          <a class="dropdown-item" href="{% url 'products_list' %}">Listar Produtos</a>
+          <a class="dropdown-item" href="{% url 'new_product' %}">Cadastrar Produto</a>
+      </div>
 
-    nav ul li.active a {
-        background-color: #666;
-    }
-
-    nav ul li.active a:hover {
-        background-color: #999;
-    }
-
-  </style>
-</head>
-<body>
-  <header>
-    <nav>
-      <ul>
-        {% if user.is_authenticated %}
-          <li>Olá, {{ user.username }}</li>
-          <li><a href="{% url 'products_list' %}">Produtos</a></li>
-          <li><a href="{% url 'new_product' %}">Cadastrar Produto</a></li>
-          <li><a href="{% url 'supplier_new' %}">Fornecedores</a></li>
-          
-
-        {% endif %}
-
-        {% if not user.is_authenticated %}
-        <li><a href="{% url 'login' %}">Login</a></li>
-        <li><a href="{% url 'register' %}">Registrar</a></li>
-        {% endif %}
+      <div class="menu-section">
+          <a class="nav-link" href="#">Fornecedores</a>
+          <!-- Substitua 'supplier_highlight' pelo nome da URL correspondente -->
+          <a class="dropdown-item" href="{% url 'supplier_new' %}">Listar Destaques</a>
+          <!-- Substitua 'supplier_list' pelo nome da URL correspondente -->
+          <a class="dropdown-item" href="{% url 'supplier_list' %}">Todos os Fornecedores</a>
+          <a href="{% url 'register' %}">Registrar</a>
+      </div>
+      {% endif %}
 
         {% if user.is_authenticated %}
-          <li><a href="{% url 'logout' %}">Sair</a></li>
+            <a href="{% url 'logout' %}">Sair</a>
+        {% else %}
+            <a href="{% url 'login' %}">Login</a>
         {% endif %}
-      </ul>
-    </nav>
-  </header>
+    </div>
 
-  <main>
-    {% block content %}
-    {% endblock %}
+
+    <main class="main-content">
+      {% block content %}
+      {% endblock %}
   </main>
 
   <footer>
-    <p>&copy; 2024 Andrew</p>
+      <p>&copy; 2024 Andrew</p>
   </footer>
-</body>
-</html>
+
+  <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.2/dist/umd/popper.min.js"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+  </body>
+  </html>

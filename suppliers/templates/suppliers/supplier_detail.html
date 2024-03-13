@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="supplier-form">
+  <h2>Detalhes do Fornecedor</h2>
+  <p><strong>Nome:</strong> {{ object.name }}</p>
+  <p><strong>E-mail:</strong> {{ object.email }}</p>
+  <p><strong>Telefone:</strong> {{ object.phone }}</p>
+  <p><strong>Empresa:</strong> {{ object.company }}</p>
+  <a href="{% url 'supplier_update' object.id %}" class="btn btn-primary">Editar</a>
+  <a href="{% url 'supplier_delete' object.id %}" class="btn btn-danger">Excluir</a>
+</div>
+{% endblock %}

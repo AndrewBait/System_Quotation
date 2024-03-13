@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+
+{% block content %}
+<style>
+  .supplier-list {
+    max-width: 800px;
+    margin: 0 auto;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+  }
+  .supplier-list table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  .supplier-list th, .supplier-list td {
+    text-align: left;
+    padding: 8px;
+    border-bottom: 1px solid #ddd;
+  }
+  .supplier-list th {
+    background-color: #007bff;
+    color: #fff;
+  }
+  .action-links a {
+    margin-right: 10px;
+  }
+</style>
+
+<div class="supplier-list">
+  <h2>Fornecedores</h2>
+  <table>
+    <tr>
+      <th>Nome</th>
+      <th>E-mail</th>
+      <th>Telefone</th>
+      <th>Empresa</th>
+      <th>Ações</th>
+    </tr>
+    {% for supplier in object_list %}
+    <tr>
+      <td>{{ supplier.name }}</td>
+      <td>{{ supplier.email }}</td>
+      <td>{{ supplier.phone }}</td>
+      <td>{{ supplier.company }}</td>
+      <td class="action-links">
+        <a href="{% url 'supplier_detail' supplier.id %}">Detalhes</a>
+        <a href="{% url 'supplier_update' supplier.id %}">Editar</a>
+        <a href="{% url 'supplier_delete' supplier.id %}">Excluir</a>
+      </td>
+    </tr>
+    {% endfor %}
+  </table>
+</div>
+{% endblock %}

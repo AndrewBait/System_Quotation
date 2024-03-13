@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="supplier-form">
+  <h2>Confirmar Exclusão</h2>
+  <p>Tem certeza que deseja excluir o fornecedor "{{ object.name }}"?</p>
+
+  <form method="post">
+    {% csrf_token %}
+    <input type="submit" value="Confirmar" class="btn btn-danger">
+    <a href="{% url 'supplier_list' %}" class="btn btn-secondary">Cancelar</a>
+  </form>
+</div>
+{% endblock %}
