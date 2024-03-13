@@ -1,5 +1,5 @@
 from django.contrib import admin
-from django.urls import path
+from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 from products.views import ProductListView, NewProductCreateView, ProductDetailView, ProductUpdatView, ProductDeleteView
@@ -22,4 +22,5 @@ urlpatterns = [
     path('<int:pk>/', SupplierDetailView.as_view(), name='supplier_detail'),
     path('<int:pk>/update/', SupplierUpdateView.as_view(), name='supplier_update'),
     path('<int:pk>/delete/', SupplierDeleteView.as_view(), name='supplier_delete'),
+    path('quotations/', include('quotations.urls')),  # Inclui as URLs do app de cotações
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

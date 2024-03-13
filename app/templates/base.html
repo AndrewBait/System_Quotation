@@ -61,48 +61,52 @@
           }
       }
     </style>
-  </head>
-  <body>
-    <div class="sidebar">
-      <a href="#">Sistema de Cotação</a>
-      {% if user.is_authenticated %}
-        <div>Olá, {{ user.username }}</div>
+</head>
+<body>
+  <div class="sidebar">
+    <a href="#">Sistema de Cotação</a>
+    {% if user.is_authenticated %}
+      <div>Olá, {{ user.username }}</div>
 
-        <div class="menu-section">
-          <a class="nav-link" href="#">Produtos</a>
-          <a class="dropdown-item" href="{% url 'products_list' %}">Listar Produtos</a>
-          <a class="dropdown-item" href="{% url 'new_product' %}">Cadastrar Produto</a>
-      </div>
-
+      <!-- Seção de Produtos -->
       <div class="menu-section">
-          <a class="nav-link" href="#">Fornecedores</a>
-          <!-- Substitua 'supplier_highlight' pelo nome da URL correspondente -->
-          <a class="dropdown-item" href="{% url 'supplier_new' %}">Listar Destaques</a>
-          <!-- Substitua 'supplier_list' pelo nome da URL correspondente -->
-          <a class="dropdown-item" href="{% url 'supplier_list' %}">Todos os Fornecedores</a>
-          <a href="{% url 'register' %}">Registrar</a>
+        <a class="nav-link" href="#">Produtos</a>
+        <a class="dropdown-item" href="{% url 'products_list' %}">Listar Produtos</a>
+        <a class="dropdown-item" href="{% url 'new_product' %}">Cadastrar Produto</a>
       </div>
-      {% endif %}
 
-        {% if user.is_authenticated %}
-            <a href="{% url 'logout' %}">Sair</a>
-        {% else %}
-            <a href="{% url 'login' %}">Login</a>
-        {% endif %}
-    </div>
+      <!-- Seção de Fornecedores -->
+      <div class="menu-section">
+        <a class="nav-link" href="#">Fornecedores</a>
+        <a class="dropdown-item" href="{% url 'supplier_list' %}">Todos os Fornecedores</a>
+        <a class="dropdown-item" href="{% url 'supplier_new' %}">Cadastrar Fornecedor</a>
+      </div>
 
+      <!-- Seção de Cotações -->
+      <div class="menu-section">
+        <a class="nav-link" href="#">Cotações</a>
+        <a class="dropdown-item" href="{% url 'create_cotation' %}">Criar Cotação</a>
+        <!-- Inclua outras URLs relacionadas a cotações aqui conforme necessário -->
+      </div>
 
-    <main class="main-content">
-      {% block content %}
-      {% endblock %}
+      <a href="{% url 'logout' %}">Sair</a>
+    {% else %}
+      <a href="{% url 'login' %}">Login</a>
+      <a href="{% url 'register' %}">Registrar</a>
+    {% endif %}
+  </div>
+
+  <main class="main-content">
+    {% block content %}
+    {% endblock %}
   </main>
 
   <footer>
-      <p>&copy; 2024 Andrew</p>
+    <p>&copy; 2024 Andrew</p>
   </footer>
 
   <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.2/dist/umd/popper.min.js"></script>
   <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-  </body>
-  </html>
+</body>
+</html>
