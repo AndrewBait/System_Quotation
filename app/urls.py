@@ -10,7 +10,7 @@ from suppliers.views import SupplierCreateView, SupplierListView, SupplierDetail
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('register/', register_view, name='register'),
-    path('login/', login_view, name='login'),
+    path('', login_view, name='login'),
     path('logout/', logout_view, name='logout'),
     path('products/', ProductListView.as_view(), name='products_list'),
     path('product/<int:pk>/', ProductDetailView.as_view(), name='product_detail'),
@@ -18,9 +18,9 @@ urlpatterns = [
     path('product/<int:pk>/update/', ProductUpdatView.as_view(), name='product_update'),
     path('product/<int:pk>/delete/', ProductDeleteView.as_view(), name='product_delete'),
     path('suppliers/new/', SupplierCreateView.as_view(), name='supplier_new'),
-    path('', SupplierListView.as_view(), name='supplier_list'),
-    path('<int:pk>/', SupplierDetailView.as_view(), name='supplier_detail'),
-    path('<int:pk>/update/', SupplierUpdateView.as_view(), name='supplier_update'),
-    path('<int:pk>/delete/', SupplierDeleteView.as_view(), name='supplier_delete'),
+    path('supplier/', SupplierListView.as_view(), name='supplier_list'),
+    path('supplier/<int:pk>/', SupplierDetailView.as_view(), name='supplier_detail'),
+    path('supplier/<int:pk>/update/', SupplierUpdateView.as_view(), name='supplier_update'),
+    path('supplier/<int:pk>/delete/', SupplierDeleteView.as_view(), name='supplier_delete'),
     path('quotations/', include('quotations.urls')),  # Inclui as URLs do app de cotações
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

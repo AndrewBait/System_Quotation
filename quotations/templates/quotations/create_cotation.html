@@ -1,6 +1,8 @@
 {% extends "base.html" %}
 
 {% block content %}
+
+<script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
 <style>
   /* Estilo adaptado do formulário de fornecedor para cotação */
   .cotation-form {
@@ -53,13 +55,25 @@
 </style>
 
 <div class="container">
-  <form action="" method="post" class="cotation-form">
+  <h2>Criar Nova Cotação</h2>
+  <form method="post">
     {% csrf_token %}
-    {{ form.as_p }}
-    {{ formset.as_p }}
     <div class="form-group">
-      <input type="submit" value="Salvar Cotação" class="btn btn-primary">
+      <label for="id_nome">Nome da Cotação:</label>
+      {{ form.nome }}
+      {{ form.nome.errors }}
     </div>
+    <div class="form-group">
+      <label for="id_data_abertura">Data de Abertura:</label>
+      {{ form.data_abertura }}
+      {{ form.data_abertura.errors }}
+    </div>
+    <div class="form-group">
+      <label for="id_data_fechamento">Data de Fechamento:</label>
+      {{ form.data_fechamento }}
+      {{ form.data_fechamento.errors }}
+    </div>
+    <button type="submit" class="btn btn-primary">Criar Cotação</button>
   </form>
 </div>
 {% endblock %}

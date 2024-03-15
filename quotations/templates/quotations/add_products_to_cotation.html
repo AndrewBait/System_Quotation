@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+<style>
+  .product-formset {
+    max-width: 600px;
+    margin: 20px auto;
+    padding: 20px;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  }
+
+  .product-formset label {
+    display: block;
+    margin-bottom: 8px;
+  }
+
+  .product-formset .form-group {
+    margin-bottom: 15px;
+  }
+
+  .product-formset input,
+  .product-formset select,
+  .product-formset textarea {
+    width: 100%;
+    padding: 10px;
+    margin: 8px 0;
+    display: inline-block;
+    border: 1px solid #ccc;
+    box-sizing: border-box;
+    border-radius: 4px;
+  }
+
+  .product-formset input[type="submit"] {
+    background-color: #007bff;
+    color: white;
+    padding: 12px 20px;
+    margin: 8px 0;
+    border: none;
+    cursor: pointer;
+    width: 100%;
+  }
+
+  .product-formset input[type="submit"]:hover {
+    background-color: #0056b3;
+  }
+
+  .add-form-row {
+    margin-top: 10px;
+    text-align: right;
+  }
+</style>
+
+<div class="container">
+  <h2>Adicionar Produtos à Cotação: {{ cotation.nome }}</h2>
+  <form method="post">
+    {% csrf_token %}
+    {{ formset.management_form }}
+    {% for form in formset %}
+      <div class="product-formset">
+        {{ form.as_p }}
+      </div>
+    {% endfor %}
+    <div class="add-form-row">
+      <button type="button" id="add-row">Adicionar Produto</button>
+    </div>
+    <input type="submit" value="Salvar Produtos">
+  </form>
+</div>
+
+<script>
+$(document).ready(function() {
+  $('#add-row').click(function() {
+    // Clone last formset row
+    var newElement = $('.product-formset:last').clone(true);
+    var formRegex = RegExp('form-(\\d+)-', 'g');
+    
+    // Update the new form's index and reset its values
+    newElement.html(newElement.html().replace(formRegex, function(match, number) {
+      return 'form-' + (parseInt(number) + 1) + '-';
+    }));
+    newElement.find('input:text').val('');
+    newElement.find('select').val('');
+    newElement.insertBefore('.add-form-row');
+
+    // Update total form count
+    var totalForms = $('#id_form-TOTAL_FORMS');
+    totalForms.val(parseInt(totalForms.val()) + 1);
+  });
+});
+</script>
+
+{% endblock %}
