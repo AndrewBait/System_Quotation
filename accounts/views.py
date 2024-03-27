@@ -12,7 +12,7 @@ def register_view(request):
         user_form = UserCreationForm(request.POST)
         if user_form.is_valid():
             user_form.save()
-            return redirect('login')
+            return redirect('accounts:login')
     return render(request, 'register.html', {'user_form': user_form})
 
 
@@ -23,7 +23,7 @@ def login_view(request):
         user = authenticate(request, username=username, password=password)
         if user is not None:    
             login(request, user)
-            return redirect('products_list')
+            return redirect('products:products_list') 
         else:   
             login_form = AuthenticationForm()
     else:
@@ -33,4 +33,4 @@ def login_view(request):
 
 def logout_view(request):
     logout(request)
-    return redirect('login')
+    return redirect('accounts:login')

@@ -7,7 +7,8 @@
   <p><strong>E-mail:</strong> {{ object.email }}</p>
   <p><strong>Telefone:</strong> {{ object.phone }}</p>
   <p><strong>Empresa:</strong> {{ object.company }}</p>
-  <a href="{% url 'supplier_update' object.id %}" class="btn btn-primary">Editar</a>
-  <a href="{% url 'supplier_delete' object.id %}" class="btn btn-danger">Excluir</a>
+  <p><strong>CNPJ:</strong> {{ object.cnpj }}</p> <!-- Linha para exibir o CNPJ -->
+  <a href="{% url 'suppliers:supplier_update' object.id %}" class="btn btn-primary">Editar</a>
+  <a href="{% url 'suppliers:supplier_delete' object.id %}" class="btn btn-danger">Excluir</a>  
 </div>
 {% endblock %}

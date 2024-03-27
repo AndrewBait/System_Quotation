@@ -1,26 +1,15 @@
 from django.contrib import admin
 from django.urls import path, include
+from django.views.generic.base import RedirectView
 from django.conf import settings
 from django.conf.urls.static import static
-from products.views import ProductListView, NewProductCreateView, ProductDetailView, ProductUpdatView, ProductDeleteView
-from accounts.views import register_view, login_view, logout_view
-from suppliers.views import SupplierCreateView, SupplierListView, SupplierDetailView, SupplierUpdateView, SupplierDeleteView
-
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('register/', register_view, name='register'),
-    path('', login_view, name='login'),
-    path('logout/', logout_view, name='logout'),
-    path('products/', ProductListView.as_view(), name='products_list'),
-    path('product/<int:pk>/', ProductDetailView.as_view(), name='product_detail'),
-    path('product/new/', NewProductCreateView.as_view(), name='new_product'),
-    path('product/<int:pk>/update/', ProductUpdatView.as_view(), name='product_update'),
-    path('product/<int:pk>/delete/', ProductDeleteView.as_view(), name='product_delete'),
-    path('suppliers/new/', SupplierCreateView.as_view(), name='supplier_new'),
-    path('supplier/', SupplierListView.as_view(), name='supplier_list'),
-    path('supplier/<int:pk>/', SupplierDetailView.as_view(), name='supplier_detail'),
-    path('supplier/<int:pk>/update/', SupplierUpdateView.as_view(), name='supplier_update'),
-    path('supplier/<int:pk>/delete/', SupplierDeleteView.as_view(), name='supplier_delete'),
-    path('quotations/', include('quotations.urls')),  # Inclui as URLs do app de cotações
+    path('accounts/', include('accounts.urls', namespace='accounts')),
+    path('products/', include('products.urls')),  # Certifique-se de que este namespace esteja configurado corretamente
+    path('suppliers/', include('suppliers.urls')),  # E este também
+    # Certifique-se de que 'quotations.urls' tem um namespace 'quotations' definido em quotations/urls.py
+    path('quotations/v1/', include(('quotations.urls', 'quotations'), namespace='v1')),  
+    path('', RedirectView.as_view(url='/accounts/login/', permanent=True), name='home'),  # Redireciona para login
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

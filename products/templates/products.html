@@ -104,7 +104,7 @@
 
   </style>
 
-  <form method="GET" action="{% url 'products_list' %}">
+  <form method="GET" action="{% url 'products:products_list' %}">
     <input type="text" name="search" placeholder="Buscar produto...">
     <button type="submit">Buscar</button>
   </form>
@@ -112,7 +112,7 @@
   <div class="car-grid">
     {% if products %}
       {% for product in products %}
-        <a href="{% url 'product_detail' product.pk %}">
+        <a href="{% url 'products:product_detail' product.pk %}">
           <div class="car-card">
             {% if product.photo %}
             <img src="{{ product.photo.url }}" alt="{{ product.ean }} - {{ product.name }}">

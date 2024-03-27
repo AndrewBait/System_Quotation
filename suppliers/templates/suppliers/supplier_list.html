@@ -36,6 +36,7 @@
       <th>E-mail</th>
       <th>Telefone</th>
       <th>Empresa</th>
+      <th>CNPJ</th> <!-- Cabeçalho da coluna CNPJ adicionado -->
       <th>Ações</th>
     </tr>
     {% for supplier in object_list %}
@@ -44,10 +45,11 @@
       <td>{{ supplier.email }}</td>
       <td>{{ supplier.phone }}</td>
       <td>{{ supplier.company }}</td>
+      <td>{{ supplier.cnpj }}</td> <!-- Valor do CNPJ do fornecedor -->
       <td class="action-links">
-        <a href="{% url 'supplier_detail' supplier.id %}">Detalhes</a>
-        <a href="{% url 'supplier_update' supplier.id %}">Editar</a>
-        <a href="{% url 'supplier_delete' supplier.id %}">Excluir</a>
+        <a href="{% url 'suppliers:supplier_detail' supplier.id %}">Detalhes</a>
+        <a href="{% url 'suppliers:supplier_update' supplier.id %}">Editar</a>
+        <a href="{% url 'suppliers:supplier_delete' supplier.id %}">Excluir</a>
       </td>
     </tr>
     {% endfor %}

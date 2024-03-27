@@ -1,9 +1,13 @@
 from django.urls import path
 from . import views
 
+app_name = 'quotations'
+
 urlpatterns = [
-    # ...outras urls do app...
-    path('cotation/new/', views.create_cotation, name='create_cotation'),
-    path('cotation/<int:cotation_id>/add_products/', views.add_products_to_cotation, name='add_products_to_cotation'),
-    # Você pode adicionar mais URLs aqui conforme desenvolve outras funcionalidades
+    path('', views.CotationListView.as_view(), name='cotation_list'),
+    path('new/', views.CotationCreateView.as_view(), name='cotation_create'),
+    path('<int:pk>/', views.CotationDetailView.as_view(), name='cotation_detail'),
+    path('<int:pk>/edit/', views.CotationUpdateView.as_view(), name='cotation_edit'),
+    path('<int:pk>/delete/', views.CotationDeleteView.as_view(), name='cotation_delete'),
+    path('<int:pk>/add_products/', views.CotationAddProductsView.as_view(), name='cotation_add_products'),
 ]

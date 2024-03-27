@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <h2>Lista de Cotações</h2>
+    <a href="{% url 'quotations:cotation_create' %}">Criar Nova Cotação</a>
+    <table>
+        <thead>
+            <tr>
+                <th>Nome</th>
+                <th>Data de Abertura</th>
+                <th>Data de Fechamento</th>
+                <th>Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for cotation in cotation_list %}
+            <tr>
+                <td>{{ cotation.nome }}</td>
+                <td>{{ cotation.data_abertura }}</td>
+                <td>{{ cotation.data_fechamento }}</td>
+                <td>
+                    <a href="{% url 'quotations:cotation_detail' cotation.pk %}">Detalhes</a> |
+                    <a href="{% url 'quotations:cotation_edit' cotation.pk %}">Editar</a> |
+                    <a href="{% url 'quotations:cotation_delete' cotation.pk %}">Excluir</a> |
+                    <a href="{% url 'quotations:add_products_to_cotation' cotation.pk %}">Adicionar Produtos</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

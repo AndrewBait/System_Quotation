@@ -8,7 +8,7 @@
   <form method="post">
     {% csrf_token %}
     <input type="submit" value="Confirmar" class="btn btn-danger">
-    <a href="{% url 'supplier_list' %}" class="btn btn-secondary">Cancelar</a>
+    <a href="{% url 'suppliers:supplier_list' %}" class="btn btn-secondary">Cancelar</a>
   </form>
 </div>
 {% endblock %}
