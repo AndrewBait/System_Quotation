@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>{{ cotacao.nome }}</h2>
+<p>Departamento: {{ cotacao.departamento.nome }}</p>
+<p>Data de Abertura: {{ cotacao.data_abertura }}</p>
+<p>Data de Fechamento: {{ cotacao.data_fechamento }}</p>
+
+<h3>Itens da Cotação</h3>
+<table>
+  <thead>
+    <tr>
+      <th>Código EAN do Produto</th>
+      <th>Quantidade</th>
+      <th>Unidade de Medida</th>
+      <th>Nome do Produto</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for item in cotacao.itens_cotacao.all %}
+    <tr>
+      <td>{{ item.produto.ean }}</td>
+      <td>{{ item.quantidade }}</td>
+      <td>{{ item.get_tipo_volume_display }}</td>
+      <td>{{ item.produto.name }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<a href="{% url 'cotacao:add_item_to_cotacao' cotacao_id=cotacao.pk %}">Adicionar item à cotação</a>
+
+{% endblock %}

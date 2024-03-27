@@ -66,35 +66,30 @@
   <div class="sidebar">
     <a href="#">Sistema de Cotação</a>
     {% if user.is_authenticated %}
-
-
+      <h4> Olá, {{ user.username }} </h4>
+  
       <!-- Seção de Produtos -->
-      <div class="menu-section">
-        <h4> Olá, {{ user.username }} </h4>
-        <a class="nav-link" href="#">Produtos</a>
-        <a class="dropdown-item" href="{% url 'products:products_list' %}">Listar Produtos</a>
-        <a class="dropdown-item" href="{% url 'products:new_product' %}">Cadastrar Produto</a>
-      </div>
-
+      <p>Produtos </p>
+      <a class="dropdown-item" href="{% url 'products:products_list' %}">Listar Produtos</a>
+      <a class="dropdown-item" href="{% url 'products:new_product' %}">Cadastrar Produto</a>
+  
       <!-- Seção de Fornecedores -->
-      <div class="menu-section">
-        <a class="nav-link" href="#">Fornecedores</a>
-        <a class="dropdown-item" href="{% url 'suppliers:supplier_list' %}">Todos os Fornecedores</a>
-        <a class="dropdown-item" href="{% url 'suppliers:supplier_new' %}">Cadastrar Fornecedor</a>
-      </div>
+      <p>Fornecedores </p>
+      <a class="dropdown-item" href="{% url 'suppliers:supplier_list' %}">Todos os Fornecedores</a>
+      <a class="dropdown-item" href="{% url 'suppliers:supplier_new' %}">Cadastrar Fornecedor</a>
 
-      <!-- Seção de Cotações -->
-      <div class="menu-section">
-        <a class="nav-link" href="#">Cotações</a>
-        <a class="dropdown-item" href="{% url 'quotations:cotation_create' %}">Criar Cotação</a>
-        <!-- Inclua outras URLs relacionadas a cotações aqui conforme necessário -->
-      </div>
-      <a href="{% url 'accounts:register' %}">Registrar</a>
+            <!-- Seção de Cotações -->
+      <p>Cotaçoes </p>
+      <a class="dropdown-item" href="{% url 'cotacao:cotacao_list' %}">Listar Cotações</a>
+      <a class="dropdown-item" href="{% url 'cotacao:cotacao_new' %}">Criar Cotação</a>
+
+    
       <a href="{% url 'accounts:logout' %}">Sair</a>
     {% else %}
       <a href="{% url 'accounts:login' %}">Login</a>
     {% endif %}
   </div>
+  
 
   <main class="main-content">
     {% block content %}

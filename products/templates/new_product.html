@@ -1,88 +1,88 @@
-{% extends "base.html" %}
+  {% extends "base.html" %}
 
-{% block content %}
-  <style>
-    /* Estilo específico para o formulário de cadastro de produto */
-    .product-form {
-      max-width: 400px;
-      width: 100%;
-      margin: 0 auto;
-      padding: 20px;
-      background-color: #fff;
-      border-radius: 8px;
-      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-    }
+  {% block content %}
+    <style>
+      /* Estilo específico para o formulário de cadastro de produto */
+      .product-form {
+        max-width: 400px;
+        width: 100%;
+        margin: 0 auto;
+        padding: 20px;
+        background-color: #fff;
+        border-radius: 8px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      }
 
-    .product-form label {
-      display: block;
-      margin-bottom: 8px;
-    }
+      .product-form label {
+        display: block;
+        margin-bottom: 8px;
+      }
 
-    .product-form .form-group {
-      margin-bottom: 15px;
-    }
+      .product-form .form-group {
+        margin-bottom: 15px;
+      }
 
-    .product-form input[type="text"],
-    .product-form input[type="password"],
-    .product-form input[type="email"],
-    .product-form input[type="number"],
-    .product-form select,
-    .product-form textarea {
-      width: 100%;
-      padding: 10px;
-      margin: 8px 0;
-      display: inline-block;
-      border: 1px solid #ccc;
-      box-sizing: border-box;
-      border-radius: 4px;
-    }
+      .product-form input[type="text"],
+      .product-form input[type="password"],
+      .product-form input[type="email"],
+      .product-form input[type="number"],
+      .product-form select,
+      .product-form textarea {
+        width: 100%;
+        padding: 10px;
+        margin: 8px 0;
+        display: inline-block;
+        border: 1px solid #ccc;
+        box-sizing: border-box;
+        border-radius: 4px;
+      }
 
-    .product-form input[type="submit"] {
-      background-color: #007bff;
-      color: #fff;
-      border: none;
-      padding: 12px 20px;
-      font-size: 16px;
-      border-radius: 4px;
-      cursor: pointer;
-      transition: background-color 0.3s ease-in-out;
-    }
+      .product-form input[type="submit"] {
+        background-color: #007bff;
+        color: #fff;
+        border: none;
+        padding: 12px 20px;
+        font-size: 16px;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: background-color 0.3s ease-in-out;
+      }
 
-    .product-form input[type="submit"]:hover {
-      background-color: #0056b3;
-    }
-  </style>
+      .product-form input[type="submit"]:hover {
+        background-color: #0056b3;
+      }
+    </style>
 
-  <div class="container">
-    <form action="" method="post" enctype="multipart/form-data" class="product-form">
-      {% csrf_token %}
-      <div class="form-group">
-        <label for="id_ean">EAN:</label>
-        {{ form.ean }}
-        {{ form.ean.errors }}
-      </div>
+    <div class="container">
+      <form action="" method="post" enctype="multipart/form-data" class="product-form">
+        {% csrf_token %}
+        <div class="form-group">
+          <label for="id_ean">EAN:</label>
+          {{ form.ean }}
+          {{ form.ean.errors }}
+        </div>
 
-      <div class="form-group">
-        <label for="id_name">Name:</label>
-        {{ form.name }}
-        {{ form.name.errors }}
-      </div>
+        <div class="form-group">
+          <label for="id_name">Name:</label>
+          {{ form.name }}
+          {{ form.name.errors }}
+        </div>
 
-      <div class="form-group">
-        <label for="id_brand">Brand:</label>
-        {{ form.brand }}
-        {{ form.brand.errors }}
-      </div>
+        <div class="form-group">
+          <label for="id_brand">Brand:</label>
+          {{ form.brand }}
+          {{ form.brand.errors }}
+        </div>
 
-      <div class="form-group">
-        <label for="id_photo">Photo:</label>
-        {{ form.photo }}
-        {{ form.photo.errors }}
-      </div>
+        <div class="form-group">
+          <label for="id_photo">Photo:</label>
+          {{ form.photo }}
+          {{ form.photo.errors }}
+        </div>
 
-      <div class="form-group">
-        <input type="submit" value="Cadastrar" class="btn btn-primary">
-      </div>
-    </form>
-  </div>
-{% endblock %}
+        <div class="form-group">
+          <input type="submit" value="Cadastrar" class="btn btn-primary">
+        </div>
+      </form>
+    </div>
+  {% endblock %}

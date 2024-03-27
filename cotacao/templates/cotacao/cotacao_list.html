@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Cotações</h2>
+<ul>
+  {% for cotacao in cotacoes %}
+    <li>
+      <a href="{% url 'cotacao:cotacao_detail' cotacao.pk %}">{{ cotacao.nome }}</a> ({{ cotacao.departamento.nome }})
+    </li>
+  {% endfor %}
+</ul>
+<a href="{% url 'cotacao:cotacao_new' %}">Criar nova cotação</a>
+
+{% endblock %}
