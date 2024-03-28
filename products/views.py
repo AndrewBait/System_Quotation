@@ -4,6 +4,15 @@ from django.urls import reverse_lazy
 from django.contrib.auth.decorators import login_required
 from django.utils.decorators import method_decorator
 from django.views.generic import ListView, CreateView, DetailView, UpdateView, DeleteView
+from django.views.generic.edit import CreateView
+from .models import Brand
+
+
+class BrandCreateView(CreateView):
+    model = Brand
+    fields = ['name']
+    template_name = 'brands/brand_form.html'
+    success_url = reverse_lazy('products:new_product')
 
 
 class ProductListView(ListView):

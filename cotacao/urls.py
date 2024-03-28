@@ -1,6 +1,6 @@
 from django.urls import path
 from .views import (CotacaoListView, CotacaoDetailView, CotacaoCreateView, 
-                    AddItemToCotacaoView, EditItemCotacaoView, DeleteItemCotacaoView)
+                    AddItemToCotacaoView, EditItemCotacaoView, DeleteItemCotacaoView, DepartamentoCreateView)
 from . import views
 
 # Definindo o namespace da app
@@ -13,4 +13,5 @@ urlpatterns = [
     path('<int:cotacao_id>/item/new/', AddItemToCotacaoView.as_view(), name='add_item_to_cotacao'),
     path('<int:cotacao_id>/item/<int:pk>/edit/', EditItemCotacaoView.as_view(), name='edit_item_cotacao'),
     path('<int:cotacao_id>/item/<int:pk>/delete/', DeleteItemCotacaoView.as_view(), name='delete_item_cotacao'),
+    path('departamento/new/', DepartamentoCreateView.as_view(), name='departamento_new'),
 ]

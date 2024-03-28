@@ -1,10 +1,9 @@
 from django.urls import reverse_lazy
-from django.shortcuts import render, redirect
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
-from .models import Cotacao, ItemCotacao
-from .forms import CotacaoForm, ItemCotacaoForm
+from .models import Departamento, Cotacao, ItemCotacao
+from .forms import CotacaoForm, ItemCotacaoForm, DepartamentoForm
 from django.views.generic.edit import CreateView
-from django.shortcuts import render, redirect, get_object_or_404
+from django.shortcuts import get_object_or_404, render, redirect
 
 
 class CotacaoListView(ListView):
@@ -62,3 +61,9 @@ class DeleteItemCotacaoView(DeleteView):
 
     def get_success_url(self):
         return reverse_lazy('cotacao:cotacao_detail', kwargs={'pk': self.object.cotacao.pk})
+
+class DepartamentoCreateView(CreateView):
+    model = Departamento
+    form_class = DepartamentoForm
+    template_name = 'cotacao/departamento_form.html'
+    success_url = reverse_lazy('cotacao:cotacao_list')

@@ -1,5 +1,6 @@
 from django import forms
-from .models import Cotacao, ItemCotacao
+from .models import Cotacao, ItemCotacao, Departamento
+from django.core.exceptions import ValidationError
 
 class CotacaoForm(forms.ModelForm):
     class Meta:
@@ -9,6 +10,10 @@ class CotacaoForm(forms.ModelForm):
             'data_abertura': forms.DateInput(format=('%Y-%m-%d'), attrs={'type': 'date'}),
             'data_fechamento': forms.DateInput(format=('%Y-%m-%d'), attrs={'type': 'date'}),
         }
+        
+    def __init__(self, *args, **kwargs):
+        super(CotacaoForm, self).__init__(*args, **kwargs)
+        self.fields['departamento'].queryset = Departamento.objects.all().order_by('nome')
 
 class ItemCotacaoForm(forms.ModelForm):
     class Meta:
@@ -19,3 +24,15 @@ class ItemCotacaoForm(forms.ModelForm):
             'quantidade': forms.NumberInput(attrs={'class': 'form-control'}),
             'tipo_volume': forms.Select(attrs={'class': 'form-control'}),
         }
+
+
+class DepartamentoForm(forms.ModelForm):
+    class Meta:
+        model = Departamento
+        fields = ['nome']
+    
+    def clean_nome(self):
+        nome = self.cleaned_data['nome']
+        if Departamento.objects.filter(nome__iexact=nome).exists():
+            raise ValidationError("Um departamento com este nome já existe.")
+        return nome

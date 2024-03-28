@@ -117,7 +117,7 @@
       <div class="buttons-container">
         <input type="submit" value="Salvar Alterações" class="btn btn-primary">
         <a href="{% url 'products:product_delete' pk=object.pk %}" class="btn btn-danger">Deletar Produto</a>
-        <a href="{% url 'products:product_detail' pk=object.pk %}" class="btn btn-secondary">Cancelar</a>
+        <a href="{% url 'products:products_list' %}" class="btn btn-secondary">Cancelar</a>
 
       </div>
     </div>

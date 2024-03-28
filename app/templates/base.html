@@ -1,113 +1,117 @@
-  <!DOCTYPE html>
-  <html lang="en">
-  <head>
-      <meta charset="UTF-8">
-      <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-      <title>{% block title %}{% endblock %}</title>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <title>{% block title %}Meu Sistema{% endblock %}</title>
     <style>
-      body {
-          font-family: 'Open Sans', sans-serif;
-          background-color: #f7f7f7;
-          color: #333;
-          margin: 0;
-          padding: 0;
-          padding-left: 250px; /* Espaço para a sidebar */
-          padding-bottom: 60px;
-      }
+        body {
+            font-family: 'Open Sans', sans-serif;
+            background-color: #f7f7f7;
+            color: #333;
+            margin: 0;
+            padding: 0;
+            padding-top: 0;
+            transition: padding-left 0.3s ease;
+        }
 
-      .sidebar {
-          position: fixed;
-          top: 0;
-          bottom: 0;
-          left: 0;
-          width: 250px;
-          padding-top: 20px;
-          background-color: #007bff;
-          color: #fff;
-          transition: all 0.3s ease;
-      }
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            width: 250px;
+            background-color: #007bff;
+            color: white;
+            transition: width 0.3s ease;
+            overflow-x: hidden;
+            padding-top: 20px;
+            z-index: 1000; /* Ensure sidebar is above other content */
+        }
 
-      .sidebar a, .dropdown-menu a {
-          color: #fff !important;
-          padding: 10px 15px;
-          text-decoration: none;
-          display: block;
-      }
+        .sidebar a {
+            color: white;
+            padding: 10px 15px;
+            text-decoration: none;
+            display: block;
+        }
 
-      .sidebar a:hover, .dropdown-menu a:hover {
-          background-color: #0056b3;
-      }
+        .sidebar a:hover {
+            background-color: #0056b3;
+        }
 
-      .dropdown-menu {
-          background-color: #007bff;
-      }
+        @media (min-width: 768px) {
+            body {
+                padding-left: 250px; /* Same as sidebar width */
+            }
+        }
 
-      footer {
-        position: fixed;
-        width: 100%;
-        bottom: 0;
-        background-color: #ccc;
-        color: #333;
-        border-top: 1px solid #e7e7e7; /* Linha separadora */
-        padding: 10px 0; /* Espaçamento interno */
-        text-align: center; /* Alinhamento do texto */
-        z-index: 999; /* Garante que o footer fique acima de outros elementos da página */
-      }
+        @media (max-width: 767.98px) {
+            .sidebar {
+                width: 100%;
+                height: auto;
+                position: relative;
+                padding-bottom: 10px;
+            }
+            body {
+                padding-left: 0;
+            }
+        }
 
-      @media (max-width: 768px) {
-          body {
-              padding-left: 0;
-          }
-          .sidebar {
-              width: 100%;
-              height: auto;
-              position: relative;
-          }
-      }
+        footer {
+            background-color: #ccc;
+            color: #333;
+            text-align: center;
+            padding: 10px 0;
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            z-index: 1001; /* Above sidebar but under modals if any */
+            border-top: 1px solid #e7e7e7;
+        }
+
+        /* Ensure footer is pushed below content */
+        .main-content {
+            min-height: 100vh;
+            padding-bottom: 50px; /* Height of the footer */
+        }
     </style>
 </head>
 <body>
-  <div class="sidebar">
-    <a href="#">Sistema de Cotação</a>
-    {% if user.is_authenticated %}
-      <h4> Olá, {{ user.username }} </h4>
-  
-      <!-- Seção de Produtos -->
-      <p>Produtos </p>
-      <a class="dropdown-item" href="{% url 'products:products_list' %}">Listar Produtos</a>
-      <a class="dropdown-item" href="{% url 'products:new_product' %}">Cadastrar Produto</a>
-  
-      <!-- Seção de Fornecedores -->
-      <p>Fornecedores </p>
-      <a class="dropdown-item" href="{% url 'suppliers:supplier_list' %}">Todos os Fornecedores</a>
-      <a class="dropdown-item" href="{% url 'suppliers:supplier_new' %}">Cadastrar Fornecedor</a>
+<div class="sidebar">
+   Sistema de Cotação
+  {% if user.is_authenticated %}
+    <h4>Olá, {{ user.username }}</h4>
+    <p>Produtos</p>
+    <a class="dropdown-item" href="{% url 'products:products_list' %}">Listar Produtos</a>
+    <a class="dropdown-item" href="{% url 'products:new_product' %}">Cadastrar Produto</a>
+    <p>Fornecedores</p>
+    <a class="dropdown-item" href="{% url 'suppliers:supplier_list' %}">Todos os Fornecedores</a>
+    <a class="dropdown-item" href="{% url 'suppliers:supplier_new' %}">Cadastrar Fornecedor</a>
+    <p>Cotações</p>
+    <a class="dropdown-item" href="{% url 'cotacao:cotacao_new' %}">Criar Cotação</a>
+    <a class="dropdown-item" href="{% url 'cotacao:departamento_new' %}">Cadastrar Departamento</a>
+    <a class="dropdown-item" href="{% url 'cotacao:cotacao_list' %}">Listar Cotações</a>
+    <a class="dropdown-item" href="{% url 'accounts:register' %}">Registrar Novo Usuário</a>
+    <a href="{% url 'accounts:logout' %}">Sair</a>
+  {% else %}
+    <a href="{% url 'accounts:login' %}">Login</a>
 
-            <!-- Seção de Cotações -->
-      <p>Cotaçoes </p>
-      <a class="dropdown-item" href="{% url 'cotacao:cotacao_new' %}">Criar Cotação</a>
-      <a class="dropdown-item" href="{% url 'cotacao:cotacao_list' %}">Listar Cotações</a>
+  {% endif %}
+</div>
 
+<main class="main-content">
+  {% block content %}
+  {% endblock %}
+</main>
 
-    
-      <a href="{% url 'accounts:logout' %}">Sair</a>
-    {% else %}
-      <a href="{% url 'accounts:login' %}">Login</a>
-    {% endif %}
-  </div>
-  
+<footer>
+  <p>&copy; 2024 Andrew</p>
+</footer>
 
-  <main class="main-content">
-    {% block content %}
-    {% endblock %}
-  </main>
-
-  <footer>
-    <p>&copy; 2024 Andrew</p>
-  </footer>
-
-  <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.2/dist/umd/popper.min.js"></script>
-  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.2/dist/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 </body>
 </html>

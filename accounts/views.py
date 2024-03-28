@@ -3,16 +3,19 @@ from django.contrib.auth import authenticate, login, logout
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from django.utils.decorators import method_decorator
+from django.urls import reverse_lazy
 
 
-@method_decorator(login_required(login_url='login'), name='dispatch')#decorator
+@login_required(login_url='accounts:login')
 def register_view(request):
-    user_form = UserCreationForm()
     if request.method == 'POST':
         user_form = UserCreationForm(request.POST)
         if user_form.is_valid():
-            user_form.save()
-            return redirect('accounts:login')
+            new_user = user_form.save()
+            login(request, new_user)  # Loga o usuário recém-criado automaticamente
+            return redirect('products:products_list')
+    else:
+        user_form = UserCreationForm()
     return render(request, 'register.html', {'user_form': user_form})
 
 
