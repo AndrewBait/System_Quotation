@@ -3,26 +3,21 @@
 {% block content %}
 <style>
     /* Estilo específico para o formulário de login */
+    .login-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh; /* Altura mínima para garantir que o container cubra a tela inteira */
+        background-color: #f7f7f7; /* Ajuste conforme necessário */
+    }
+
     .login-form {
         max-width: 400px;
         width: 100%;
-        margin: 0 auto;
         padding: 20px;
         background-color: #fff;
         border-radius: 8px;
         box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-    }
-
-    .login-form table {
-        width: 100%;
-        border-collapse: collapse;
-        margin-bottom: 15px;
-    }
-
-    .login-form th, .login-form td {
-        padding: 10px;
-        border-bottom: 1px solid #ddd;
-        text-align: left;
     }
 
     .login-form input[type="text"],
@@ -37,10 +32,11 @@
     }
 
     .login-form input[type="submit"] {
+        width: 100%; /* Faz com que o botão de submit ocupe toda a largura do formulário */
         background-color: #0096c7;
         color: #fff;
         border: none;
-        padding: 12px 20px;
+        padding: 12px;
         font-size: 16px;
         border-radius: 4px;
         cursor: pointer;
@@ -52,11 +48,11 @@
     }
 </style>
 
-<form class="login-form" action="" method="post">
-    {% csrf_token %}
-    <table>
-        {{ login_form.as_table }}
-    </table>
-    <input type="submit" value="Entrar">
-</form>
+<div class="login-container">
+    <form class="login-form" action="" method="post">
+        {% csrf_token %}
+        {{ login_form.as_p }}
+        <input type="submit" value="Entrar">
+    </form>
+</div>
 {% endblock %}
