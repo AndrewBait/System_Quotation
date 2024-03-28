@@ -13,6 +13,7 @@
           margin: 0;
           padding: 0;
           padding-left: 250px; /* Espaço para a sidebar */
+          padding-bottom: 60px;
       }
 
       .sidebar {
@@ -43,11 +44,15 @@
       }
 
       footer {
-          background-color: #ccc;
-          color: #333;
-          padding: 20px;
-          text-align: center;
-          margin-top: 20px;
+        position: fixed;
+        width: 100%;
+        bottom: 0;
+        background-color: #ccc;
+        color: #333;
+        border-top: 1px solid #e7e7e7; /* Linha separadora */
+        padding: 10px 0; /* Espaçamento interno */
+        text-align: center; /* Alinhamento do texto */
+        z-index: 999; /* Garante que o footer fique acima de outros elementos da página */
       }
 
       @media (max-width: 768px) {
@@ -80,8 +85,9 @@
 
             <!-- Seção de Cotações -->
       <p>Cotaçoes </p>
-      <a class="dropdown-item" href="{% url 'cotacao:cotacao_list' %}">Listar Cotações</a>
       <a class="dropdown-item" href="{% url 'cotacao:cotacao_new' %}">Criar Cotação</a>
+      <a class="dropdown-item" href="{% url 'cotacao:cotacao_list' %}">Listar Cotações</a>
+
 
     
       <a href="{% url 'accounts:logout' %}">Sair</a>

@@ -19,7 +19,7 @@ GITPOD_CSRF_TRUSTED_URL = str(os.getenv("GITPOD_WORKSPACE_URL")).replace("https:
 
 ALLOWED_HOSTS = ['*']
 
-CSRF_TRUSTED_ORIGINS = [GITPOD_CSRF_TRUSTED_URL]
+# CSRF_TRUSTED_ORIGINS = [GITPOD_CSRF_TRUSTED_URL]
 
 # Application definition
 
@@ -30,6 +30,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'widget_tweaks',
 
     'products',
     'accounts',

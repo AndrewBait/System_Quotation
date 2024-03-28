@@ -4,7 +4,7 @@ from .models import Cotacao, ItemCotacao
 class CotacaoForm(forms.ModelForm):
     class Meta:
         model = Cotacao
-        fields = ['nome', 'departamento', 'data_abertura', 'data_fechamento']
+        fields = '__all__'
         widgets = {
             'data_abertura': forms.DateInput(format=('%Y-%m-%d'), attrs={'type': 'date'}),
             'data_fechamento': forms.DateInput(format=('%Y-%m-%d'), attrs={'type': 'date'}),

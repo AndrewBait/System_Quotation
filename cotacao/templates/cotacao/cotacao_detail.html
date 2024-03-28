@@ -1,33 +1,40 @@
 {% extends "base.html" %}
 
 {% block content %}
-<h2>{{ cotacao.nome }}</h2>
-<p>Departamento: {{ cotacao.departamento.nome }}</p>
-<p>Data de Abertura: {{ cotacao.data_abertura }}</p>
-<p>Data de Fechamento: {{ cotacao.data_fechamento }}</p>
+<div class="container mt-4">
+    <h2>{{ cotacao.nome }}</h2>
+    <p><strong>Departamento:</strong> {{ cotacao.departamento.nome }}</p>
+    <p><strong>Data de Abertura:</strong> {{ cotacao.data_abertura }}</p>
+    <p><strong>Data de Fechamento:</strong> {{ cotacao.data_fechamento }}</p>
 
-<h3>Itens da Cotação</h3>
-<table>
-  <thead>
-    <tr>
-      <th>Código EAN do Produto</th>
-      <th>Quantidade</th>
-      <th>Unidade de Medida</th>
-      <th>Nome do Produto</th>
-    </tr>
-  </thead>
-  <tbody>
-    {% for item in cotacao.itens_cotacao.all %}
-    <tr>
-      <td>{{ item.produto.ean }}</td>
-      <td>{{ item.quantidade }}</td>
-      <td>{{ item.get_tipo_volume_display }}</td>
-      <td>{{ item.produto.name }}</td>
-    </tr>
-    {% endfor %}
-  </tbody>
-</table>
-
-<a href="{% url 'cotacao:add_item_to_cotacao' cotacao_id=cotacao.pk %}">Adicionar item à cotação</a>
-
+    <h3>Itens da Cotação</h3>
+    <div class="table-responsive">
+        <table class="table table-hover">
+            <thead class="thead-light">
+                <tr>
+                    <th>Código EAN do Produto</th>
+                    <th>Quantidade</th>
+                    <th>Unidade de Medida</th>
+                    <th>Nome do Produto</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in cotacao.itens_cotacao.all %}
+                <tr>
+                    <td>{{ item.produto.ean }}</td>
+                    <td>{{ item.quantidade }}</td>
+                    <td>{{ item.get_tipo_volume_display }}</td>
+                    <td>{{ item.produto.name }}</td>
+                    <td>
+                        <a href="{% url 'cotacao:edit_item_cotacao' cotacao_id=cotacao.pk pk=item.pk %}" class="btn btn-sm btn-primary">Editar</a>
+                        <a href="{% url 'cotacao:delete_item_cotacao' cotacao_id=cotacao.pk pk=item.pk %}" class="btn btn-sm btn-danger">Excluir</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <a href="{% url 'cotacao:add_item_to_cotacao' cotacao_id=cotacao.pk %}" class="btn btn-success">Adicionar item à cotação</a>
+</div>
 {% endblock %}

@@ -11,7 +11,7 @@ class SupplierCreateView(CreateView):
     model = Supplier
     form_class = SupplierForm
     template_name = 'suppliers/supplier_form.html'
-    success_url = reverse_lazy('supplier_list')  # Substitua 'supplier_list' pela URL que você deseja redirecionar após o cadastro
+    success_url = reverse_lazy('suppliers:supplier_list') 
 
 
 @method_decorator(login_required(login_url='login'), name='dispatch')#decorator
@@ -31,11 +31,11 @@ class SupplierUpdateView(UpdateView):
     model = Supplier
     form_class = SupplierForm
     template_name = 'suppliers/supplier_form.html'
-    success_url = reverse_lazy('supplier_list')  # Atualize para a URL correta de listagem
+    success_url = reverse_lazy('suppliers:supplier_list') 
 
 
 @method_decorator(login_required(login_url='login'), name='dispatch')#decorator
 class SupplierDeleteView(DeleteView):
     model = Supplier
     template_name = 'suppliers/supplier_confirm_delete.html'
-    success_url = reverse_lazy('supplier_list')  # Atualize para a URL correta de listagem
+    success_url = reverse_lazy('suppliers:supplier_list') 

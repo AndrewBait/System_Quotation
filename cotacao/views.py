@@ -1,6 +1,6 @@
 from django.urls import reverse_lazy
 from django.shortcuts import render, redirect
-from django.views.generic import ListView, DetailView, CreateView
+from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
 from .models import Cotacao, ItemCotacao
 from .forms import CotacaoForm, ItemCotacaoForm
 from django.views.generic.edit import CreateView
@@ -12,9 +12,11 @@ class CotacaoListView(ListView):
     template_name = 'cotacao/cotacao_list.html'
     context_object_name = 'cotacoes'
 
+
 class CotacaoDetailView(DetailView):
     model = Cotacao
     template_name = 'cotacao/cotacao_detail.html'
+
 
 class CotacaoCreateView(CreateView):
     model = Cotacao
@@ -43,3 +45,20 @@ class AddItemToCotacaoView(CreateView):
         context = super().get_context_data(**kwargs)
         context['cotacao'] = get_object_or_404(Cotacao, pk=self.kwargs['cotacao_id'])
         return context
+
+# Classe de visão para editar um item de cotação
+class EditItemCotacaoView(UpdateView):
+    model = ItemCotacao
+    form_class = ItemCotacaoForm
+    template_name = 'cotacao/itemcotacao_form.html'
+
+    def get_success_url(self):
+        return reverse_lazy('cotacao:cotacao_detail', kwargs={'pk': self.object.cotacao.pk})
+
+# Classe de visão para excluir um item de cotação
+class DeleteItemCotacaoView(DeleteView):
+    model = ItemCotacao
+    template_name = 'cotacao/itemcotacao_confirm_delete.html'
+
+    def get_success_url(self):
+        return reverse_lazy('cotacao:cotacao_detail', kwargs={'pk': self.object.cotacao.pk})

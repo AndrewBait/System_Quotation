@@ -55,7 +55,7 @@
         {% csrf_token %}
         <div class="buttons-container">
           <button type="submit" class="btn btn-danger">Deletar Produto</button>
-          <a href="{% url 'product_update' pk=object.pk %}" class="btn btn-secondary">Cancelar</a>
+          <a href="{% url 'products:product_update' pk=object.pk %}" class="btn btn-secondary">Cancelar</a>
         </div>
       </form>
     </div>
