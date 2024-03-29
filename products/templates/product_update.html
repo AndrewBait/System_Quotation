@@ -2,124 +2,130 @@
 
 {% block content %}
 
-  <style>
-    form {
-      max-width: 800px;
-      margin: 0 auto;
-      padding: 20px;
-      background-color: #f5f5f5;
-      border-radius: 10px;
-      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
-    }
+<style>
+  form {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+    background-color: #343a40; /* Fundo escuro */
+    border-radius: 10px;
+    box-shadow: 0 2px 6px rgba(255, 255, 255, 0.1); /* Sombra mais clara para o modo escuro */
+    color: #ffffff; /* Texto branco */
+  }
 
-    form h1 {
-      font-size: 2rem;
-      margin-bottom: 20px;
-      text-align: center;
-    }
+  form h1 {
+    font-size: 2rem;
+    margin-bottom: 20px;
+    text-align: center;
+    color: #ffffff; /* Texto branco */
+  }
 
-    table {
-      margin: 0 auto;
-      border-collapse: collapse;
-      width: 100%;
-      max-width: 600px;
-    }
+  table {
+    margin: 0 auto;
+    border-collapse: collapse;
+    width: 100%;
+    max-width: 600px;
+    color: #ffffff; /* Texto branco */
+  }
 
-    th, td {
-      padding: 4px;
-      text-align: left;
-      border-bottom: 1px solid #ddd;
-    }
+  th, td {
+    padding: 4px;
+    text-align: left;
+    border-bottom: 1px solid #777; /* Bordas mais claras para contraste */
+    color: #ffffff; /* Texto branco */
+  }
 
-    th {
-      background-color: #f2f2f2;
-    }
+  th {
+    background-color: #222; /* Cabeçalho da tabela mais escuro */
+  }
 
-    input[type="text"], input[type="number"], select, textarea {
-      padding: 8px;
-      font-size: 14px;
-      border: 2px solid #ddd;
-      border-radius: 4px;
-      width: 100%;
-      max-width: 300px;
-      margin-bottom: 8px;
-      transition: border-bottom-color 0.3s ease-in-out;
-    }
+  input[type="text"], input[type="number"], select, textarea {
+    padding: 8px;
+    font-size: 14px;
+    border: 2px solid #777; /* Bordas claras para contraste */
+    background-color: #495057; /* Fundo dos campos de formulário */
+    color: #ffffff; /* Texto branco */
+    border-radius: 4px;
+    width: 100%;
+    max-width: 300px;
+    margin-bottom: 8px;
+    transition: border-bottom-color 0.3s ease-in-out;
+  }
 
-    input[type="text"]:focus, input[type="number"]:focus, select:focus, textarea:focus {
-      outline: none;
-      border-bottom-color: #0096c7;
-    }
+  input[type="text"]:focus, input[type="number"]:focus, select:focus, textarea:focus {
+    outline: none;
+    border-color: #007bff; /* Cor de foco mais brilhante para contraste */
+  }
 
-    .btn {
-      background-color: #0096c7;
-      color: #fff;
-      border: none;
-      padding: 10px 20px;
-      font-size: 16px;
-      border-radius: 4px;
-      cursor: pointer;
-      transition: background-color 0.3s ease-in-out;
-    }
+  .btn, .btn-primary, .btn-danger, .btn-secondary {
+    border: none;
+    padding: 10px 20px;
+    font-size: 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s ease-in-out;
+    margin: 0 10px;
+  }
 
-    .buttons-container {
-      display: flex;
-      justify-content: center;
-      margin-top: 20px;
-      margin-bottom: 20px;
-    }
+  .btn-primary {
+    background-color: #007bff;
+    color: #fff;
+  }
 
-    .btn {
-      display: inline-block;
-      background-color: #0096c7;
-      color: #fff;
-      border: none;
-      padding: 10px 20px;
-      font-size: 16px;
-      border-radius: 4px;
-      cursor: pointer;
-      transition: background-color 0.3s ease-in-out;
-      margin: 0 10px;
-    }
+  .btn-primary:hover {
+    background-color: #0056b3;
+  }
 
-    .btn:hover {
-      background-color: #108eb8;
-    }
+  .btn-danger {
+    background-color: #dc3545; /* Cor adaptada para o modo escuro */
+    color: #fff;
+  }
 
-    .btn-danger {
-      background-color: #d9534f;
-      text-decoration: none !important;
-    }
+  .btn-danger:hover {
+    background-color: #bd2130;
+  }
 
-    .btn-danger:hover {
-      background-color: #d2221c;
-    }
+  .btn-secondary {
+    background-color: #6c757d; /* Cor adaptada para o modo escuro */
+    color: #fff;
+  }
 
-    .error-message {
-      color: #d9534f;
-      font-size: 14px;
-      margin-top: 5px;
-    }
+  .btn-secondary:hover {
+    background-color: #545b62;
+  }
 
-    a {
-      text-decoration: none !important;
-    }
+  .error-message {
+    color: #f8d7da; /* Cor de mensagem de erro adaptada para o modo escuro */
+  }
 
+  a {
+    color: #ffffff; /* Links brancos para contraste */
+  }
 
-  </style>
-  <form method="post" enctype="multipart/form-data">
-    {% csrf_token %}
-    <h1>Editar Produto</h1>
-    <table>
-      {{ form.as_table }}
-    </table>
-    <div>
-      <div class="buttons-container">
-        <input type="submit" value="Salvar Alterações" class="btn btn-primary">
-        <a href="{% url 'products:product_delete' pk=object.pk %}" class="btn btn-danger">Deletar Produto</a>
-        <a href="{% url 'products:products_list' %}" class="btn btn-secondary">Cancelar</a>
+  a:hover {
+    color: #bbcadd; /* Cor de hover para links */
+  }
 
-      </div>
+  .buttons-container {
+    display: flex;
+    justify-content: center;
+    margin-top: 20px;
+    margin-bottom: 20px;
+  }
+
+</style>
+<form method="post" enctype="multipart/form-data">
+  {% csrf_token %}
+  <h1>Editar Produto</h1>
+  <table>
+    {{ form.as_table }}
+  </table>
+  <div>
+    <div class="buttons-container">
+      <input type="submit" value="Salvar Alterações" class="btn btn-primary">
+      <a href="{% url 'products:product_delete' pk=object.pk %}" class="btn btn-danger">Deletar Produto</a>
+      <a href="{% url 'products:products_list' %}" class="btn btn-secondary">Cancelar</a>
     </div>
-  </form>
+  </div>
+</form>
 {% endblock %}

@@ -1,91 +1,116 @@
-  {% extends "base.html" %}
+{% extends "base.html" %}
 
-  {% block content %}
-    <style>
-      /* Estilo específico para o formulário de cadastro de produto */
-      .product-form {
-        max-width: 400px;
-        width: 100%;
-        margin: 0 auto;
-        padding: 20px;
-        background-color: #fff;
-        border-radius: 8px;
-        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-      }
+{% block content %}
+<style>
+  /* Estilo específico para o formulário de cadastro de produto adaptado para modo escuro */
+  .product-form {
+    max-width: 400px;
+    width: 100%;
+    margin: 0 auto;
+    padding: 20px;
+    background-color: #343a40; /* Fundo mais escuro */
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
+    color: #fff; /* Texto branco */
+  }
 
-      .product-form label {
-        display: block;
-        margin-bottom: 8px;
-      }
+  .product-form label {
+    display: block;
+    margin-bottom: 8px;
+    color: #dee2e6; /* Cor de texto claro para melhor contraste */
+  }
 
-      .product-form .form-group {
-        margin-bottom: 15px;
-      }
+  .product-form .form-group {
+    margin-bottom: 15px;
+  }
 
-      .product-form input[type="text"],
-      .product-form input[type="password"],
-      .product-form input[type="email"],
-      .product-form input[type="number"],
-      .product-form select,
-      .product-form textarea {
-        width: 100%;
-        padding: 10px;
-        margin: 8px 0;
-        display: inline-block;
-        border: 1px solid #ccc;
-        box-sizing: border-box;
-        border-radius: 4px;
-      }
+  .product-form input[type="text"],
+  .product-form input[type="password"],
+  .product-form input[type="email"],
+  .product-form input[type="number"],
+  .product-form select,
+  .product-form textarea {
+    width: 100%;
+    padding: 10px;
+    margin: 8px 0;
+    display: inline-block;
+    border: 1px solid #ced4da;
+    box-sizing: border-box;
+    border-radius: 4px;
+    background-color: #495057; /* Fundo dos campos mais escuro */
+    color: #e9ecef; /* Texto dos inputs claro */
+  }
 
-      .product-form input[type="submit"] {
-        background-color: #007bff;
-        color: #fff;
-        border: none;
-        padding: 12px 20px;
-        font-size: 16px;
-        border-radius: 4px;
-        cursor: pointer;
-        transition: background-color 0.3s ease-in-out;
-      }
+  .product-form input[type="submit"],
+  .btn-info, .btn-secondary {
+    border: none;
+    padding: 12px 20px;
+    font-size: 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s ease-in-out;
+  }
 
-      .product-form input[type="submit"]:hover {
-        background-color: #0056b3;
-      }
-    </style>
+  .product-form input[type="submit"] {
+    background-color: #007bff;
+    color: #fff;
+  }
 
-    <div class="container">
-      <form action="" method="post" enctype="multipart/form-data" class="product-form">
-        {% csrf_token %}
-        <div class="form-group">
-          <label for="id_ean">EAN:</label>
-          {{ form.ean }}
-          {{ form.ean.errors }}
-        </div>
+  .product-form input[type="submit"]:hover {
+    background-color: #0056b3;
+  }
 
-        <div class="form-group">
-          <label for="id_name">Nome:</label>
-          {{ form.name }}
-          {{ form.name.errors }}
-        </div>
+  .btn-info {
+    background-color: #17a2b8;
+    color: #fff;
+  }
 
-        <div class="form-group">
-          <label for="id_brand">Marca</label>
-          {{ form.brand }}
-          {{ form.brand.errors }}
-          <a href="{% url 'products:brand_new' %}" class="btn btn-info">Adicionar Nova Marca</a>
-        </div>
+  .btn-info:hover {
+    background-color: #138496;
+  }
 
-        <div class="form-group">
-          <label for="id_photo">Imagem:</label>
-          {{ form.photo }}
-          {{ form.photo.errors }}
-        </div>
+  .btn-secondary {
+    background-color: #6c757d;
+    color: #fff;
+  }
 
+  .btn-secondary:hover {
+    background-color: #545b62;
+  }
+</style>
 
-        <div class="form-group">
-          <input type="submit" value="Cadastrar" class="btn btn-primary">
-          <a href="{% url 'products:products_list' %}" class="btn btn-secondary">Cancelar</a>
-        </div>
-      </form>
+<div class="container">
+  <form action="" method="post" enctype="multipart/form-data" class="product-form">
+    {% csrf_token %}
+    <div class="form-group">
+      <label for="id_ean">EAN:</label>
+      {{ form.ean }}
+      {{ form.ean.errors }}
     </div>
-  {% endblock %}
+
+    <div class="form-group">
+      <label for="id_name">Nome:</label>
+      {{ form.name }}
+      {{ form.name.errors }}
+    </div>
+
+    <div class="form-group">
+      <label for="id_brand">Marca</label>
+      {{ form.brand }}
+      {{ form.brand.errors }}
+      <a href="{% url 'products:brand_new' %}" class="btn btn-info">Adicionar Nova Marca</a>
+    </div>
+
+    <div class="form-group">
+      <label for="id_photo">Imagem:</label>
+      {{ form.photo }}
+      {{ form.photo.errors }}
+    </div>
+
+    <div class="form-group">
+      <input type="submit" value="Cadastrar" class="btn btn-primary">
+      <a href="{% url 'products:products_list' %}" class="btn btn-secondary">Cancelar</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

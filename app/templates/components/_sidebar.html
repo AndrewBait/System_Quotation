@@ -1,0 +1,63 @@
+<div class="d-flex flex-column flex-shrink-0 p-3 text-white bg-dark" style="width: 250px;">
+    <a href="/" class="d-flex align-items-center mb-3 mb-md-0 me-md-auto text-white text-decoration-none">
+    </a>
+    <hr>
+    {% if user.is_authenticated %}
+    <ul class="nav nav-pills flex-column mb-auto">
+        <li class="nav-item">
+            <a href="#" class="nav-link active" aria-current="page">
+                <i class="bi bi-house-door-fill"></i>
+                Olá, {{ user.username }}
+            </a>
+        </li>
+        <li>
+            <a href="{% url 'products:products_list' %}" class="nav-link text-white">
+                <i class="bi bi-box-seam fs-4"></i>
+                Produtos
+            </a>
+        </li>
+        <li>
+            <a href="{% url 'suppliers:supplier_list' %}" class="nav-link text-white">
+                <i class="bi bi-truck fs-4"></i>
+                Fornecedores
+            </a>
+        </li>
+        <li>
+            <a href="{% url 'cotacao:departamento_new' %}" class="nav-link text-white">
+                <i class="bi bi-plus-square"></i>
+                Departamento
+            </a>
+        </li>
+        <li>
+            <a href="{% url 'cotacao:cotacao_new' %}" class="nav-link text-white">
+                <i class="bi bi-tags fs-4"></i>
+                Criar Cotação
+            </a>
+        </li>
+        <li>
+            <a href="{% url 'cotacao:cotacao_list' %}" class="nav-link text-white">
+                <i class="bi bi-tags fs-4"></i>
+                Listar Cotações
+            </a>
+        </li>
+        <li>
+            <a href="{% url 'accounts:register' %}" class="nav-link text-white">
+                <i class="bi bi-arrow-up-right-square fs-4"></i>
+                Novo Usuário
+            </a>
+        </li>
+        <li>
+            <a href="{% url 'accounts:logout' %}" class="nav-link text-white">
+                <i class="bi bi-box-arrow-right"></i>
+                Sair
+            </a>
+        </li>
+    </ul>
+    {% else %}
+    <a href="{% url 'accounts:login' %}" class="nav-link text-white">
+        <i class="bi bi-box-arrow-in-right"></i>
+        Login
+    </a>
+    {% endif %}
+    <hr>
+</div>

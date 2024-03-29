@@ -3,7 +3,7 @@ from .views import (CotacaoListView, CotacaoDetailView, CotacaoCreateView,
                     AddItemToCotacaoView, EditItemCotacaoView, DeleteItemCotacaoView, DepartamentoCreateView)
 from . import views
 
-# Definindo o namespace da app
+
 app_name = 'cotacao'
 
 urlpatterns = [

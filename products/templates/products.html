@@ -5,9 +5,9 @@
   <div class="mb-3 d-flex justify-content-between">
     <form method="GET" action="{% url 'products:products_list' %}" class="form-inline my-2 my-lg-0">
         <input class="form-control mr-sm-2" type="search" name="search" placeholder="Buscar produto..." aria-label="Search">
-        <button class="btn btn-outline-success my-2 my-sm-0" type="submit">Buscar</button>
+        
     </form>
-    <a href="{% url 'products:new_product' %}" class="btn btn-primary my-2">Adicionar Produto</a>
+    <a href="{% url 'products:new_product' %}" class="btn btn-primary my-2">Cadastrar Produto</a>
   </div>
 
   {% if products %}

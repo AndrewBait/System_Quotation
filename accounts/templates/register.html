@@ -2,20 +2,22 @@
 
 {% block content %}
 <style>
-    /* Estilo específico para o formulário de registro */
+    /* Estilo específico para o formulário de registro adaptado para o tema escuro */
     .register-form {
         max-width: 400px;
         width: 100%;
         margin: 0 auto;
         padding: 20px;
-        background-color: #fff;
+        background-color: #343a40; /* Fundo mais escuro para o formulário */
         border-radius: 8px;
-        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        box-shadow: 0 0 10px rgba(255, 255, 255, 0.1); /* Sombra clara para contraste */
+        color: #ffffff; /* Texto branco */
     }
 
     .register-form label {
         display: block;
         margin-bottom: 8px;
+        color: #dee2e6; /* Cor de texto claro para melhor contraste */
     }
 
     .register-form .form-group {
@@ -28,14 +30,16 @@
         padding: 10px;
         margin: 8px 0;
         display: inline-block;
-        border: 1px solid #ccc;
-        box-sizing: border-box;
+        border: 1px solid #ced4da; /* Bordas claras para contraste */
+        background-color: #495057; /* Fundo dos campos de entrada */
+        color: #e9ecef; /* Cor do texto nos inputs */
         border-radius: 4px;
     }
 
     .register-form input[type="submit"] {
-        background-color: #0096c7;
-        color: #fff;
+        width: 100%;
+        background-color: #007bff; /* Cor do botão */
+        color: #fff; /* Cor do texto no botão */
         border: none;
         padding: 12px 20px;
         font-size: 16px;
@@ -45,7 +49,7 @@
     }
 
     .register-form input[type="submit"]:hover {
-        background-color: #108eb8;
+        background-color: #0056b3; /* Cor do botão ao passar o mouse */
     }
 </style>
 

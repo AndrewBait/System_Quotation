@@ -2,20 +2,22 @@
 
 {% block content %}
 <style>
-  /* Estilo específico para o formulário de cadastro de fornecedor */
+  /* Estilo específico para o formulário de cadastro de fornecedor adaptado para o modo escuro */
   .supplier-form {
     max-width: 400px;
     width: 100%;
     margin: 0 auto;
     padding: 20px;
-    background-color: #fff;
+    background-color: #343a40; /* Fundo mais escuro */
     border-radius: 8px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
+    color: #ffffff; /* Texto branco */
   }
 
   .supplier-form label {
     display: block;
     margin-bottom: 8px;
+    color: #dee2e6; /* Cor de texto claro para melhor contraste */
   }
 
   .supplier-form .form-group {
@@ -32,8 +34,9 @@
     padding: 10px;
     margin: 8px 0;
     display: inline-block;
-    border: 1px solid #ccc;
-    box-sizing: border-box;
+    border: 1px solid #ced4da;
+    background-color: #495057; /* Fundo dos campos mais escuro */
+    color: #e9ecef; /* Texto claro para os inputs */
     border-radius: 4px;
   }
 
@@ -80,7 +83,6 @@
       {{ form.company.errors }}
     </div>
 
-    <!-- Adicionando o campo CNPJ -->
     <div class="form-group">
       <label for="id_cnpj">CNPJ:</label>
       {{ form.cnpj }}
