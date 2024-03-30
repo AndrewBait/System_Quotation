@@ -1,0 +1,4 @@
+<form action="{% url 'cotacao:departamento_delete' departamento.id %}" method="post">
+    {% csrf_token %}
+    <button type="submit" class="btn btn-danger btn-sm">Excluir</button>
+</form>

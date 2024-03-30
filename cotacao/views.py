@@ -3,7 +3,9 @@ from django.views.generic import ListView, DetailView, CreateView, UpdateView, D
 from .models import Departamento, Cotacao, ItemCotacao
 from .forms import CotacaoForm, ItemCotacaoForm, DepartamentoForm
 from django.views.generic.edit import CreateView
-from django.shortcuts import get_object_or_404, render, redirect
+from django.shortcuts import get_object_or_404, redirect
+from django.contrib import messages
+from django.core.exceptions import ValidationError
 
 
 class CotacaoListView(ListView):
@@ -45,7 +47,7 @@ class AddItemToCotacaoView(CreateView):
         context['cotacao'] = get_object_or_404(Cotacao, pk=self.kwargs['cotacao_id'])
         return context
 
-# Classe de visão para editar um item de cotação
+
 class EditItemCotacaoView(UpdateView):
     model = ItemCotacao
     form_class = ItemCotacaoForm
@@ -54,16 +56,41 @@ class EditItemCotacaoView(UpdateView):
     def get_success_url(self):
         return reverse_lazy('cotacao:cotacao_detail', kwargs={'pk': self.object.cotacao.pk})
 
-# Classe de visão para excluir um item de cotação
+
 class DeleteItemCotacaoView(DeleteView):
     model = ItemCotacao
     template_name = 'cotacao/itemcotacao_confirm_delete.html'
 
     def get_success_url(self):
         return reverse_lazy('cotacao:cotacao_detail', kwargs={'pk': self.object.cotacao.pk})
+    
 
 class DepartamentoCreateView(CreateView):
     model = Departamento
     form_class = DepartamentoForm
     template_name = 'cotacao/departamento_form.html'
-    success_url = reverse_lazy('cotacao:cotacao_list')
+    success_url = reverse_lazy('cotacao:departamento_new')
+
+    def post(self, request, *args, **kwargs):
+        if "delete" in request.POST:
+            departamento_id = request.POST.get("delete")
+            departamento = Departamento.objects.get(pk=departamento_id)
+            try:
+                departamento.delete()
+            except ValidationError as e:
+                messages.error(request, e.messages[0])
+            return redirect(self.success_url)
+        return super().post(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['departamentos'] = Departamento.objects.all().order_by('nome')
+        return context
+
+
+class DepartamentoDeleteView(DeleteView):
+    model = Departamento
+    success_url = reverse_lazy('cotacao:departamento_new')  
+    template_name = 'cotacao/departamento_confirm_delete.html'
+
+

@@ -1,11 +1,15 @@
 from django.db import models
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _  
-from django.utils import timezone  
 
 
 class Departamento(models.Model):
     nome = models.CharField(max_length=100, unique=True)  
+
+    def delete(self, *args, **kwargs):
+        if self.cotacoes.exists():
+            raise ValidationError("Não é possível excluir um departamento que possui cotações vinculadas.")
+        super().delete(*args, **kwargs)
 
     def __str__(self):
         return self.nome
@@ -17,9 +21,10 @@ class Departamento(models.Model):
 
 class Cotacao(models.Model):
     nome = models.CharField(max_length=200)
-    departamento = models.ForeignKey(Departamento, on_delete=models.CASCADE, related_name='cotacoes')
+    departamento = models.ForeignKey(Departamento, on_delete=models.SET_NULL, null=True, related_name='cotacoes')
     data_abertura = models.DateField()
     data_fechamento = models.DateField()
+
 
     def __str__(self):
         return f"{self.nome} ({self.departamento.nome})"
@@ -72,3 +77,6 @@ class ItemCotacao(models.Model):
     def save(self, *args, **kwargs):
         self.full_clean()  
         super().save(*args, **kwargs)
+
+
+

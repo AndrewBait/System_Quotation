@@ -1,54 +1,8 @@
-{% extends 'base.html' %}
+{% extends 'base_login.html' %}
 
 {% block content %}
 <style>
-    /* Estilo específico para o formulário de login adaptado para o tema escuro */
-    .login-container {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        min-height: 80vh; /* Altura mínima para garantir que o container cubra a tela inteira */
-        background-color: #343a40; /* Fundo escuro */
-    }
-
-    .login-form {
-        max-width: 400px;
-        width: 100%;
-        padding: 20px;
-        background-color: #495057; /* Fundo mais escuro para o formulário */
-        border-radius: 8px;
-        box-shadow: 0 0 10px rgba(255, 255, 255, 0.1); /* Sombra clara para contraste */
-        color: #ffffff; /* Cor do texto */
-    }
-
-    .login-form input[type="text"],
-    .login-form input[type="password"] {
-        width: 100%;
-        padding: 10px;
-        margin: 8px 0;
-        display: inline-block;
-        border: 1px solid #ced4da; /* Bordas claras para contraste */
-        background-color: #6c757d; /* Fundo dos campos de entrada */
-        color: #e9ecef; /* Cor do texto nos inputs */
-        box-sizing: border-box;
-        border-radius: 4px;
-    }
-
-    .login-form input[type="submit"] {
-        width: 100%; /* Faz com que o botão de submit ocupe toda a largura do formulário */
-        background-color: #007bff; /* Cor do botão */
-        color: #fff; /* Cor do texto no botão */
-        border: none;
-        padding: 12px;
-        font-size: 16px;
-        border-radius: 4px;
-        cursor: pointer;
-        transition: background-color 0.3s ease-in-out;
-    }
-
-    .login-form input[type="submit"]:hover {
-        background-color: #0056b3; /* Cor do botão ao passar o mouse */
-    }
+    /* Seu CSS específico para a página de login aqui */
 </style>
 
 <div class="login-container">

@@ -1,3 +1,11 @@
+<style>
+    .nav-link:hover {
+        background-color: #007bff; /* Azul claro para o hover */
+        color: #ffffff; /* Texto branco para o hover */
+        border-radius: .25rem; /* Arredondamento dos cantos */
+    }
+</style>
+
 <div class="d-flex flex-column flex-shrink-0 p-3 text-white bg-dark" style="width: 250px;">
     <a href="/" class="d-flex align-items-center mb-3 mb-md-0 me-md-auto text-white text-decoration-none">
     </a>
@@ -24,28 +32,32 @@
         </li>
         <li>
             <a href="{% url 'cotacao:departamento_new' %}" class="nav-link text-white">
-                <i class="bi bi-plus-square"></i>
+                <i class="bi bi-plus-square fs-4"></i>
                 Departamento
             </a>
         </li>
         <li>
             <a href="{% url 'cotacao:cotacao_new' %}" class="nav-link text-white">
-                <i class="bi bi-tags fs-4"></i>
+                <i class="bi bi-clipboard-check fs-4"></i>
                 Criar Cotação
             </a>
         </li>
         <li>
             <a href="{% url 'cotacao:cotacao_list' %}" class="nav-link text-white">
-                <i class="bi bi-tags fs-4"></i>
+                <i class="bi bi-card-checklist fs-4"></i>
                 Listar Cotações
             </a>
         </li>
+
+
+        
         <li>
             <a href="{% url 'accounts:register' %}" class="nav-link text-white">
-                <i class="bi bi-arrow-up-right-square fs-4"></i>
+                <i class="bi bi-person-plus fs-4"></i>
                 Novo Usuário
             </a>
         </li>
+        <br>
         <li>
             <a href="{% url 'accounts:logout' %}" class="nav-link text-white">
                 <i class="bi bi-box-arrow-right"></i>
