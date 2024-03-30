@@ -8,7 +8,6 @@ from django.views.generic.edit import CreateView
 from .models import Brand
 
 
-
 class BrandCreateView(CreateView):
     model = Brand
     fields = ['name']

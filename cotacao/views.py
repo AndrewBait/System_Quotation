@@ -1,11 +1,11 @@
-from django.urls import reverse_lazy
-from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
-from .models import Departamento, Cotacao, ItemCotacao
-from .forms import CotacaoForm, ItemCotacaoForm, DepartamentoForm
-from django.views.generic.edit import CreateView
-from django.shortcuts import get_object_or_404, redirect
 from django.contrib import messages
 from django.core.exceptions import ValidationError
+from django.shortcuts import get_object_or_404, redirect
+from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
+from django.urls import reverse_lazy
+from django.views.generic.edit import CreateView
+from .models import Departamento, Cotacao, ItemCotacao
+from .forms import CotacaoForm, ItemCotacaoForm, DepartamentoForm
 
 
 class CotacaoListView(ListView):

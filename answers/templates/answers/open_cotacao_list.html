@@ -1,0 +1,16 @@
+<!-- Em responses/templates/responses/open_cotacao_list.html -->
+
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <h2>Cotações Abertas</h2>
+    <div class="list-group">
+        {% for cotacao in object_list %}
+        <a href="{% url 'answers:cotacao_detail' cotacao.pk %}" class="list-group-item list-group-item-action">
+            {{ cotacao.nome }} - {{ cotacao.departamento.nome }}
+        </a>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

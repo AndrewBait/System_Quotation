@@ -1,0 +1,24 @@
+<!-- Em answers/templates/answers/cotacao_detail.html -->
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <h2>Detalhes da Cotação: {{ object.nome }}</h2>
+    <p>Departamento: {{ object.departamento.nome }}</p>
+
+    <form method="post" action="{% url 'answers:submit_answers' cotacao_id=object.id %}">
+        {% csrf_token %}
+        <ul>
+            {% for item, form in item_forms %}
+            <li>
+                {{ item.produto.name }} - 
+                {% for field in form %}
+                    {{ field }}  <!-- Renderiza cada campo do formulário para o item -->
+                {% endfor %}
+            </li>
+            {% endfor %}
+        </ul>
+        <button type="submit" class="btn btn-primary">Enviar Respostas</button>
+    </form>
+</div>
+{% endblock %}
