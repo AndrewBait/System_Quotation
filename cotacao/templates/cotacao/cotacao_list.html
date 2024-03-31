@@ -6,10 +6,15 @@
     {% if cotacoes %}
     <div class="list-group">
         {% for cotacao in cotacoes %}
-        <a href="{% url 'cotacao:cotacao_detail' cotacao.pk %}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
-            {{ cotacao.nome }}
-            <span class="badge badge-primary badge-pill">{{ cotacao.departamento.nome }}</span>
-        </a>
+        <div class="list-group-item d-flex justify-content-between align-items-center">
+            <a href="{% url 'cotacao:cotacao_detail' cotacao.pk %}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+
+                {{ cotacao.nome }}
+                <span class="badge badge-primary badge-pill">{{ cotacao.departamento.nome }}</span>
+            </a>
+            <!-- Adicione este botão para cada cotação -->
+            <a href="{% url 'cotacao:enviar_cotacao' cotacao.pk %}" class="btn btn-secondary btn-sm">Enviar para os Fornecedores</a>
+        </div>
         {% endfor %}
     </div>
     {% else %}

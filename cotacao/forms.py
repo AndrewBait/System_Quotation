@@ -3,7 +3,6 @@ from .models import Cotacao, ItemCotacao, Departamento
 from django.core.exceptions import ValidationError
 
 
-
 class CotacaoForm(forms.ModelForm):
     class Meta:
         model = Cotacao
@@ -39,6 +38,8 @@ class DepartamentoForm(forms.ModelForm):
         if Departamento.objects.filter(nome__iexact=nome).exists():
             raise ValidationError("Um departamento com este nome já existe.")
         return nome
+
+
 
 
 

@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <h2>Enviar Cotação: {{ cotacao.nome }}</h2>
+    <form method="post">
+        {% csrf_token %}
+        {% for fornecedor in fornecedores %}
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" name="fornecedores" value="{{ fornecedor.id }}" id="fornecedor{{ forloop.counter }}">
+                <label class="form-check-label" for="fornecedor{{ forloop.counter }}">
+                    {{ fornecedor.name }}
+                </label>
+            </div>
+        {% endfor %}
+        <button type="submit" class="btn btn-primary">Enviar para Selecionados</button>
+    </form>
+</div>
+{% endblock %}

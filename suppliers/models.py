@@ -1,8 +1,8 @@
 from django.db import models
 from django.core.validators import RegexValidator
 from django.core.exceptions import ValidationError
-from django.contrib.auth.models import User
 from validate_docbr import CNPJ
+import uuid
 
 # Função de validação do CNPJ
 def validate_cnpj(value):
@@ -11,13 +11,13 @@ def validate_cnpj(value):
         raise ValidationError("CNPJ inválido.")
 
 class Supplier(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='supplier')
     name = models.CharField(max_length=255)
     email = models.EmailField(unique=True)
     phone_regex = RegexValidator(regex=r'^\+55\d{2}\d{4,5}\d{4}$', message="O número de telefone deve ser no formato: '+999999999'. Até 15 dígitos permitidos.")
     phone = models.CharField(validators=[phone_regex], max_length=17, blank=True)
     company = models.CharField(max_length=255)
     cnpj = models.CharField(max_length=18, unique=True, validators=[validate_cnpj], null=True)
+    uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
 
     def __str__(self):
         return self.name

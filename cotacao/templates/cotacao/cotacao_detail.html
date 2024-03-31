@@ -29,7 +29,6 @@
                     <td>
                         <a href="{% url 'cotacao:edit_item_cotacao' cotacao_id=cotacao.pk pk=item.pk %}" class="btn btn-sm btn-primary">Editar</a>
                         <a href="{% url 'cotacao:delete_item_cotacao' cotacao_id=cotacao.pk pk=item.pk %}" class="btn btn-sm btn-danger">Excluir</a>
-                        <td><a href="{% url 'answers:submit_answer' item.id %}" class="btn btn-primary">Responder</a></td>
                     </td>
                 </tr>
                 {% endfor %}

@@ -1,15 +1,17 @@
-# Em answers/views.py
-
-from django.views.generic import ListView, DetailView, CreateView
+from django.contrib import messages
+from .forms import AnswerForm, NonAuthenticatedAnswerForm, create_answer_formset 
+from django.views.generic import ListView, DetailView, CreateView, FormView, TemplateView
 from django.utils import timezone
-from django.shortcuts import get_object_or_404, redirect
-from django.urls import reverse_lazy
+from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse_lazy, reverse
 from django.contrib.auth.mixins import LoginRequiredMixin
 from cotacao.models import Cotacao, ItemCotacao
 from .models import Answer
 from .forms import AnswerForm
-from suppliers.models import Supplier  # Se você estiver associando respostas a um modelo de fornecedor
+from suppliers.models import Supplier  
 from django.views import View
+from django.http import HttpResponseRedirect
+from django.db.models import Prefetch
 
 
 class OpenCotacaoListView(ListView):
@@ -25,11 +27,17 @@ class CotacaoDetailView(DetailView):
     model = Cotacao
     template_name = 'answers/cotacao_detail.html'
 
+    def get_object(self):
+        uuid = self.kwargs.get('uuid')
+        return get_object_or_404(Cotacao, uuid=uuid)
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         cotacao = context['object']
         item_forms = [(item, AnswerForm(prefix=str(item.id))) for item in cotacao.itens_cotacao.all()]
         context['item_forms'] = item_forms
+        # Supondo que o uuid do fornecedor é passado via GET parâmetro, ajuste conforme necessário
+        context['fornecedor_uuid'] = self.request.GET.get('fornecedor_uuid', None)
         return context
 
 
@@ -61,20 +69,109 @@ class AnswerCreateView(LoginRequiredMixin, CreateView):
 
 class SubmitAnswersView(View):
     def post(self, request, *args, **kwargs):
-        cotacao_id = kwargs.get('cotacao_id')
-        cotacao = get_object_or_404(Cotacao, id=cotacao_id)
+        cotacao_uuid = self.kwargs.get('uuid')
+        cotacao = get_object_or_404(Cotacao, uuid=cotacao_uuid)
+        form = NonAuthenticatedAnswerForm(request.POST)
 
-        # Encontra o fornecedor pelo email do usuário autenticado
-        # Isso presume que o email usado no modelo User é o mesmo que no modelo Supplier
-        supplier = get_object_or_404(Supplier, email=request.user.email)
+        if form.is_valid():
+            fornecedor_email = form.cleaned_data['fornecedor_email']
+            fornecedor = get_object_or_404(Supplier, email=fornecedor_email)
+            
+            # Supondo que o modelo Answer aceite um fornecedor (verifique seus campos)
+            answer = form.save(commit=False)
+            answer.supplier = fornecedor
+            answer.item_cotacao = get_object_or_404(ItemCotacao, id=request.POST.get('item_cotacao_id'))
+            answer.save()
+            
+            # Redirecionar após o envio com sucesso
+            return HttpResponseRedirect(reverse('alguma_url_de_sucesso'))
+        else:
+            # Se o formulário não for válido, você pode decidir o que fazer,
+            # como redirecionar de volta ao formulário com erros.
+            return render(request, 'seu_template_com_erros.html', {'form': form, 'cotacao': cotacao})
+        
 
-        # Processa cada item de cotação e salva a resposta
-        for item in cotacao.itens_cotacao.all():
-            form = AnswerForm(request.POST, prefix=str(item.id))
-            if form.is_valid():
+def submit_answers_by_uuid(request, uuid):
+    cotacao = get_object_or_404(Cotacao, uuid=uuid)
+    if request.method == 'POST':
+        item_forms = create_answer_formset(cotacao, request.POST)
+        if all(form.is_valid() for form in item_forms):
+            fornecedor_email = request.POST.get('fornecedor_email')
+            fornecedor, created = Supplier.objects.get_or_create(email=fornecedor_email)
+            # Aqui você precisará implementar a lógica para associar cada resposta com o respectivo item da cotação
+            for form in item_forms:
                 answer = form.save(commit=False)
-                answer.item_cotacao = item
-                answer.supplier = supplier
+                answer.supplier = fornecedor
+                # Atribua o item_cotacao corretamente aqui, se necessário
                 answer.save()
+            messages.success(request, "Suas respostas foram enviadas com sucesso.")
+            return redirect('alguma_url_de_confirmação')
+        else:
+            messages.error(request, "Houve um erro ao processar suas respostas.")
+    else:
+        item_forms = create_answer_formset(cotacao)
 
-        return redirect('answers:cotacao_detail', pk=cotacao_id)
+    item_form_pairs = list(zip(cotacao.itens_cotacao.all(), item_forms))
+
+    return render(request, 'answers/submit_answer_by_uuid.html', {
+        'cotacao': cotacao, 
+        'item_form_pairs': item_form_pairs
+    })
+       
+
+class SubmitAnswerByUUIDView(FormView):
+    template_name = 'answers/submit_answer_by_uuid.html'
+    form_class = NonAuthenticatedAnswerForm
+
+
+
+    def form_valid(self, form):
+        cotacao_uuid = self.kwargs.get('uuid')
+        cotacao = get_object_or_404(Cotacao, uuid=cotacao_uuid)
+        fornecedor_email = form.cleaned_data['fornecedor_email']
+        fornecedor = get_object_or_404(Supplier, email=fornecedor_email)
+
+        for item in cotacao.itens_cotacao.all():
+            price = form.cleaned_data[f'price_{item.id}']
+            Answer.objects.create(
+                item_cotacao=item,
+                supplier=fornecedor,
+                price=price,
+            )
+
+        return redirect('some_success_url')  # Substitua 'some_success_url' pelo nome da sua URL de sucesso
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        cotacao_uuid = self.kwargs.get('uuid')
+        cotacao = get_object_or_404(Cotacao, uuid=cotacao_uuid)
+        context['cotacao'] = cotacao
+        return context
+    
+
+class CotacaoRespostasListView(ListView):
+    model = Cotacao
+    template_name = 'answers/cotacao_respostas_list.html'
+    context_object_name = 'cotacoes'
+
+    def get_queryset(self):
+        return Cotacao.objects.prefetch_related(
+            Prefetch('itens_cotacao__answers', queryset=Answer.objects.select_related('supplier'))
+        )
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        cotacoes = context['cotacoes']
+
+        # Estrutura para armazenar as respostas
+        cotacoes_respostas = []
+
+        for cotacao in cotacoes:
+            itens_respostas = []
+            for item in cotacao.itens_cotacao.all():
+                respostas = item.answers.all()
+                itens_respostas.append((item, respostas))
+            cotacoes_respostas.append((cotacao, itens_respostas))
+
+        context['cotacoes_respostas'] = cotacoes_respostas
+        return context
