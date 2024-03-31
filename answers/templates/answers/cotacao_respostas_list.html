@@ -1,33 +1,15 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="container mt-4">
-    {% for cotacao, itens_respostas in cotacoes_respostas %}
-        <h2>Respostas da Cotação: {{ cotacao.nome }}</h2>
-        <div class="table-responsive">
-            <table class="table">
-                <thead>
-                    <tr>
-                        <th>Item</th>
-                        <th>Quantidade</th>
-                        <th>Respostas dos Fornecedores</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for item, respostas in itens_respostas %}
-                    <tr>
-                        <td>{{ item.produto.name }}</td>
-                        <td>{{ item.quantidade }}</td>
-                        <td>
-                            {% for resposta in respostas %}
-                                {{ resposta.supplier.name }}: {{ resposta.price }}<br>
-                            {% endfor %}
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-    {% endfor %}
+<div class="container">
+    <h2>Cotações Respondidas</h2>
+    <ul class="list-group">
+        {% for cotacao in cotacoes %}
+        <li class="list-group-item">
+            {{ cotacao.nome }} - Respostas recebidas
+            <a href="{% url 'answers:cotacao_respostas_detail' cotacao.uuid %}" class="btn btn-primary float-right">Ver Respostas</a>
+        </li>
+        {% endfor %}
+    </ul>
 </div>
 {% endblock %}

@@ -1,6 +1,6 @@
 from django.contrib import messages
 from .forms import AnswerForm, NonAuthenticatedAnswerForm, create_answer_formset 
-from django.views.generic import ListView, DetailView, CreateView, FormView, TemplateView
+from django.views.generic import ListView, DetailView, CreateView, FormView
 from django.utils import timezone
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse_lazy, reverse
@@ -95,28 +95,29 @@ def submit_answers_by_uuid(request, uuid):
     cotacao = get_object_or_404(Cotacao, uuid=uuid)
     if request.method == 'POST':
         item_forms = create_answer_formset(cotacao, request.POST)
+        
         if all(form.is_valid() for form in item_forms):
             fornecedor_email = request.POST.get('fornecedor_email')
             fornecedor, created = Supplier.objects.get_or_create(email=fornecedor_email)
-            # Aqui você precisará implementar a lógica para associar cada resposta com o respectivo item da cotação
+            
             for form in item_forms:
+                item_id = form.prefix.split('_')[-1]
+                item = get_object_or_404(ItemCotacao, id=item_id)
+                
                 answer = form.save(commit=False)
                 answer.supplier = fornecedor
-                # Atribua o item_cotacao corretamente aqui, se necessário
+                answer.item_cotacao = item
                 answer.save()
+            
             messages.success(request, "Suas respostas foram enviadas com sucesso.")
             return redirect('alguma_url_de_confirmação')
         else:
             messages.error(request, "Houve um erro ao processar suas respostas.")
+            # Ajuste para exibir novamente o formulário com erros
     else:
         item_forms = create_answer_formset(cotacao)
-
-    item_form_pairs = list(zip(cotacao.itens_cotacao.all(), item_forms))
-
-    return render(request, 'answers/submit_answer_by_uuid.html', {
-        'cotacao': cotacao, 
-        'item_form_pairs': item_form_pairs
-    })
+    
+    return render(request, 'answers/submit_answer_by_uuid.html', {'cotacao': cotacao, 'item_forms': item_forms})
        
 
 class SubmitAnswerByUUIDView(FormView):
@@ -174,4 +175,26 @@ class CotacaoRespostasListView(ListView):
             cotacoes_respostas.append((cotacao, itens_respostas))
 
         context['cotacoes_respostas'] = cotacoes_respostas
+        return context
+
+
+class CotacaoRespostasDetailView(DetailView):
+    model = Cotacao
+    template_name = 'answers/cotacao_respostas_detail.html'
+    context_object_name = 'cotacao'
+
+    def get_object(self, queryset=None):
+        # Use self.kwargs['uuid'] para buscar a Cotacao pelo UUID
+        return get_object_or_404(Cotacao, uuid=self.kwargs['uuid'])
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        cotacao = context['cotacao']
+        itens_respostas = []
+
+        for item in cotacao.itens_cotacao.all():
+            respostas = item.answers.select_related('supplier').all()
+            itens_respostas.append((item, respostas))
+
+        context['itens_respostas'] = itens_respostas
         return context

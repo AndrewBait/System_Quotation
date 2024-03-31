@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Respostas da Cotação: {{ cotacao.nome }}</h2>
+    <div class="table-responsive">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Produto</th>
+                    <th>Quantidade</th>
+                    <th>Respostas dos Fornecedores</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item, respostas in itens_respostas %}
+                <tr>
+                    <td>{{ item.produto.name }}</td>
+                    <td>{{ item.quantidade }}</td>
+                    <td>
+                        {% for resposta in respostas %}
+                            {{ resposta.supplier.name }}: {{ resposta.price }}<br>
+                        {% empty %}
+                            Sem respostas.
+                        {% endfor %}
+                    </td>
+                </tr>
+                {% endfor %}
+        </table>
+    </div>
+</div>
+{% endblock %}
