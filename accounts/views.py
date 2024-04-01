@@ -21,17 +21,20 @@ def register_view(request):
 
 def login_view(request):
     if request.method == 'POST':
-        username = request.POST["username"]
-        password = request.POST["password"]
+        username = request.POST.get("username")
+        password = request.POST.get("password")
         user = authenticate(request, username=username, password=password)
-        if user is not None:    
+        if user is not None:
             login(request, user)
-            return redirect('products:products_list') 
-        else:   
-            login_form = AuthenticationForm()
+            next_page = request.POST.get('next') or 'products:products_list'
+            return redirect(next_page)
+        else:
+            messages.error(request, "Usuário ou senha inválidos.")
     else:
-        login_form = AuthenticationForm()    
+        login_form = AuthenticationForm()
+
     return render(request, 'login.html', {'login_form': login_form})
+
 
 
 def logout_view(request):

@@ -3,6 +3,7 @@ Django==5.0.2
 django-environ==0.11.2
 django-widget-tweaks==1.5.0
 pillow==10.2.0
+python-dotenv==1.0.1
 python-http-client==3.3.7
 sendgrid==6.11.0
 sqlparse==0.4.4

@@ -2,6 +2,7 @@ from django.db import models
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _  
 import uuid
+from suppliers.models import Supplier
 
 
 class Departamento(models.Model):
@@ -24,6 +25,7 @@ class Cotacao(models.Model):
     uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
     nome = models.CharField(max_length=200)
     departamento = models.ForeignKey(Departamento, on_delete=models.SET_NULL, null=True, related_name='cotacoes')
+    fornecedores_convidados = models.ManyToManyField(Supplier, related_name='cotacoes_convidadas')
     data_abertura = models.DateField()
     data_fechamento = models.DateField()
 

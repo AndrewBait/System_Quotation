@@ -5,11 +5,10 @@
     /* Seu CSS específico para a página de login aqui */
 </style>
 
-<div class="login-container">
-    <form class="login-form" action="" method="post">
-        {% csrf_token %}
-        {{ login_form.as_p }}
-        <input type="submit" value="Entrar">
-    </form>
-</div>
+<form method="post" action="{% url 'accounts:login' %}">
+    {% csrf_token %}
+    {{ login_form.as_p }}
+    <input type="hidden" name="next" value="{{ request.GET.next }}">
+    <button type="submit">Login</button>
+</form>
 {% endblock %}

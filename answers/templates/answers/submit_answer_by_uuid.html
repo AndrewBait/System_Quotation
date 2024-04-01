@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+{% extends "base_no_sidebar.html" %}
 
 {% block content %}
 <div class="container mt-4">
@@ -9,10 +9,6 @@
 
     <form method="post" action="{% url 'answers:submit_answers_by_uuid' uuid=cotacao.uuid %}">
         {% csrf_token %}
-        <div class="form-group mb-4">
-            <label for="fornecedor_email">Seu E-mail:</label>
-            <input type="email" name="fornecedor_email" class="form-control" required>
-        </div>
         <div class="table-responsive">
             <table class="table table-hover">
                 <thead class="thead-light">
