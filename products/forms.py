@@ -8,3 +8,6 @@ class ProductModelForm(forms.ModelForm):
         model = Product
         fields = '__all__'    
 
+
+class ProductImportForm(forms.Form):
+    file = forms.FileField(label='Selecione um arquivo CSV/XML')

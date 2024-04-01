@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<produtos>
+    <produto>
+        <codigoEAN>1234567890123</codigoEAN>
+        <nomeDoProduto>Produto Exemplo 1</nomeDoProduto>
+        <marca>Marca A</marca>
+        <foto>http://exemplo.com/foto1.jpg</foto>
+    </produto>
+    <produto>
+        <codigoEAN>2345678901234</codigoEAN>
+        <nomeDoProduto>Produto Exemplo 2</nomeDoProduto>
+        <marca>Marca B</marca>
+        <foto>http://exemplo.com/foto2.jpg</foto>
+    </produto>
+</produtos>

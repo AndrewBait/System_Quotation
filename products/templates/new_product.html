@@ -1,81 +1,93 @@
 {% extends "base.html" %}
 
+{% load static %} 
+
 {% block content %}
 <style>
-  /* Estilo específico para o formulário de cadastro de produto adaptado para modo escuro */
+  .container {
+    max-width: 500px; 
+    margin: 1rem auto;
+  }
+
   .product-form {
-    max-width: 400px;
-    width: 100%;
-    margin: 0 auto;
+    background-color: #343a40;
     padding: 20px;
-    background-color: #343a40; /* Fundo mais escuro */
     border-radius: 8px;
-    box-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
-    color: #fff; /* Texto branco */
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+    color: #dee2e6;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start; /* Alinha os elementos à esquerda */
   }
 
   .product-form label {
-    display: block;
-    margin-bottom: 8px;
-    color: #dee2e6; /* Cor de texto claro para melhor contraste */
+    font-weight: bold;
+    margin-bottom: .5rem;
   }
 
-  .product-form .form-group {
-    margin-bottom: 15px;
+  .product-form .form-group, .form-actions {
+    margin-bottom: 1rem;
+    width: 100%;
+  }
+
+  .product-form input, .product-form select, .product-form textarea, .btn {
+    border-radius: 4px;
+    transition: all 0.3s ease;
+    width: 100%; /* Faz com que os inputs e botões ocupem a largura total do seu container */
   }
 
   .product-form input[type="text"],
-  .product-form input[type="password"],
-  .product-form input[type="email"],
   .product-form input[type="number"],
   .product-form select,
   .product-form textarea {
-    width: 100%;
-    padding: 10px;
-    margin: 8px 0;
-    display: inline-block;
+    background-color: #495057;
+    color: #e9ecef;
     border: 1px solid #ced4da;
-    box-sizing: border-box;
-    border-radius: 4px;
-    background-color: #495057; /* Fundo dos campos mais escuro */
-    color: #e9ecef; /* Texto dos inputs claro */
+    padding: .75rem 1.25rem;
   }
 
-  .product-form input[type="submit"],
-  .btn-info, .btn-secondary {
-    border: none;
-    padding: 12px 20px;
-    font-size: 16px;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: background-color 0.3s ease-in-out;
+  .form-actions {
+    width: 100%; /* Garante que a seção de ações ocupe a largura total */
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start; /* Alinha os botões à esquerda */
   }
 
-  .product-form input[type="submit"] {
-    background-color: #007bff;
+  .form-actions > * {
+    margin-top: 0.5rem;
+  }
+
+  .product-form input[type="submit"], .btn-info, .btn-secondary {
+    font-size: 1rem;
+    padding: .75rem 1.25rem;
     color: #fff;
+    margin-bottom: 5px; 
   }
 
-  .product-form input[type="submit"]:hover {
-    background-color: #0056b3;
+  .product-form input[type="submit"]:hover, .btn-info:hover, .btn-secondary:hover {
+    filter: brightness(90%);
+  }
+
+  .btn-info, .btn-secondary {
+    background-color: #6c757d;
+    margin-right: 5px;
   }
 
   .btn-info {
     background-color: #17a2b8;
-    color: #fff;
   }
 
-  .btn-info:hover {
-    background-color: #138496;
+  .btn .bi {
+    margin-right: 8px;
   }
 
-  .btn-secondary {
-    background-color: #6c757d;
-    color: #fff;
+  .form-actions {
+    text-align: right;
   }
 
-  .btn-secondary:hover {
-    background-color: #545b62;
+  .form-group a {
+    display: inline-block;
+    margin-top: .5rem;
   }
 </style>
 
@@ -95,10 +107,12 @@
     </div>
 
     <div class="form-group">
-      <label for="id_brand">Marca</label>
+      <label for="id_brand">Marca:</label>
       {{ form.brand }}
       {{ form.brand.errors }}
-      <a href="{% url 'products:brand_new' %}" class="btn btn-info">Adicionar Nova Marca</a>
+      <a href="{% url 'products:brand_new' %}" class="btn btn-info">
+        <i class="bi bi-plus-circle-fill"></i>ADICIONAR NOVA MARCA
+      </a>
     </div>
 
     <div class="form-group">
@@ -107,9 +121,17 @@
       {{ form.photo.errors }}
     </div>
 
-    <div class="form-group">
+    <div class="form-actions">
       <input type="submit" value="Cadastrar" class="btn btn-primary">
-      <a href="{% url 'products:products_list' %}" class="btn btn-secondary">Cancelar</a>
+      <a href="{% url 'products:import_products' %}" class="btn btn-secondary">
+        <i class="bi bi-file-earmark-arrow-up"></i> Importar via CSV/XML
+      </a>
+      <a href="{% static 'modelos/modelo_produtos.csv' %}" download="modelo_produtos.csv" class="btn btn-info">
+        <i class="bi bi-download"></i> Baixar Modelo CSV
+      </a>
+      <a href="{% static 'modelos/modelo_produtos.xml' %}" download="modelo_produtos.xml" class="btn btn-info">
+        <i class="bi bi-download"></i> Baixar Modelo XML
+      </a>
     </div>
   </form>
 </div>
