@@ -1,42 +1,41 @@
 {% extends "base_no_sidebar.html" %}
 
 {% block content %}
-<div class="container mt-4">
-    <h2>Responder à Cotação: {{ cotacao.nome }}</h2>
-    <p><strong>Departamento:</strong> {{ cotacao.departamento.nome }}</p>
-    <p><strong>Data de Abertura:</strong> {{ cotacao.data_abertura }}</p>
-    <p><strong>Data de Fechamento:</strong> {{ cotacao.data_fechamento }}</p>
+<div class="container mt-5">
+    <h2 class="mb-4">Responder à Cotação: {{ cotacao.nome }}</h2>
+    <p class="font-weight-bold">Departamento: {{ cotacao.departamento.nome }}</p>
+    <p class="font-weight-bold">Data de Abertura: {{ cotacao.data_abertura }}</p>
+    <p class="font-weight-bold mb-4">Data de Fechamento: {{ cotacao.data_fechamento }}</p>
 
-    <form method="post" action="{% url 'answers:submit_answers_by_uuid' uuid=cotacao.uuid %}">
+    <form method="post" action="{% url 'answers:submit_answers_by_uuid' uuid=cotacao.uuid %}" class="needs-validation" novalidate>
         {% csrf_token %}
-        <div class="table-responsive">
-            <table class="table table-hover">
-                <thead class="thead-light">
-                    <tr>
-                        <th>Código EAN do Produto</th>
-                        <th>Quantidade</th>
-                        <th>Unidade de Medida</th>
-                        <th>Nome do Produto</th>
-                        <th>Preço Proposto</th> 
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for item in cotacao.itens_cotacao.all %}
-                    <tr>
-                        <td>{{ item.produto.ean }}</td>
-                        <td>{{ item.quantidade }}</td>
-                        <td>{{ item.get_tipo_volume_display }}</td>
-                        <td>{{ item.produto.name }}</td>
-                        <td>
-                            <!-- Campo para inserção do preço pelo fornecedor -->
-                            <input type="number" name="price_{{ item.pk }}" class="form-control" step="0.01" min="0" required>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-        <button type="submit" class="btn btn-primary">Enviar Respostas</button>
+        
+        <table class="table table-hover">
+            <thead class="thead-light">
+                <tr>
+                    <th>EAN</th>
+                    <th>Qtd</th>
+                    <th>Volume</th>
+                    <th>Produto</th>
+                    <th>Preço</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in cotacao.itens_cotacao.all %}
+                <tr>
+                    <td>{{ item.produto.ean }}</td>
+                    <td>{{ item.quantidade }}</td>
+                    <td>{{ item.get_tipo_volume_display }}</td>
+                    <td>{{ item.produto.name }}</td>
+                    <td>
+                        <input type="number" name="price_{{ item.pk }}" class="form-control" step="0.01" min="0" required>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        
+        <button type="submit" class="btn btn-primary mt-3">Enviar Respostas</button>
     </form>
 </div>
 {% endblock %}
