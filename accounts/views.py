@@ -4,6 +4,12 @@ from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from django.utils.decorators import method_decorator
 from django.urls import reverse_lazy
+from django.contrib import messages
+
+
+@login_required(login_url='accounts:login')
+def home_view(request):
+    return render(request, 'home.html')
 
 
 @login_required(login_url='accounts:login')
@@ -13,7 +19,7 @@ def register_view(request):
         if user_form.is_valid():
             new_user = user_form.save()
             login(request, new_user) 
-            return redirect('products:products_list')
+            return redirect('home')
     else:
         user_form = UserCreationForm()
     return render(request, 'register.html', {'user_form': user_form})
@@ -26,8 +32,7 @@ def login_view(request):
         user = authenticate(request, username=username, password=password)
         if user is not None:
             login(request, user)
-            next_page = request.POST.get('next') or 'products:products_list'
-            return redirect(next_page)
+            return redirect('accounts:home')
         else:
             messages.error(request, "Usuário ou senha inválidos.")
     else:
