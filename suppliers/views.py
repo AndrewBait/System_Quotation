@@ -18,31 +18,31 @@ class SupplierCreateView(LoginRequiredMixin, CreateView):
     success_url = reverse_lazy('suppliers:supplier_list')
 
     def form_valid(self, form):
-        # Crie primeiro o usuário
         user = User.objects.create(
             username=form.cleaned_data['email'],
             email=form.cleaned_data['email'],
-            password=make_password('resposta')  # Use uma senha segura
+            password=make_password('resposta')  # Preciso uma senha segura ou mudar depois isso
         )
-        # Agora, salve o fornecedor com esse usuário
+
         supplier = form.save(commit=False)
         supplier.user = user
         supplier.save()
-        return redirect('suppliers:supplier_list')  # Substitua pela sua URL de sucesso
+        return redirect('suppliers:supplier_list')  
 
-@method_decorator(login_required(login_url='login'), name='dispatch')#decorator
+
+@method_decorator(login_required(login_url='login'), name='dispatch')
 class SupplierListView(ListView):
     model = Supplier
     template_name = 'suppliers/supplier_list.html'
 
 
-@method_decorator(login_required(login_url='login'), name='dispatch')#decorator
+@method_decorator(login_required(login_url='login'), name='dispatch')
 class SupplierDetailView(DetailView):
     model = Supplier
     template_name = 'suppliers/supplier_detail.html'
 
 
-@method_decorator(login_required(login_url='login'), name='dispatch')#decorator
+@method_decorator(login_required(login_url='login'), name='dispatch')
 class SupplierUpdateView(UpdateView):
     model = Supplier
     form_class = SupplierForm
@@ -50,7 +50,7 @@ class SupplierUpdateView(UpdateView):
     success_url = reverse_lazy('suppliers:supplier_list') 
 
 
-@method_decorator(login_required(login_url='login'), name='dispatch')#decorator
+@method_decorator(login_required(login_url='login'), name='dispatch')
 class SupplierDeleteView(DeleteView):
     model = Supplier
     template_name = 'suppliers/supplier_confirm_delete.html'
@@ -59,9 +59,6 @@ class SupplierDeleteView(DeleteView):
 
 def create_supplier(request):
     if request.method == 'POST':
-        # Crie o usuário baseado nos dados recebidos
         user = User.objects.create_user(username=request.POST['email'], password=request.POST['senha'])
-        # Crie o fornecedor e associe ao usuário
         supplier = Supplier(user=user)
         supplier.save()
-        # Redirecione ou retorne uma resposta adequada

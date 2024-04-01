@@ -5,11 +5,13 @@ from validate_docbr import CNPJ
 from django.contrib.auth.models import User
 from django.conf import settings
 
+
 # Função de validação do CNPJ
 def validate_cnpj(value):
     cnpj_validator = CNPJ()
     if not cnpj_validator.validate(value):
         raise ValidationError("CNPJ inválido.")
+
 
 class Supplier(models.Model):
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)

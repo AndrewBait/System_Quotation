@@ -1,14 +1,62 @@
 {% extends 'base_login.html' %}
 
+{% block title %}Login - SISC - SISTEMA DE COTAÇÃO{% endblock %}
+
 {% block content %}
 <style>
-    /* Seu CSS específico para a página de login aqui */
+    html, body {
+        height: 100%;
+        margin: 0;
+    }
+    .login-container {
+        height: 80vh; /* Ajustado para 100vh para melhor acomodação */
+        display: flex;
+        flex-direction: column; /* Muda a direção do flex para coluna */
+        align-items: center;
+        justify-content: center;
+    }
+    .login-title {
+        margin-bottom: 1rem; /* Espaçamento entre o título e o formulário */
+        color: #ffffff; /* Cor branca para o título, considerando o tema escuro */
+        text-align: center; /* Centraliza o título */
+        font-size: 24px; /* Tamanho do texto */
+    }
+    .login-form {   
+        padding: 2rem;
+        background-color: #343a40;
+        border-radius: 0.5rem;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        width: 100%;
+        max-width: 400px;
+    }
+    .login-form .btn-primary {
+        background-color: #007bff;
+        border: none;
+        width: 100%;
+    }
+    .login-form input[type='text'], .login-form input[type='password'] {
+        margin-bottom: 1rem;
+    }
+    .login-form label {
+        color: #fff;
+    }
 </style>
 
-<form method="post" action="{% url 'accounts:login' %}">
-    {% csrf_token %}
-    {{ login_form.as_p }}
-    <input type="hidden" name="next" value="{{ request.GET.next }}">
-    <button type="submit">Login</button>
-</form>
+<div class="login-container">
+    <div class="login-title">SISC - SISTEMA DE COTAÇÃO</div>
+    <form class="login-form" method="post" action="{% url 'accounts:login' %}">
+        {% csrf_token %}
+        {% for field in login_form %}
+            <div class="form-group">
+                <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                <input class="form-control" id="{{ field.id_for_label }}" type="{{ field.field.widget.input_type }}" name="{{ field.name }}" placeholder="{{ field.help_text }}" {% if field.errors %}style="border-color: red;"{% endif %}>
+                {% if field.errors %}
+                    <div class="text-danger">{{ field.errors.as_text }}</div>
+                {% endif %}
+            </div>
+        {% endfor %}
+        <input type="hidden" name="next" value="{{ request.GET.next }}">
+        <button type="submit" class="btn btn-primary">Login</button>
+    </form>
+</div>
 {% endblock %}

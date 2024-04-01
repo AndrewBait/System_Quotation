@@ -12,7 +12,7 @@ def register_view(request):
         user_form = UserCreationForm(request.POST)
         if user_form.is_valid():
             new_user = user_form.save()
-            login(request, new_user)  # Loga o usuário recém-criado automaticamente
+            login(request, new_user) 
             return redirect('products:products_list')
     else:
         user_form = UserCreationForm()

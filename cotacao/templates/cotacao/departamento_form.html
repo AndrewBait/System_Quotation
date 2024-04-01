@@ -5,11 +5,18 @@
     <h2>Criar Novo Departamento</h2>
     <form method="post">
         {% csrf_token %}
-        {{ form.as_p }}
+        {% for field in form %}
+            <div class="mb-3">
+                <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+                <input type="{{ field.field.widget.input_type }}" class="form-control" id="{{ field.id_for_label }}" name="{{ field.name }}" placeholder="Insira o {{ field.label|lower }}">
+                {% if field.help_text %}
+                <div class="form-text">{{ field.help_text }}</div>
+                {% endif %}
+            </div>
+        {% endfor %}
         <button type="submit" class="btn btn-primary">Salvar</button>
     </form>
 </div>
-
 
 <div class="mt-5">
     <h3>Departamentos existentes</h3>
@@ -17,22 +24,52 @@
         {% for departamento in departamentos %}
             <li class="list-group-item d-flex justify-content-between align-items-center">
                 {{ departamento.nome }}
-                <form method="post">
-                    {% csrf_token %}
-                    <!-- Campo oculto para identificar a ação de exclusão -->
-                    <input type="hidden" name="delete" value="{{ departamento.id }}">
-                    <button type="submit" class="btn btn-danger btn-sm">Excluir</button>
-                </form>
+                <button type="button" class="btn btn-outline-danger btn-sm" data-bs-toggle="modal" data-bs-target="#deleteModal{{ departamento.id }}" style="transition: all 0.3s;">
+                    <i class="bi bi-trash-fill"></i>
+                </button>
+
+                <!-- Hover Effect no CSS para mudar cor do botão ao passar o mouse -->
+                <style>
+                    .btn-outline-danger:hover {
+                        color: #fff;
+                        background-color: #dc3545;
+                        border-color: #dc3545;
+                    }
+                </style>
+
+                <!-- Modal -->
+                <div class="modal fade" id="deleteModal{{ departamento.id }}" tabindex="-1" aria-labelledby="deleteModalLabel{{ departamento.id }}" aria-hidden="true">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="deleteModalLabel{{ departamento.id }}">Confirmar Exclusão</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                                Tem certeza que deseja excluir {{ departamento.nome }}?
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                <form method="post" style="display: inline;">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="delete" value="{{ departamento.id }}">
+                                    <button type="submit" class="btn btn-danger">Excluir</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </li>
         {% endfor %}    
     </ul>
 </div>
 
 {% if messages %}
-<div class="alert-container">
+<div class="alert-container mt-4">
     {% for message in messages %}
-    <div class="alert alert-{{ message.tags }}">
+    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
         {{ message }}
+        <button type="button" class="btn-close" data-dismiss="alert" aria-label="Close"></button>
     </div>
     {% endfor %}
 </div>

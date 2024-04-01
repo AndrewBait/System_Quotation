@@ -2,13 +2,12 @@
 
 {% block content %}
 <style>
-  /* Estilos para melhorar a clareza e a estética da lista de produtos */
+  /* Estilos base */
   .product-item {
     display: flex;
     align-items: center;
     padding: 1rem;
     margin-bottom: 1rem;
-    
     border-radius: 8px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     transition: box-shadow 0.3s ease;
@@ -20,13 +19,18 @@
     flex-shrink: 0;
     width: 60px;
     height: 60px;
-    background-color: #fff;
     border: 1px solid #ddd;
     border-radius: 8px;
+    margin-right: 15px;
     display: flex;
     justify-content: center;
     align-items: center;
-    margin-right: 15px;
+    overflow: hidden;
+  }
+  .product-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
   }
   .product-info {
     flex-grow: 1;
@@ -36,27 +40,32 @@
     align-items: center;
     gap: 10px;
   }
-  .action-buttons a {
-    display: inline-flex;
-    justify-content: center;
-    align-items: center;
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    color: white;
+  .action-buttons a, .btn-outline-success, .btn-primary {
+    transition: transform 0.2s ease, background-color 0.2s ease;
   }
-  .edit-btn {
-    background-color: #007bff;
-  }
-  .delete-btn {
-    background-color: #dc3545;
-  }
-  .edit-btn:hover, .delete-btn:hover {
+  .action-buttons a:hover, .btn-primary:hover {
+    transform: scale(1.1);
     opacity: 0.85;
+  }
+  .btn-outline-success:hover {
+    background-color: #28a745;
+    color: white;
   }
   .btn-icon {
     width: 20px;
     height: 20px;
+  }
+  /* Estilos para a busca */
+  .form-control {
+    box-shadow: none;
+    border-color: #007bff;
+  }
+  .form-control:focus {
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+  }
+  p {
+    text-align: center;
+    color: #6c757d;
   }
 </style>
 
@@ -87,10 +96,10 @@
             <small class="text-muted">Código EAN: {{ product.ean }}</small>
           </div>
           <div class="action-buttons">
-            <a href="{% url 'products:product_update' product.pk %}" class="edit-btn" title="Editar">
+            <a href="{% url 'products:product_update' product.pk %}" class="btn btn-primary" title="Editar" aria-label="Editar {{ product.name }}">
               <i class="bi bi-pencil btn-icon"></i>
             </a>
-            <a href="{% url 'products:product_delete' product.pk %}" class="delete-btn" title="Excluir">
+            <a href="{% url 'products:product_delete' product.pk %}" class="btn btn-danger" title="Excluir" aria-label="Excluir {{ product.name }}">
               <i class="bi bi-trash btn-icon"></i>
             </a>
           </div>

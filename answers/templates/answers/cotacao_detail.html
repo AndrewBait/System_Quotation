@@ -5,12 +5,10 @@
     <h2>Responder à Cotação: {{ cotacao.nome }}</h2>
     <form method="post">
         {% csrf_token %}
-        <!-- Inclui o campo para o e-mail do fornecedor fora do loop -->
         <div class="form-group">
             <label for="fornecedor_email">Seu E-mail:</label>
             <input type="email" name="fornecedor_email" class="form-control" required>
         </div>
-        <!-- Loop pelos itens da cotação e seus formulários -->
         {% for item, form in item_form_pairs %}
             <div>
                 <label>{{ item.produto.name }}:</label>

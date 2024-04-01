@@ -32,7 +32,7 @@ class CotacaoCreateView(CreateView):
 
 class CotacaoDeleteView(DeleteView):
     model = Cotacao
-    success_url = reverse_lazy('cotacao:cotacao_list')  # Redirect to the list after deletion
+    success_url = reverse_lazy('cotacao:cotacao_list')
 
 
 class AddItemToCotacaoView(CreateView):
@@ -104,13 +104,9 @@ class DepartamentoDeleteView(DeleteView):
 
 
 def enviar_cotacao_view(request, pk):
-    # Busca a cotação pelo pk, isso permanece porque a função é chamada com pk
+    # Busca a cotação pelo pk
     cotacao = get_object_or_404(Cotacao, pk=pk)
     fornecedores = Supplier.objects.all()
-
-    # Você constrói o link de resposta aqui para o e-mail, usando 'uuid'
-    # Isso está correto e pode permanecer assim
-
 
     if request.method == 'POST':
         selected_fornecedores = request.POST.getlist('fornecedores')
@@ -119,15 +115,13 @@ def enviar_cotacao_view(request, pk):
 
             link_resposta = request.build_absolute_uri(
                 reverse('answers:submit_answers_by_uuid', kwargs={'uuid': cotacao.uuid})
-            )            
-            
+            )           
             # Criação do contexto para o template de e-mail
             context = {
                 'fornecedor': fornecedor,
                 'cotacao': cotacao,
-                'link_resposta': link_resposta  # Aqui usamos o link que já construímos anteriormente
-            }
-            
+                'link_resposta': link_resposta 
+            }            
             # Renderiza o conteúdo do e-mail
             html_content = render_to_string('emails/enviar_cotacao.html', context)
             text_content = strip_tags(html_content)
@@ -141,10 +135,6 @@ def enviar_cotacao_view(request, pk):
                 html_message=html_content,
                 fail_silently=False,
             )
-
-        # Após enviar os e-mails, redireciona para a lista de cotações
-        # A função de redirect aqui está correta e não precisa ser mudada
         return redirect('cotacao:cotacao_list')
-
     # Renderiza a página para enviar as cotações caso o método não seja POST
     return render(request, 'cotacao/enviar_cotacao.html', {'cotacao': cotacao, 'fornecedores': fornecedores})
