@@ -19,7 +19,8 @@
                     <td>{{ item.quantidade }}</td>
                     <td>
                         {% for resposta in respostas %}
-                            {{ resposta.supplier.name }}: {{ resposta.price }}<br>
+                            <strong>{{ resposta.supplier.name }}</strong><br>
+                            {{ resposta.price }}<br>
                         {% empty %}
                             Sem respostas.
                         {% endfor %}

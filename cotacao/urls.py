@@ -17,4 +17,5 @@ urlpatterns = [
     path('departamento/new/', DepartamentoCreateView.as_view(), name='departamento_new'),
     path('departamento/<int:pk>/delete/', DepartamentoDeleteView.as_view(), name='departamento_delete'),
     path('cotacao/<int:pk>/enviar/', enviar_cotacao_view, name='enviar_cotacao'),
+    path('<int:pk>/delete/', views.CotacaoDeleteView.as_view(), name='cotacao_delete'),
 ]

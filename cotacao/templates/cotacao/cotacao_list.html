@@ -6,20 +6,32 @@
     {% if cotacoes %}
     <div class="list-group">
         {% for cotacao in cotacoes %}
-        <div class="list-group-item d-flex justify-content-between align-items-center">
-            <a href="{% url 'cotacao:cotacao_detail' cotacao.pk %}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+        <div class="list-group-item d-flex justify-content-between align-items-center py-3">
+            <div class="flex-grow-1 ms-3">
+                <a href="{% url 'cotacao:cotacao_detail' cotacao.pk %}" class="h5 text-decoration-none">
+                    {{ cotacao.nome }}
+                </a>
+                <span class="badge bg-primary ms-2">{{ cotacao.departamento.nome }}</span>
+            </div>
+            <div>
+                <a href="{% url 'cotacao:enviar_cotacao' cotacao.pk %}" class="btn btn-outline-primary btn-sm mx-1" aria-label="Enviar para os Fornecedores">
+                    <i class="bi bi-send"></i>Enviar para os Fornecedores
+                </a>
+                <a href="{% url 'cotacao:cotacao_delete' cotacao.pk %}" class="btn btn-outline-danger btn-sm mx-1" aria-label="Delete">
+                    <i class="bi bi-trash"></i>                
+                </a>
 
-                {{ cotacao.nome }}
-                <span class="badge badge-primary badge-pill">{{ cotacao.departamento.nome }}</span>
-            </a>
-            <!-- Adicione este botão para cada cotação -->
-            <a href="{% url 'cotacao:enviar_cotacao' cotacao.pk %}" class="btn btn-secondary btn-sm">Enviar para os Fornecedores</a>
+            </div>
         </div>
         {% endfor %}
     </div>
     {% else %}
-    <p>Nenhuma cotação encontrada.</p>
+    <div class="alert alert-info text-center" role="alert">
+        Nenhuma cotação encontrada.
+    </div>
     {% endif %}
-    <a href="{% url 'cotacao:cotacao_new' %}" class="btn btn-primary mt-3">Criar nova cotação</a>
+    <a href="{% url 'cotacao:cotacao_new' %}" class="btn btn-primary mt-3" aria-label="Criar nova cotação">
+        <i class="bi bi-plus-circle"></i> Criar nova cotação
+    </a>
 </div>
 {% endblock %}

@@ -30,6 +30,11 @@ class CotacaoCreateView(CreateView):
     success_url = reverse_lazy('cotacao:cotacao_list')
 
 
+class CotacaoDeleteView(DeleteView):
+    model = Cotacao
+    success_url = reverse_lazy('cotacao:cotacao_list')  # Redirect to the list after deletion
+
+
 class AddItemToCotacaoView(CreateView):
     model = ItemCotacao
     form_class = ItemCotacaoForm
