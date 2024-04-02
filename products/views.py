@@ -23,13 +23,35 @@ class ProductListView(ListView):
     model = Product
     template_name = 'products.html'
     context_object_name = 'products'
+    paginate_by = 10
 
     def get_queryset(self):
-        products = super().get_queryset().order_by('name')
+        queryset = super().get_queryset().order_by('name')
         search = self.request.GET.get('search')
+        department = self.request.GET.get('department')
+        category = self.request.GET.get('category')
+        subcategory = self.request.GET.get('subcategory')
+        status = self.request.GET.get('status')
+
         if search:
-            products = products.filter(name__icontains=search)
-        return products
+            queryset = queryset.filter(name__icontains=search)
+        if department:
+            queryset = queryset.filter(department__id=department)
+        if category:
+            queryset = queryset.filter(category__id=category)
+        if subcategory:
+            queryset = queryset.filter(subcategory__id=subcategory)
+        if status is not None:
+            queryset = queryset.filter(status=status == 'True')
+
+        return queryset
+
+    # def get_queryset(self):
+    #     products = super().get_queryset().order_by('name')
+    #     search = self.request.GET.get('search')
+    #     if search:
+    #         products = products.filter(name__icontains=search)
+    #     return products
     
 
 class ProductDetailView(DetailView):

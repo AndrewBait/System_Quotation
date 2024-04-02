@@ -1,138 +1,65 @@
 {% extends "base.html" %}
 
-{% load static %} 
+{% load static %}
+{% load widget_tweaks %}
 
 {% block content %}
-<style>
-  .container {
-    max-width: 500px; 
-    margin: 1rem auto;
-  }
-
-  .product-form {
-    background-color: #343a40;
-    padding: 20px;
-    border-radius: 8px;
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
-    color: #dee2e6;
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start; /* Alinha os elementos à esquerda */
-  }
-
-  .product-form label {
-    font-weight: bold;
-    margin-bottom: .5rem;
-  }
-
-  .product-form .form-group, .form-actions {
-    margin-bottom: 1rem;
-    width: 100%;
-  }
-
-  .product-form input, .product-form select, .product-form textarea, .btn {
-    border-radius: 4px;
-    transition: all 0.3s ease;
-    width: 100%; /* Faz com que os inputs e botões ocupem a largura total do seu container */
-  }
-
-  .product-form input[type="text"],
-  .product-form input[type="number"],
-  .product-form select,
-  .product-form textarea {
-    background-color: #495057;
-    color: #e9ecef;
-    border: 1px solid #ced4da;
-    padding: .75rem 1.25rem;
-  }
-
-  .form-actions {
-    width: 100%; /* Garante que a seção de ações ocupe a largura total */
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start; /* Alinha os botões à esquerda */
-  }
-
-  .form-actions > * {
-    margin-top: 0.5rem;
-  }
-
-  .product-form input[type="submit"], .btn-info, .btn-secondary {
-    font-size: 1rem;
-    padding: .75rem 1.25rem;
-    color: #fff;
-    margin-bottom: 5px; 
-  }
-
-  .product-form input[type="submit"]:hover, .btn-info:hover, .btn-secondary:hover {
-    filter: brightness(90%);
-  }
-
-  .btn-info, .btn-secondary {
-    background-color: #6c757d;
-    margin-right: 5px;
-  }
-
-  .btn-info {
-    background-color: #17a2b8;
-  }
-
-  .btn .bi {
-    margin-right: 8px;
-  }
-
-  .form-actions {
-    text-align: right;
-  }
-
-  .form-group a {
-    display: inline-block;
-    margin-top: .5rem;
-  }
-</style>
-
-<div class="container">
-  <form action="" method="post" enctype="multipart/form-data" class="product-form">
-    {% csrf_token %}
-    <div class="form-group">
-      <label for="id_ean">EAN:</label>
-      {{ form.ean }}
-      {{ form.ean.errors }}
-    </div>
-
-    <div class="form-group">
-      <label for="id_name">Nome:</label>
-      {{ form.name }}
-      {{ form.name.errors }}
-    </div>
-
-    <div class="form-group">
-      <label for="id_brand">Marca:</label>
-      {{ form.brand }}
-      {{ form.brand.errors }}
-      <a href="{% url 'products:brand_new' %}" class="btn btn-info">
-        <i class="bi bi-plus-circle-fill"></i>ADICIONAR NOVA MARCA
-      </a>
-    </div>
-
-    <div class="form-group">
-      <label for="id_photo">Imagem:</label>
-      {{ form.photo }}
-      {{ form.photo.errors }}
-    </div>
-
-    <div class="form-actions">
-      <input type="submit" value="Cadastrar" class="btn btn-primary">
-      <a href="{% url 'products:import_products' %}" class="btn btn-secondary">
-        <i class="bi bi-file-earmark-arrow-up"></i> Importar via CSV/XML
-      </a>
-      <a href="{% static 'modelos/modelo_produtos.csv' %}" download="modelo_produtos.csv" class="btn btn-info">
-        <i class="bi bi-download"></i> Baixar Modelo CSV
-      </a>
-      <a href="{% static 'modelos/modelo_produtos.xml' %}" download="modelo_produtos.xml" class="btn btn-info">
-        <i class="bi bi-download"></i> Baixar Modelo XML
-      </a>
-    </div>
-  </form>
+<div class="container-fluid mt-4">
+    <form action="" method="post" enctype="multipart/form-data" class="needs-validation" novalidate>
+        {% csrf_token %}
+        <div class="row g-3">
+            <!-- Aumento da largura das colunas para telas grandes -->
+            <div class="col-lg-4">
+                <div class="mb-3">
+                    <label for="id_ean" class="form-label">EAN:</label>
+                    {{ form.ean|add_class:'form-control' }}
+                    {{ form.ean.errors }}
+                </div>
+                <div class="mb-3">
+                    <label for="id_name" class="form-label">Nome:</label>
+                    {{ form.name|add_class:'form-control' }}
+                    {{ form.name.errors }}
+                </div>
+                <div class="mb-3">
+                    <label for="id_brand" class="form-label">Marca:</label>
+                    {{ form.brand|add_class:'form-control' }}
+                    {{ form.brand.errors }}
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <div class="mb-3">
+                    <label for="id_department" class="form-label">Departamento:</label>
+                    {{ form.department|add_class:'form-control' }}
+                    {{ form.department.errors }}
+                </div>
+                <div class="mb-3">
+                    <label for="id_category" class="form-label">Categoria:</label>
+                    {{ form.category|add_class:'form-control' }}
+                    {{ form.category.errors }}
+                </div>
+                <div class="mb-3">
+                    <label for="id_subcategory" class="form-label">Subcategoria:</label>
+                    {{ form.subcategory|add_class:'form-control' }}
+                    {{ form.subcategory.errors }}
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <div class="mb-3">
+                    <label for="id_status" class="form-label">Status:</label>
+                    {{ form.status|add_class:'form-control' }}
+                    {{ form.status.errors }}
+                </div>
+                <div class="mb-3">
+                    <label for="id_photo" class="form-label">Imagem:</label>
+                    {{ form.photo|add_class:'form-control' }}
+                    {{ form.photo.errors }}
+                </div>
+            </div>
+        </div>
+        <div class="text-end mt-4">
+            <input type="submit" value="Cadastrar" class="btn btn-primary me-2">
+            <!-- Botões adicionais -->
+        </div>
+    </form>
 </div>
 {% endblock %}
