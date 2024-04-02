@@ -10,6 +10,8 @@ import csv
 import xml.etree.ElementTree as ET
 from .forms import ProductImportForm
 from django.shortcuts import render, redirect
+from django.http import JsonResponse
+from django.core import serializers
 
 
 class BrandCreateView(CreateView):
@@ -23,28 +25,21 @@ class ProductListView(ListView):
     model = Product
     template_name = 'products.html'
     context_object_name = 'products'
-    paginate_by = 10
 
     def get_queryset(self):
         queryset = super().get_queryset().order_by('name')
-        search = self.request.GET.get('search')
-        department = self.request.GET.get('department')
-        category = self.request.GET.get('category')
-        subcategory = self.request.GET.get('subcategory')
-        status = self.request.GET.get('status')
-
+        search = self.request.GET.get('search', '')
         if search:
             queryset = queryset.filter(name__icontains=search)
-        if department:
-            queryset = queryset.filter(department__id=department)
-        if category:
-            queryset = queryset.filter(category__id=category)
-        if subcategory:
-            queryset = queryset.filter(subcategory__id=subcategory)
-        if status is not None:
-            queryset = queryset.filter(status=status == 'True')
-
         return queryset
+
+    def get(self, request, *args, **kwargs):
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            self.object_list = self.get_queryset()
+            products_json = serializers.serialize('json', self.object_list)
+            return JsonResponse(products_json, safe=False)
+        else:
+            return super().get(request, *args, **kwargs)
 
     # def get_queryset(self):
     #     products = super().get_queryset().order_by('name')
