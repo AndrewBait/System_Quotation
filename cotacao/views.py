@@ -1,7 +1,7 @@
 from django.contrib import messages
 from django.core.exceptions import ValidationError
 from django.shortcuts import get_object_or_404, redirect, render
-from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
+from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView, TemplateView
 from django.urls import reverse_lazy, reverse
 from django.views.generic.edit import CreateView
 from .models import Departamento, Cotacao, ItemCotacao
@@ -17,10 +17,20 @@ class CotacaoListView(ListView):
     template_name = 'cotacao/cotacao_list.html'
     context_object_name = 'cotacoes'
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['show_cotacao_tabs'] = True  # Adiciona a variável ao contexto
+        return context
+
 
 class CotacaoDetailView(DetailView):
     model = Cotacao
     template_name = 'cotacao/cotacao_detail.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['show_cotacao_tabs'] = True
+        return context
 
 
 class CotacaoCreateView(CreateView):
@@ -28,6 +38,11 @@ class CotacaoCreateView(CreateView):
     form_class = CotacaoForm
     template_name = 'cotacao/cotacao_form.html'
     success_url = reverse_lazy('cotacao:cotacao_list')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['show_cotacao_tabs'] = True
+        return context
 
 
 class CotacaoDeleteView(DeleteView):

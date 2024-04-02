@@ -16,19 +16,20 @@
             {% if user.is_authenticated %}
                 {% include 'components/_sidebar.html' %}
                 <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
-                    <!-- Abas para Navegação, visíveis apenas para usuários autenticados -->
-                    <ul class="nav nav-tabs">
-                      <li class="nav-item">
-                        <a class="nav-link" href="{% url 'cotacao:cotacao_new' %}">Criar Cotação</a>
+                    {% if show_cotacao_tabs %}  
+                      <ul class="nav nav-tabs">
+                        <li class="nav-item">
+                          <a class="nav-link" href="{% url 'cotacao:cotacao_new' %}">Criar Cotação</a>
+                          </li>
+                        <li class="nav-item">
+                          <a class="nav-link" aria-current="page" href="{% url 'cotacao:cotacao_list' %}">Listar Cotações</a>
                         </li>
-                      <li class="nav-item">
-                        <a class="nav-link" aria-current="page" href="{% url 'cotacao:cotacao_list' %}">Listar Cotações</a>
-                      </li>
 
-                      <li class="nav-item">
-                        <a class="nav-link" href="{% url 'answers:cotacao_respostas_list' %}">Respostas</a>
-                      </li>
-                    </ul>
+                        <li class="nav-item">
+                          <a class="nav-link" href="{% url 'answers:cotacao_respostas_list' %}">Respostas</a>
+                        </li>
+                      </ul>
+                    {% endif %}
             {% else %}
                 <main class="col-12 px-md-4">
                     <!-- Aviso ou conteúdo alternativo para usuários não autenticados -->

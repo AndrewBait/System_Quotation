@@ -147,6 +147,8 @@ class CotacaoRespostasListView(ListView):
     template_name = 'answers/cotacao_respostas_list.html'
     context_object_name = 'cotacoes'
 
+    
+
     def get_queryset(self):
         return Cotacao.objects.prefetch_related(
             Prefetch('itens_cotacao__answers', queryset=Answer.objects.select_related('supplier'))
@@ -172,6 +174,7 @@ class CotacaoRespostasDetailView(DetailView):
     model = Cotacao
     template_name = 'answers/cotacao_respostas_detail.html'
     context_object_name = 'cotacao'
+    
 
     def get_object(self, queryset=None):
         return get_object_or_404(Cotacao, uuid=self.kwargs['uuid'])
