@@ -4,14 +4,14 @@
 {% load widget_tweaks %}
 
 {% block content %}
-<div class="container-fluid mt-4">
+<div class="container-fluid mt-4">  
     <form action="" method="post" enctype="multipart/form-data" class="needs-validation" novalidate>
         {% csrf_token %}
         <div class="row g-3">
             <!-- Aumento da largura das colunas para telas grandes -->
             <div class="col-lg-4">
                 <div class="mb-3">
-                    <label for="id_ean" class="form-label">EAN:</label>
+                    <label for="id_ean" class="form-label">Codigo de barras EAN:</label>
                     {{ form.ean|add_class:'form-control' }}
                     {{ form.ean.errors }}
                 </div>

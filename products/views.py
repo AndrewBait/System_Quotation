@@ -12,6 +12,10 @@ from .forms import ProductImportForm
 from django.shortcuts import render, redirect
 from django.http import JsonResponse
 from django.core import serializers
+from dal import autocomplete
+from django.db.models import Q
+from .models import Category, Subcategory
+from cotacao.models import Departamento
 
 
 class BrandCreateView(CreateView):
@@ -142,3 +146,26 @@ def handle_xml_upload(f):
             brand=brand,
             photo=elem.find('foto').text if elem.find('foto') is not None else None  # Assume que 'foto' é um URL ou caminho válido para a imagem
         )
+
+
+class CategoryAutocomplete(autocomplete.Select2QuerySetView):
+    def get_queryset(self):
+        department_id = self.forwarded.get('department', None)
+        if department_id:
+            return Category.objects.filter(department_id=department_id)
+        else:
+            return Category.objects.none()
+
+
+class SubcategoryAutocomplete(autocomplete.Select2QuerySetView):
+    def get_queryset(self):
+        category_id = self.forwarded.get('category', None)
+        qs = Subcategory.objects.all()
+
+        if category_id:
+            qs = qs.filter(category_id=category_id)
+
+        if self.q:
+            qs = qs.filter(name__icontains=self.q)
+
+        return qs

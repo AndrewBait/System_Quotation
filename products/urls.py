@@ -1,6 +1,8 @@
 from django.urls import path
 from .views import ProductListView, NewProductCreateView, ProductDetailView, ProductUpdatView, ProductDeleteView, BrandCreateView
-from .views import import_products
+from .views import import_products, CategoryAutocomplete, SubcategoryAutocomplete
+from django.urls import path
+
 
 app_name = 'products'
 
@@ -12,4 +14,9 @@ urlpatterns = [
     path('<int:pk>/delete/', ProductDeleteView.as_view(), name='product_delete'),
     path('brands/new/', BrandCreateView.as_view(), name='brand_new'),
     path('import/', import_products, name='import_products'),
+    path('category-autocomplete/', CategoryAutocomplete.as_view(), name='category-autocomplete'),
+    path('subcategory-autocomplete/', SubcategoryAutocomplete.as_view(), name='subcategory-autocomplete'),
+
+
+    
 ]

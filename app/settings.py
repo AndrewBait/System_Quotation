@@ -39,8 +39,12 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'widget_tweaks',
 
+    #minhas libs
+    'widget_tweaks',
+    'dal',
+    'dal_select2',
+    #minhas apps
     'products',
     'accounts',
     'suppliers',
@@ -77,6 +81,7 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'app.wsgi.application'
+
 
 
 # Database

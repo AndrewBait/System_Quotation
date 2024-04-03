@@ -1,5 +1,6 @@
 from django.db import models
 from django.core.exceptions import ValidationError
+from cotacao.models import Departamento
 
 
 class Brand(models.Model):
@@ -8,18 +9,11 @@ class Brand(models.Model):
     name = models.CharField(max_length=200)
 
     def __str__(self):
-        return self.name
+        return self.name   
     
-
-class Department(models.Model):
-    name = models.CharField(max_length=200)
-
-    def __str__(self):
-        return self.name
-
-
+    
 class Category(models.Model):
-    department = models.ForeignKey(Department, on_delete=models.CASCADE, related_name='categories')
+    department = models.ForeignKey(Departamento, on_delete=models.CASCADE, related_name='categories')
     name = models.CharField(max_length=200)
 
     def __str__(self):
@@ -40,7 +34,7 @@ class Product(models.Model):
     ean = models.CharField(max_length=13, unique=True, blank=True, null=True)  # EAN não é mais obrigatório
     name = models.CharField(max_length=255)
     brand = models.ForeignKey(Brand, on_delete=models.PROTECT, related_name='products', blank=True, null=True)
-    department = models.ForeignKey(Department, on_delete=models.PROTECT, related_name='products', blank=True, null=True)
+    department = models.ForeignKey(Departamento, on_delete=models.PROTECT, related_name='products', blank=True, null=True)
     category = models.ForeignKey(Category, on_delete=models.PROTECT, related_name='products', blank=True, null=True)
     subcategory = models.ForeignKey(Subcategory, on_delete=models.PROTECT, related_name='products', blank=True, null=True)
     status = models.BooleanField(default=True)  # True para ativo, False para inativo

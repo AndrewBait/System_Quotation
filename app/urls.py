@@ -7,10 +7,11 @@ from django.conf.urls.static import static
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('products/', include(('products.urls', 'products'), namespace='product')), 
     path('accounts/', include('accounts.urls', namespace='accounts')),
     path('products/', include('products.urls')),
     path('suppliers/', include('suppliers.urls')),
     path('cotacoes/', include('cotacao.urls', namespace='cotacao')),
-    path('answers/', include('answers.urls', namespace='answers')),  # Inclua esta linha
-    path('', RedirectView.as_view(url='/accounts/login/', permanent=True), name='home'),  
+    path('answers/', include('answers.urls', namespace='answers')), 
+    path('', RedirectView.as_view(url='/accounts/login/', permanent=True), name='home'), 
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
