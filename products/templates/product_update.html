@@ -99,5 +99,55 @@
                 });
             });
     });
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const departmentSelect = document.getElementById('id_department');
+        const categorySelect = document.getElementById('id_category');
+        const subcategorySelect = document.getElementById('id_subcategory');
+
+        if (departmentSelect.value) {
+            fetchCategories(departmentSelect.value, true);
+        }
+
+        departmentSelect.addEventListener('change', function() {
+            fetchCategories(this.value, false);
+        });
+
+        categorySelect.addEventListener('change', function() {
+            fetchSubcategories(this.value);
+        });
+
+        function fetchCategories(departmentId, initialLoad) {
+            fetch(`/products/get-categories/?department_id=${departmentId}`)
+                .then(response => response.json())
+                .then(data => {
+                    resetSelect(categorySelect, initialLoad);
+                    fillSelect(categorySelect, data);
+                    if (initialLoad) fetchSubcategories(categorySelect.value);
+                });
+        }
+
+        function fetchSubcategories(categoryId) {
+            fetch(`/products/get-subcategories/?category_id=${categoryId}`)
+                .then(response => response.json())
+                .then(data => {
+                                        fillSelect(subcategorySelect, data);
+                });
+        }
+
+        function resetSelect(selectElement, keepExisting) {
+            if (!keepExisting) {
+                selectElement.innerHTML = '<option value="">---------</option>';
+            }
+        }
+
+        function fillSelect(selectElement, data) {
+            data.forEach(function(item) {
+                const option = new Option(item.name, item.id, false, selectElement.value === item.id.toString());
+                selectElement.appendChild(option);
+            });
+        }
+    });
+
 </script>
 {% endblock %}

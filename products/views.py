@@ -17,8 +17,6 @@ from .models import Category, Subcategory
 from django.http import JsonResponse
 
 
-
-
 class BrandCreateView(CreateView):
     model = Brand
     fields = ['name']
@@ -64,12 +62,36 @@ class NewProductCreateView(CreateView):
     template_name = 'new_product.html'
     success_url = '/products/'
 
+    def form_valid(self, form):
+        self.object = form.save(commit=False)
+        # Aqui, você pode adicionar qualquer lógica adicional antes de salvar o objeto, se necessário.
+        self.object.save()
+        return super().form_valid(form)
+ 
+    
 
 @method_decorator(login_required(login_url='login'), name='dispatch')#decorator
 class ProductUpdatView(UpdateView):
     model = Product
     form_class = ProductModelForm
     template_name = 'product_update.html'
+
+    def form_valid(self, form):
+        product = form.save(commit=False)
+    # Outra lógica, se necessário
+        product.save()
+        form.save_m2m()
+        return super().form_valid(form)
+    
+    def get_initial(self):
+        initial = super().get_initial()
+        if self.object.department:
+            initial['department'] = self.object.department.id
+        if self.object.category:
+            initial['category'] = self.object.category.id
+        if self.object.subcategory:
+            initial['subcategory'] = self.object.subcategory.id
+        return initial
 
     def get_success_url(self):
         return reverse_lazy('products:product_detail', kwargs={'pk': self.object.pk})

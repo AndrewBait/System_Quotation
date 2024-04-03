@@ -11,8 +11,9 @@ class BrandAdmin(admin.ModelAdmin):
 
 class ProductAdmin(admin.ModelAdmin):
     form = ProductModelForm
-    list_display = ('ean','name', 'brand',)
+    list_display = ('name', 'department', 'category', 'subcategory')
     search_fields = ('name',)
+    
 
 
 class SubcategoryInline(admin.TabularInline):

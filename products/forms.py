@@ -22,20 +22,28 @@ class ProductModelForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super(ProductModelForm, self).__init__(*args, **kwargs)
-        # Inicializa os campos de categoria e subcategoria vazios
-        self.fields['category'].queryset = Category.objects.none()
-        self.fields['subcategory'].queryset = Subcategory.objects.none()
+        # Inicializa as querysets para edição
+        if self.instance.pk:
+            self.fields['category'].queryset = Category.objects.filter(department=self.instance.department)
+            self.fields['subcategory'].queryset = Subcategory.objects.filter(category=self.instance.category)
+        else:
+            # Inicializa vazias se for um novo produto
+            self.fields['category'].queryset = Category.objects.none()
+            self.fields['subcategory'].queryset = Subcategory.objects.none()
 
-        # Atualiza a queryset de categorias e subcategorias quando um departamento é selecionado
+        # Manipulação dinâmica com base no input do usuário
         if 'department' in self.data:
             try:
                 department_id = int(self.data.get('department'))
                 self.fields['category'].queryset = Category.objects.filter(department_id=department_id).order_by('name')
-                category_id = int(self.data.get('category'))
-                self.fields['subcategory'].queryset = Subcategory.objects.filter(category_id=category_id).order_by('name')
+                if 'category' in self.data:
+                    category_id = int(self.data.get('category'))
+                    self.fields['subcategory'].queryset = Subcategory.objects.filter(category_id=category_id).order_by('name')
             except (ValueError, TypeError):
                 pass  # Caso inválido, não atualiza as querysets
 
 
 class ProductImportForm(forms.Form):
     file = forms.FileField(label='Selecione um arquivo CSV/XML')
+
+

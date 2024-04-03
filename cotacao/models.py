@@ -2,7 +2,6 @@ from django.db import models
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _  
 import uuid
-from suppliers.models import Supplier
 from products.models import Departamento
 
 

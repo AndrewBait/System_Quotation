@@ -58,11 +58,21 @@ class Product(models.Model):
     photo = models.ImageField(upload_to='products/', blank=True, null=True)
 
     def clean(self):
+    # Verificação do comprimento do EAN.
         if self.ean and len(self.ean) != 13:
             raise ValidationError({'ean': "O EAN deve conter 13 dígitos."})
-        if not self.ean:
-            if Product.objects.filter(name=self.name, brand=self.brand, category=self.category).exists():
-                raise ValidationError("Um produto com este nome, marca e categoria já existe.")
+        
+        # Verifica se o produto com este nome, categoria e subcategoria já existe (excluindo o próprio objeto no caso de uma atualização).
+        query = Product.objects.filter(name=self.name, category=self.category, subcategory=self.subcategory)
+        if self.pk:  # Verifica se o objeto já tem um ID, indicando que é uma atualização.
+            query = query.exclude(pk=self.pk)
+        
+        if query.exists():
+            # Essa mudança permite que a validação de unicidade considere o caso de atualização, 
+            # evitando considerar o próprio objeto como duplicata.
+            raise ValidationError("Um produto com este nome, categoria e subcategoria já existe.")
+
+        # Note: Não é necessário retornar nada, pois o método clean modifica o estado do objeto ou levanta uma exceção se houver erro.
 
 
 

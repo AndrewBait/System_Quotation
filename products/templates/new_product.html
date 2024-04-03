@@ -72,7 +72,9 @@
             .then(response => response.json())
             .then(data => {
                 var categorySelect = document.getElementById('id_category');
+                var subcategorySelect = document.getElementById('id_subcategory');
                 categorySelect.innerHTML = '<option value="">---------</option>';
+                subcategorySelect.innerHTML = '<option value="">---------</option>'; // Adicionado para resetar as subcategorias
                 data.forEach(function(category) {
                     var option = new Option(category.name, category.id);
                     categorySelect.add(option);
