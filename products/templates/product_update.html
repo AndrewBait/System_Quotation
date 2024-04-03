@@ -3,11 +3,16 @@
 {% load static %}
 {% load widget_tweaks %}
 
+{% block extrahead %}
+  {{ block.super }}
+  <script src="{% static 'js/jquery.min.js' %}"></script> <!-- Incluindo o jQuery -->
+{% endblock %}
+
 {% block content %}
 <div class="container-fluid mt-4" style="background-color: #343a40; color: #ffffff; border-radius: 10px; box-shadow: 0 2px 6px rgba(255, 255, 255, 0.1); padding: 20px; max-width: 1200px; margin: auto;">  
     <form action="" method="post" enctype="multipart/form-data" class="needs-validation" novalidate>
         {% csrf_token %}
-        <h1 style="font-size: 2rem; margin-bottom: 20px; text-align: center;">Cadastrar Produto</h1>
+        <h1 style="font-size: 2rem; margin-bottom: 20px; text-align: center;">Atualizar Produto</h1>
         <div class="row g-3">
             <!-- Aumento da largura das colunas para aproveitar melhor o espaço em telas grandes -->
             <div class="col-lg-6">
@@ -56,9 +61,43 @@
             </div>
         </div>
         <div class="text-end mt-4">
-            <input type="submit" value="Cadastrar" class="btn btn-primary me-2">
+            <input type="submit" value="Atualizar" class="btn btn-primary me-2">
             <!-- Aqui você pode adicionar botões adicionais conforme necessário -->
         </div>
     </form>
 </div>
+
+<script>
+    // Cole aqui o bloco de script do template de cadastro de produto
+    // Garanta que os IDs dos campos sejam consistentes com os usados no formulário de atualização
+    document.getElementById('id_department').addEventListener('change', function() {
+        var departmentId = this.value;
+        fetch(`/products/get-categories/?department_id=${departmentId}`)
+            .then(response => response.json())
+            .then(data => {
+                var categorySelect = document.getElementById('id_category');
+                var subcategorySelect = document.getElementById('id_subcategory');
+                categorySelect.innerHTML = '<option value="">---------</option>';
+                subcategorySelect.innerHTML = '<option value="">---------</option>'; // Para resetar as subcategorias ao mudar o departamento
+                data.forEach(function(category) {
+                    var option = new Option(category.name, category.id);
+                    categorySelect.add(option);
+                });
+            });
+    });
+
+    document.getElementById('id_category').addEventListener('change', function() {
+        var categoryId = this.value;
+        fetch(`/products/get-subcategories/?category_id=${categoryId}`)
+            .then(response => response.json())
+            .then(data => {
+                var subcategorySelect = document.getElementById('id_subcategory');
+                subcategorySelect.innerHTML = '<option value="">---------</option>';
+                data.forEach(function(subcategory) {
+                    var option = new Option(subcategory.name, subcategory.id);
+                    subcategorySelect.add(option);
+                });
+            });
+    });
+</script>
 {% endblock %}
