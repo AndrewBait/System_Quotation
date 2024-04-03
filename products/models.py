@@ -1,7 +1,24 @@
 from django.db import models
 from django.core.exceptions import ValidationError
-from cotacao.models import Departamento
+from django.utils.translation import gettext as _
+from django.contrib import messages
 
+
+class Departamento(models.Model):
+    nome = models.CharField(max_length=100, unique=True)  
+
+    def delete(self, *args, **kwargs):
+        if self.cotacoes.exists():
+            raise ValidationError("Não é possível excluir um departamento que possui cotações vinculadas.")
+        super().delete(*args, **kwargs)
+
+    def __str__(self):
+        return self.nome
+
+    class Meta:
+        verbose_name = _('Departamento')
+        verbose_name_plural = _('Departamentos')
+        ordering = ['nome']  
 
 class Brand(models.Model):
 

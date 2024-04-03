@@ -3,23 +3,9 @@ from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _  
 import uuid
 from suppliers.models import Supplier
+from products.models import Departamento
 
 
-class Departamento(models.Model):
-    nome = models.CharField(max_length=100, unique=True)  
-
-    def delete(self, *args, **kwargs):
-        if self.cotacoes.exists():
-            raise ValidationError("Não é possível excluir um departamento que possui cotações vinculadas.")
-        super().delete(*args, **kwargs)
-
-    def __str__(self):
-        return self.nome
-
-    class Meta:
-        verbose_name = _('Departamento')
-        verbose_name_plural = _('Departamentos')
-        ordering = ['nome']  
 
 class Cotacao(models.Model):
     uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)

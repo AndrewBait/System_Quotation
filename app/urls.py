@@ -9,7 +9,6 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('products/', include(('products.urls', 'products'), namespace='product')), 
     path('accounts/', include('accounts.urls', namespace='accounts')),
-    path('products/', include('products.urls')),
     path('suppliers/', include('suppliers.urls')),
     path('cotacoes/', include('cotacao.urls', namespace='cotacao')),
     path('answers/', include('answers.urls', namespace='answers')), 

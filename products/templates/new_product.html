@@ -3,15 +3,20 @@
 {% load static %}
 {% load widget_tweaks %}
 
+{% block extrahead %}
+  {{ block.super }}
+  {% include 'autocomplete_light/static.html' %}
+  <script src="{% static 'js/jquery.min.js' %}"></script> <!-- Incluindo o jQuery -->
+{% endblock %}
+
 {% block content %}
 <div class="container-fluid mt-4">  
     <form action="" method="post" enctype="multipart/form-data" class="needs-validation" novalidate>
         {% csrf_token %}
         <div class="row g-3">
-            <!-- Aumento da largura das colunas para telas grandes -->
             <div class="col-lg-4">
                 <div class="mb-3">
-                    <label for="id_ean" class="form-label">Codigo de barras EAN:</label>
+                    <label for="id_ean" class="form-label">Código de barras EAN:</label>
                     {{ form.ean|add_class:'form-control' }}
                     {{ form.ean.errors }}
                 </div>
@@ -25,8 +30,6 @@
                     {{ form.brand|add_class:'form-control' }}
                     {{ form.brand.errors }}
                 </div>
-            </div>
-            <div class="col-lg-4">
                 <div class="mb-3">
                     <label for="id_department" class="form-label">Departamento:</label>
                     {{ form.department|add_class:'form-control' }}
@@ -58,8 +61,37 @@
         </div>
         <div class="text-end mt-4">
             <input type="submit" value="Cadastrar" class="btn btn-primary me-2">
-            <!-- Botões adicionais -->
         </div>
     </form>
 </div>
+
+<script>
+    document.getElementById('id_department').addEventListener('change', function() {
+        var departmentId = this.value;
+        fetch(`/products/get-categories/?department_id=${departmentId}`) // Ajuste o caminho conforme a necessidade
+            .then(response => response.json())
+            .then(data => {
+                var categorySelect = document.getElementById('id_category');
+                categorySelect.innerHTML = '<option value="">---------</option>';
+                data.forEach(function(category) {
+                    var option = new Option(category.name, category.id);
+                    categorySelect.add(option);
+                });
+            });
+    });
+    
+    document.getElementById('id_category').addEventListener('change', function() {
+        var categoryId = this.value;
+        fetch(`/products/get-subcategories/?category_id=${categoryId}`) // Ajuste o caminho conforme a necessidade
+            .then(response => response.json())
+            .then(data => {
+                var subcategorySelect = document.getElementById('id_subcategory');
+                subcategorySelect.innerHTML = '<option value="">---------</option>';
+                data.forEach(function(subcategory) {
+                    var option = new Option(subcategory.name, subcategory.id);
+                    subcategorySelect.add(option);
+                });
+            });
+    });
+</script>
 {% endblock %}

@@ -1,8 +1,7 @@
 from django import forms
-from django.core.exceptions import ValidationError
 from products.models import Product, Category, Subcategory
 from cotacao.models import Departamento  
-from django.db.models import Q
+from dal import autocomplete
 from dal import autocomplete
 
 
@@ -14,8 +13,11 @@ class ProductModelForm(forms.ModelForm):
         fields = '__all__'
         widgets = {
             'status': forms.Select(choices=[(True, 'Ativo'), (False, 'Inativo')]),
-            'category': autocomplete.ModelSelect2(url='product:category-autocomplete', forward=['department']),
-            'subcategory': autocomplete.ModelSelect2(url='product:subcategory-autocomplete', forward=['category']),
+            'department': autocomplete.ModelSelect2(url='products:department-autocomplete'),
+            'category': autocomplete.ModelSelect2(url='products:category-autocomplete',
+                                                  forward=['department']),
+            'subcategory': autocomplete.ModelSelect2(url='products:subcategory-autocomplete',
+                                                     forward=['category']),
         }
 
     def __init__(self, *args, **kwargs):

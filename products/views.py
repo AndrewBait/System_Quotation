@@ -13,9 +13,10 @@ from django.shortcuts import render, redirect
 from django.http import JsonResponse
 from django.core import serializers
 from dal import autocomplete
-from django.db.models import Q
 from .models import Category, Subcategory
-from cotacao.models import Departamento
+from django.http import JsonResponse
+
+
 
 
 class BrandCreateView(CreateView):
@@ -45,13 +46,11 @@ class ProductListView(ListView):
         else:
             return super().get(request, *args, **kwargs)
 
-    # def get_queryset(self):
-    #     products = super().get_queryset().order_by('name')
-    #     search = self.request.GET.get('search')
-    #     if search:
-    #         products = products.filter(name__icontains=search)
-    #     return products
-    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['categories'] = Category.objects.all()
+        context['subcategories'] = Subcategory.objects.all()
+        return context
 
 class ProductDetailView(DetailView):
     model = Product
@@ -148,24 +147,35 @@ def handle_xml_upload(f):
         )
 
 
+def get_categories(request):
+    department_id = request.GET.get('department_id')
+    categories = list(Category.objects.filter(department_id=department_id).values('id', 'name'))
+    return JsonResponse(categories, safe=False)
+
+def get_subcategories(request):
+    category_id = request.GET.get('category_id')
+    subcategories = list(Subcategory.objects.filter(category_id=category_id).values('id', 'name'))
+    return JsonResponse(subcategories, safe=False)
+
+
 class CategoryAutocomplete(autocomplete.Select2QuerySetView):
     def get_queryset(self):
         department_id = self.forwarded.get('department', None)
         if department_id:
-            return Category.objects.filter(department_id=department_id)
+            queryset = Category.objects.filter(department__id=department_id)
         else:
-            return Category.objects.none()
-
+            queryset = Category.objects.none()
+        if self.q:
+            queryset = queryset.filter(name__istartswith=self.q)
+        return queryset
 
 class SubcategoryAutocomplete(autocomplete.Select2QuerySetView):
     def get_queryset(self):
         category_id = self.forwarded.get('category', None)
-        qs = Subcategory.objects.all()
-
         if category_id:
-            qs = qs.filter(category_id=category_id)
-
+            queryset = Subcategory.objects.filter(category__id=category_id)
+        else:
+            queryset = Subcategory.objects.none()
         if self.q:
-            qs = qs.filter(name__icontains=self.q)
-
-        return qs
+            queryset = queryset.filter(name__istartswith=self.q)
+        return queryset
