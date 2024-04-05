@@ -36,16 +36,16 @@
                     {{ form.department|add_class:'form-control' }}
                     {{ form.department.errors }}
                 </div>
-            </div>
-            <div class="col-lg-6">
+                </div>
+                <div class="col-lg-6">
                 <div class="mb-3">
                     <label for="id_category" class="form-label">Categoria:</label>
-                    {{ form.category|add_class:'form-control' }}
+                    <select id="id_category" name="category" class="form-control" data-selected="{{ form.instance.category_id|default_if_none:'' }}"></select>
                     {{ form.category.errors }}
                 </div>
                 <div class="mb-3">
                     <label for="id_subcategory" class="form-label">Subcategoria:</label>
-                    {{ form.subcategory|add_class:'form-control' }}
+                    <select id="id_subcategory" name="subcategory" class="form-control" data-selected="{{ form.instance.subcategory_id|default_if_none:'' }}"></select>
                     {{ form.subcategory.errors }}
                 </div>
                 <div class="mb-3">
@@ -68,86 +68,55 @@
 </div>
 
 <script>
-    // Cole aqui o bloco de script do template de cadastro de produto
-    // Garanta que os IDs dos campos sejam consistentes com os usados no formulário de atualização
-    document.getElementById('id_department').addEventListener('change', function() {
-        var departmentId = this.value;
-        fetch(`/products/get-categories/?department_id=${departmentId}`)
-            .then(response => response.json())
-            .then(data => {
-                var categorySelect = document.getElementById('id_category');
-                var subcategorySelect = document.getElementById('id_subcategory');
-                categorySelect.innerHTML = '<option value="">---------</option>';
-                subcategorySelect.innerHTML = '<option value="">---------</option>'; // Para resetar as subcategorias ao mudar o departamento
-                data.forEach(function(category) {
-                    var option = new Option(category.name, category.id);
-                    categorySelect.add(option);
-                });
-            });
-    });
-
-    document.getElementById('id_category').addEventListener('change', function() {
-        var categoryId = this.value;
-        fetch(`/products/get-subcategories/?category_id=${categoryId}`)
-            .then(response => response.json())
-            .then(data => {
-                var subcategorySelect = document.getElementById('id_subcategory');
-                subcategorySelect.innerHTML = '<option value="">---------</option>';
-                data.forEach(function(subcategory) {
-                    var option = new Option(subcategory.name, subcategory.id);
-                    subcategorySelect.add(option);
-                });
-            });
-    });
-
     document.addEventListener('DOMContentLoaded', function() {
         const departmentSelect = document.getElementById('id_department');
         const categorySelect = document.getElementById('id_category');
         const subcategorySelect = document.getElementById('id_subcategory');
-
-        if (departmentSelect.value) {
-            fetchCategories(departmentSelect.value, true);
-        }
-
-        departmentSelect.addEventListener('change', function() {
-            fetchCategories(this.value, false);
-        });
-
-        categorySelect.addEventListener('change', function() {
-            fetchSubcategories(this.value);
-        });
-
-        function fetchCategories(departmentId, initialLoad) {
-            fetch(`/products/get-categories/?department_id=${departmentId}`)
-                .then(response => response.json())
-                .then(data => {
-                    resetSelect(categorySelect, initialLoad);
-                    fillSelect(categorySelect, data);
-                    if (initialLoad) fetchSubcategories(categorySelect.value);
-                });
-        }
-
-        function fetchSubcategories(categoryId) {
-            fetch(`/products/get-subcategories/?category_id=${categoryId}`)
-                .then(response => response.json())
-                .then(data => {
-                                        fillSelect(subcategorySelect, data);
-                });
-        }
-
-        function resetSelect(selectElement, keepExisting) {
-            if (!keepExisting) {
-                selectElement.innerHTML = '<option value="">---------</option>';
+    
+        // Função para carregar as categorias baseadas no departamento selecionado
+        async function loadCategories() {
+            if (!departmentSelect.value) {
+                return;
+            }
+            const response = await fetch(`/products/get-categories/?department_id=${departmentSelect.value}`);
+            const categories = await response.json();
+            updateSelectOptions(categorySelect, categories, categorySelect.dataset.selected);
+    
+            // Se uma categoria estiver pré-selecionada, dispara o evento de mudança para carregar as subcategorias
+            if (categorySelect.dataset.selected) {
+                categorySelect.dispatchEvent(new Event('change'));
             }
         }
-
-        function fillSelect(selectElement, data) {
-            data.forEach(function(item) {
-                const option = new Option(item.name, item.id, false, selectElement.value === item.id.toString());
-                selectElement.appendChild(option);
+    
+        // Função para carregar as subcategorias baseadas na categoria selecionada
+        async function loadSubcategories() {
+            if (!categorySelect.value) {
+                return;
+            }
+            const response = await fetch(`/products/get-subcategories/?category_id=${categorySelect.value}`);
+            const subcategories = await response.json();
+            updateSelectOptions(subcategorySelect, subcategories, subcategorySelect.dataset.selected);
+        }
+    
+        // Função para atualizar as opções de um <select>
+        function updateSelectOptions(select, options, selectedValue) {
+            select.innerHTML = '<option value="">---------</option>'; // Limpa as opções existentes
+            options.forEach(option => { // Adiciona as novas opções
+                const isSelected = option.id.toString() === selectedValue;
+                select.add(new Option(option.name, option.id, isSelected, isSelected));
             });
         }
+    
+        departmentSelect.addEventListener('change', loadCategories); // Evento de mudança no departamento
+        categorySelect.addEventListener('change', loadSubcategories); // Evento de mudança na categoria
+    
+        // Inicializa os selects com os valores salvos (se houver)
+        if (departmentSelect.value) {
+            loadCategories(); // Não precisa esperar, pois o evento de mudança na categoria será disparado após carregar as categorias
+            loadSubcategories();
+        }   
     });
-
 </script>
+    
+    
 {% endblock %}

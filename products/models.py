@@ -2,7 +2,7 @@ from django.db import models
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext as _
 from django.contrib import messages
-
+from suppliers.models import Supplier 
 
 class Departamento(models.Model):
     nome = models.CharField(max_length=100, unique=True)  
@@ -56,11 +56,27 @@ class Product(models.Model):
     subcategory = models.ForeignKey(Subcategory, on_delete=models.PROTECT, related_name='products', blank=True, null=True)
     status = models.BooleanField(default=True)  # True para ativo, False para inativo
     photo = models.ImageField(upload_to='products/', blank=True, null=True)
+    fornecedores = models.ManyToManyField(Supplier, related_name='produtos')
+    descricao = models.TextField(_("Descrição"), max_length=50, blank=True)
+    preco_de_custo = models.DecimalField(_("Preço de Custo"), max_digits=10, decimal_places=2, blank=True, null=True)
+    unidade_de_medida = models.CharField(_("Unidade de Medida"), max_length=50, null=True, choices=[
+        ('Kg', 'Quilo'),
+        ('L', 'Litro'),
+        ('Dp', 'Display'),
+        ('Un', 'Unidade'),
+        ('Cx', 'Caixa'),
+        ('Fd', 'Fardo'),
+        ('Bdj', 'Bandeija'),
+        ('Pct', 'Pacote'),
+        ('Sch', 'Sache'),
+        ('Tp', 'Take Profit'),
+        
+    ])
+    data_de_validade = models.DateField(_("Data de Validade"), blank=True, null=True)
 
     def clean(self):
-    # Verificação do comprimento do EAN.
-        if self.ean and len(self.ean) != 13:
-            raise ValidationError({'ean': "O EAN deve conter 13 dígitos."})
+        if self.ean and len(self.ean) <= 13:
+            raise ValidationError({'ean': "O EAN deve conter no máximo 13 dígitos."})
         
         # Verifica se o produto com este nome, categoria e subcategoria já existe (excluindo o próprio objeto no caso de uma atualização).
         query = Product.objects.filter(name=self.name, category=self.category, subcategory=self.subcategory)
@@ -73,8 +89,6 @@ class Product(models.Model):
             raise ValidationError("Um produto com este nome, categoria e subcategoria já existe.")
 
         # Note: Não é necessário retornar nada, pois o método clean modifica o estado do objeto ou levanta uma exceção se houver erro.
-
-
 
     def save(self, *args, **kwargs):
         self.full_clean()
