@@ -1,7 +1,7 @@
 from django.urls import path
 from .views import (ProductListView, NewProductCreateView, ProductDetailView, ProductUpdatView,
-                     ProductDeleteView, BrandCreateView, import_products, CategoryAutocomplete, SubcategoryAutocomplete,                    
-                      get_categories, get_subcategories )
+                     ProductDeleteView, BrandCreateView, import_products, CategoryAutocomplete, SubcategoryAutocomplete, BrandAutocomplete,                    
+                      get_categories, get_subcategories , add_brand)
 from . import views
 
 
@@ -19,4 +19,7 @@ urlpatterns = [
     path('subcategory-autocomplete/', SubcategoryAutocomplete.as_view(), name='subcategory-autocomplete'),  
     path('get-categories/', views.get_categories, name='get-categories'),
     path('get-subcategories/', views.get_subcategories, name='get-subcategories'),
+    path('brands/autocomplete/', BrandAutocomplete.as_view(), name='brands-autocomplete'),
+    path('add-brand/', add_brand, name='add_brand'),
+    path('list-brands/', views.list_brands, name='list_brands'),
 ]

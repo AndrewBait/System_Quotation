@@ -15,6 +15,34 @@ from django.core import serializers
 from dal import autocomplete
 from .models import Category, Subcategory
 from django.http import JsonResponse
+from django.views.decorators.http import require_http_methods
+from .models import Brand
+
+
+def list_brands(request):
+    brands = list(Brand.objects.all().values('id', 'name'))
+    return JsonResponse(brands, safe=False)
+
+
+
+@require_http_methods(["POST"])
+def add_brand(request):
+    brand_name = request.POST.get('name')
+    if not brand_name:
+        return JsonResponse({'error': 'O nome da marca é obrigatório'}, status=400)
+    
+    brand, created = Brand.objects.get_or_create(name=brand_name)
+    return JsonResponse({'id': brand.id, 'name': brand.name}, status=201 if created else 200)
+    
+
+def brand_autocomplete(request):
+    qs = Brand.objects.all()
+
+    if request.GET.get('term'):
+        qs = qs.filter(name__istartswith=request.GET.get('term'))
+
+    brands = list(qs.values('id', 'name'))
+    return JsonResponse(brands, safe=False)
 
 
 class BrandCreateView(CreateView):
@@ -22,6 +50,17 @@ class BrandCreateView(CreateView):
     fields = ['name']
     template_name = 'brands/brand_form.html'
     success_url = reverse_lazy('products:new_product')
+
+
+class BrandAutocomplete(autocomplete.Select2QuerySetView):
+    def get_queryset(self):
+        # Usuários podem editar apenas as marcas que podem ver.
+        qs = Brand.objects.all()
+
+        if self.q:
+            qs = qs.filter(name__istartswith=self.q)
+        return qs
+
 
 
 class ProductListView(ListView):
@@ -49,6 +88,7 @@ class ProductListView(ListView):
         context['categories'] = Category.objects.all()
         context['subcategories'] = Subcategory.objects.all()
         return context
+    
 
 class ProductDetailView(DetailView):
     model = Product
@@ -60,14 +100,14 @@ class NewProductCreateView(CreateView):
     model = Product
     form_class = ProductModelForm
     template_name = 'new_product.html'
-    success_url = '/products/'
+    success_url = reverse_lazy('products:products_list')
 
     def form_valid(self, form):
-        self.object = form.save(commit=False)
-        # Aqui, você pode adicionar qualquer lógica adicional antes de salvar o objeto, se necessário.
-        self.object.save()
-        return super().form_valid(form)
- 
+        new_brand_name = self.request.POST.get('new_brand')
+        if new_brand_name:
+            brand, created = Brand.objects.get_or_create(name=new_brand_name.strip())
+            form.instance.brand = brand
+        return super(NewProductCreateView, self).form_valid(form) 
     
 
 @method_decorator(login_required(login_url='login'), name='dispatch')#decorator
@@ -77,11 +117,11 @@ class ProductUpdatView(UpdateView):
     template_name = 'product_update.html'
 
     def form_valid(self, form):
-        product = form.save(commit=False)
-    # Outra lógica, se necessário
-        product.save()
-        form.save_m2m()
-        return super().form_valid(form)
+        new_brand_name = self.request.POST.get('new_brand')
+        if new_brand_name:
+            brand, created = Brand.objects.get_or_create(name=new_brand_name.strip())
+            form.instance.brand = brand
+        return super(ProductUpdatView, self).form_valid(form)
     
     def get_initial(self):
         initial = super().get_initial()

@@ -1,17 +1,33 @@
 from django import forms
-from products.models import Product, Category, Subcategory
+from products.models import Product, Category, Subcategory, Brand
 from cotacao.models import Departamento  
 from dal import autocomplete
-from dal import autocomplete
+from django_select2.forms import ModelSelect2Widget
 
 
 class ProductModelForm(forms.ModelForm):
     department = forms.ModelChoiceField(queryset=Departamento.objects.all().order_by('nome'), required=True, label="Departamento")
+    brand = forms.ModelChoiceField(
+        queryset=Brand.objects.all(),
+        required=False,
+        label='Marca',
+        widget=ModelSelect2Widget(
+            url='products:brands-autocomplete',
+            model=Brand,
+            search_fields=['name__icontains'],
+            attrs={'data-minimum-input-length': 2},  # O usuário deve digitar pelo menos 3 caracteres antes de iniciar a busca
+            # Aqui você define a URL configurada para a busca autocomplete
+            data_url='/products/list-brands/'
 
+        )
+    )
     class Meta:
         model = Product
         fields = '__all__'
         widgets = {
+            'brand': autocomplete.ModelSelect2(url='products:brands-autocomplete'),
+            'descricao': forms.Textarea(attrs={'rows': 5, 'cols': 40}),
+            'notas': forms.Textarea(attrs={'rows': 4, 'cols': 40}),  # Use o nome da sua app no lugar de 'products' se for diferente
             'status': forms.Select(choices=[(True, 'Ativo'), (False, 'Inativo')]),
             'department': autocomplete.ModelSelect2(url='products:department-autocomplete'),
             'category': autocomplete.ModelSelect2(url='products:category-autocomplete',

@@ -44,6 +44,8 @@ INSTALLED_APPS = [
     'widget_tweaks',
     'dal',
     'dal_select2',
+    'simple_history',
+    'django_select2',
     #minhas apps
     'products',
     'accounts',

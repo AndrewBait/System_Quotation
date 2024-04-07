@@ -22,15 +22,20 @@
                     {{ form.ean.errors }}
                 </div>
                 <div class="mb-3">
+                    <label for="id_sku" class="form-label">SKU:</label>
+                    {{ form.sku|add_class:'form-control' }}
+                    {{ form.sku.errors }}
+                </div>
+                <div class="mb-3">
                     <label for="id_name" class="form-label">Nome:</label>
                     {{ form.name|add_class:'form-control' }}
                     {{ form.name.errors }}
                 </div>
-                <div class="mb-3">
+                <!-- <div class="mb-3">
                     <label for="id_brand" class="form-label">Marca:</label>
                     {{ form.brand|add_class:'form-control' }}
                     {{ form.brand.errors }}
-                </div>
+                </div> -->
                 <div class="mb-3">
                     <label for="id_department" class="form-label">Departamento:</label>
                     {{ form.department|add_class:'form-control' }}
@@ -58,6 +63,17 @@
                     {{ form.photo|add_class:'form-control' }}
                     {{ form.photo.errors }}
                 </div>
+                <div class="mb-3">
+                    <label for="id_descricao" class="form-label">Descrição:</label>
+                    {{ form.descricao|add_class:'form-control' }}
+                    {{ form.descricao.errors }}
+                </div>
+                <div class="mb-3">
+                    <label for="id_notas" class="form-label">Notas:</label>
+                    {{ form.notas|add_class:'form-control' }}
+                    {{ form.notas.errors }}
+                </div>
+                
             </div>
         </div>
         <div class="text-end mt-4">
