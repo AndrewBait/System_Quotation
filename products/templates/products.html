@@ -135,7 +135,10 @@
           <div class="product-info">
             <h5 class="mb-1">{{ product.name }}</h5>
             <small class="text-muted">Código EAN: {{ product.ean }}</small>
-          </div>
+            {% if product.sku %}
+                <br><small class="text-muted">SKU: {{ product.sku }}</small>
+            {% endif %}
+        </div>
           <div class="action-buttons">
             <a href="{% url 'products:product_update' product.pk %}" class="btn btn-primary" title="Editar" aria-label="Editar {{ product.name }}">
               <i class="bi bi-pencil btn-icon"></i>
