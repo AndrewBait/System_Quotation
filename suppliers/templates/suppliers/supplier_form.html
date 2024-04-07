@@ -1,99 +1,172 @@
 {% extends "base.html" %}
 
+{% load static %}
+{% load widget_tweaks %}
+
+{% block extrahead %}
+{{ block.super }}
+<!-- Bootstrap CSS -->
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.mask/1.14.16/jquery.mask.min.js"></script>
+{% endblock %}
+
 {% block content %}
-<style>
-  /* Estilo específico para o formulário de cadastro de fornecedor adaptado para o modo escuro */
-  .supplier-form {
-    max-width: 400px;
-    width: 100%;
-    margin: 0 auto;
-    padding: 20px;
-    background-color: #343a40; /* Fundo mais escuro */
-    border-radius: 8px;
-    box-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
-    color: #ffffff; /* Texto branco */
-  }
+<div class="container-fluid mt-4">  
+    <form action="" method="post" enctype="multipart/form-data" class="needs-validation" novalidate>
+        {% csrf_token %}
+        <h1 style="font-size: 2rem; margin-bottom: 20px;">Cadastro de Fornecedor</h1>
+        <div class="row g-3">
+            <div class="col-lg-6">
+                <!-- Informações Básicas -->
+                <div class="mb-3">
+                    <label for="id_name" class="form-label">Nome:</label>
+                    {{ form.name|add_class:'form-control' }}
+                </div>
+                <div class="mb-3">
+                    <label for="id_email" class="form-label">E-mail:</label>
+                    {{ form.email|add_class:'form-control' }}
+                </div>
+                <div class="mb-3">
+                    <label for="id_phone" class="form-label">Telefone:</label>
+                    {{ form.phone|add_class:'form-control' }}
+                </div>
+                <div class="mb-3">
+                    <label for="id_company" class="form-label">Empresa Representante:</label>
+                    {{ form.company|add_class:'form-control' }}
+                </div>
+                <div class="mb-3">
+                  <label for="id_cnpj" class="form-label">CNPJ:</label>
+                  {{ form.cnpj|add_class:'form-control' }}
+                  <small class="text-muted">Formato: 00.000.000/0000-00</small>
+              </div>
 
-  .supplier-form label {
-    display: block;
-    margin-bottom: 8px;
-    color: #dee2e6; /* Cor de texto claro para melhor contraste */
-  }
+                <!-- Endereço -->
+                <h4>Endereço</h4>
+                <div class="mb-3">
+                  <label for="id_zip_code" class="form-label">CEP:</label>
+                  {{ form.zip_code }} <!-- Já incluirá a classe e o id especificados no forms.py -->
+              </div>
+                <div class="mb-3">
+                    <label for="id_address_line_1" class="form-label">Endereço:</label>
+                    {{ form.address_line_1|add_class:'form-control' }}
+                </div>
 
-  .supplier-form .form-group {
-    margin-bottom: 15px;
-  }
+                <div class="mb-3">
+                    <label for="id_address_line_2" class="form-label">Complemento:</label>
+                    {{ form.address_line_2|add_class:'form-control' }}
+                </div>
+                <div class="mb-3">
+                    <label for="id_city" class="form-label">Cidade:</label>
+                    {{ form.city|add_class:'form-control' }}
+                </div>
+                <div class="mb-3">
+                    <label for="id_state" class="form-label">Estado:</label>
+                    {{ form.state|add_class:'form-control' }}
+                </div>
 
-  .supplier-form input[type="text"],
-  .supplier-form input[type="password"],
-  .supplier-form input[type="email"],
-  .supplier-form input[type="number"],
-  .supplier-form select,
-  .supplier-form textarea {
-    width: 100%;
-    padding: 10px;
-    margin: 8px 0;
-    display: inline-block;
-    border: 1px solid #ced4da;
-    background-color: #495057; /* Fundo dos campos mais escuro */
-    color: #e9ecef; /* Texto claro para os inputs */
-    border-radius: 4px;
-  }
+            </div>
+            <div class="col-lg-6">
+                <!-- Detalhes Adicionais -->
+                <h4>Detalhes Adicionais</h4>
+                <div class="mb-3">
+                    <label for="id_minimum_order_value" class="form-label">Valor Mínimo para Pedido:</label>
+                    {{ form.minimum_order_value|add_class:'form-control' }}
+                </div>
+                <div class="mb-3">
+                    <label for="id_order_response_deadline" class="form-label">Prazo de Resposta para Pedidos:</label>
+                    {{ form.order_response_deadline|add_class:'form-control' }}
+                </div>
+                
+                <!-- Departamentos, Categorias, Subcategorias, Marcas -->
+                <div class="mb-3">
+                    <label for="id_departments" class="form-label">Departamentos:</label>
+                    {{ form.departments|add_class:'form-control' }}
 
-  .supplier-form input[type="submit"] {
-    background-color: #007bff;
-    color: #fff;
-    border: none;
-    padding: 12px 20px;
-    font-size: 16px;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: background-color 0.3s ease-in-out;
-  }
+                    
+                </div>
+                <div class="mb-3">
+                    <label for="id_categories" class="form-label">Categorias:</label>
+                    {{ form.categories|add_class:'form-control' }}
+                </div>
+                <div class="mb-3">
+                    <label for="id_subcategories" class="form-label">Subcategorias:</label>
+                    {{ form.subcategories|add_class:'form-control' }}
+                </div>
+                <div class="mb-3">
+                    <label for="id_brands" class="form-label">Marcas:</label>
+                    {{ form.brands|add_class:'form-control' }}
+                </div>
 
-  .supplier-form input[type="submit"]:hover {
-    background-color: #0056b3;
-  }
-</style>
+                <div class="text-end mt-4">
+                    <button type="submit" class="btn btn-primary">Cadastrar</button>
+                </div>
+            </div>
+        </div>
+    </form>
+<script>
+      document.addEventListener("DOMContentLoaded", function() {
+    var cepInput = document.getElementById('id_zip_code');
 
-<div class="container">
-  <form action="" method="post" class="supplier-form">
-    {% csrf_token %}
-    <div class="form-group">
-      <label for="id_name">Nome:</label>
-      {{ form.name }}
-      {{ form.name.errors }}
-    </div>
+    cepInput.addEventListener('blur', function(e) {
+        var cep = e.target.value.replace(/\D/g, '');
 
-    <div class="form-group">
-      <label for="id_email">E-mail:</label>
-      {{ form.email }}
-      {{ form.email.errors }}
-    </div>
+        // Se o CEP tiver 8 dígitos, tenta buscar o endereço
+        if(cep.length === 8) {
+            fetch(`https://brasilapi.com.br/api/cep/v1/${cep}`)
+                .then(response => response.json())
+                .then(data => {
+                    if(data) {
+                        document.getElementById('id_address_line_1').value = data.street;
+                        document.getElementById('id_city').value = data.city;
+                        document.getElementById('id_state').value = data.state;
+                    } else {
+                        alert('CEP não encontrado.');
+                    }
+                })
+                .catch(() => alert('Erro ao buscar o CEP.'));
+        } else {
+            // Se o CEP estiver vazio ou for removido, limpa os campos
+            document.getElementById('id_address_line_1').value = '';
+            document.getElementById('id_city').value = '';
+            document.getElementById('id_state').value = '';
+        }
+    });
+});
 
-    <div class="form-group">
-      <label for="id_phone">Telefone:</label>
-      {{ form.phone }}
-      {{ form.phone.errors }}
-    </div>
+$(document).ready(function() {
+    // Máscaras
+    $('#id_cnpj').mask('00.000.000/0000-00');
+    $('#id_zip_code').mask('00000-000');
+    $('#id_phone').mask('(00) 00000-0000');
+    $('#id_minimum_order_value').mask('000.000.000.000.000,00', {reverse: true});
 
-    <div class="form-group">
-      <label for="id_company">Empresa Representante:</label>
-      {{ form.company }}
-      {{ form.company.errors }}
-    </div>
-
-    <div class="form-group">
-      <label for="id_cnpj">CNPJ:</label>
-      {{ form.cnpj }}
-      {{ form.cnpj.errors }}
-    </div>
-
-
-    <div class="form-group">
-      <input type="submit" value="Cadastrar" class="btn btn-primary">
-      <a href="{% url 'suppliers:supplier_list' %}" class="btn btn-info btn-sm">Cancelar</a> 
-    </div>
-  </form>
+    // Preenchimento automático do CEP
+    $('#id_zip_code').on('blur', function(e) {
+        var cep = e.target.value.replace(/\D/g, '');
+        if(cep.length === 8) {
+            fetch(`https://brasilapi.com.br/api/cep/v1/${cep}`)
+                .then(response => response.json())
+                .then(data => {
+                    if(data) {
+                        $('#id_address_line_1').val(data.street);
+                        $('#id_city').val(data.city);
+                        $('#id_state').val(data.state);
+                    } else {
+                        alert('CEP não encontrado.');
+                    }
+                }).catch(() => alert('Erro ao buscar o CEP.'));
+        } else {
+            // Limpa os campos se o CEP for removido
+            $('#id_address_line_1').val('');
+            $('#id_city').val('');
+            $('#id_state').val('');
+        }
+    });
+});
+      </script>
+  
 </div>
 {% endblock %}

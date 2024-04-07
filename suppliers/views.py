@@ -8,6 +8,13 @@ from .forms import SupplierForm
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.hashers import make_password
 from django.shortcuts import redirect
+from .models import Departamento
+from django.shortcuts import render
+
+
+def sua_view_para_o_formulário(request):
+    departamentos = Departamento.objects.all()
+    return render(request, 'seu_template.html', {'departamentos': departamentos})
 
 
 @method_decorator(login_required(login_url='login'), name='dispatch')
@@ -16,6 +23,11 @@ class SupplierCreateView(LoginRequiredMixin, CreateView):
     form_class = SupplierForm
     template_name = 'suppliers/supplier_form.html'
     success_url = reverse_lazy('suppliers:supplier_list')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['departamentos'] = Departamento.objects.all()
+        return context
 
     def form_valid(self, form):
         user = User.objects.create(

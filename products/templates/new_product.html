@@ -57,10 +57,7 @@
                     <label for="id_subcategory" class="form-label">Subcategoria:</label>
                     {{ form.subcategory|add_class:'form-control' }}
                     {{ form.subcategory.errors }}
-                </div>
-                <div class="text-end mt-4">
-                    <input type="submit" value="Cadastrar" class="btn btn-primary me-2">
-                </div>
+                </div>                
             </div>
             <div class="col-lg-4">
                 <div class="mb-3">
@@ -84,6 +81,9 @@
                     {{ form.notas.errors }}
                 </div>
                 <div class="mb-3">
+                    <div class="text-end mt-4">
+                        <input type="submit" value="Cadastrar" class="btn btn-primary me-2">
+                    </div>
             </div>
         </div>
 
