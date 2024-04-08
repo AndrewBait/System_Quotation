@@ -39,7 +39,7 @@
           <option value="">Departamentos</option>
           {% for department in departments %}
           <option value="{{ department.id }}" {% if current_department == department.id|stringformat:"s" %} selected {% endif %}>
-              {{ department.name }}
+              {{ department.nome }}
           </option>
           {% endfor %}
       </select>

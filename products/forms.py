@@ -7,9 +7,10 @@ from django_select2.forms import ModelSelect2Widget
 
 class ProductModelForm(forms.ModelForm):
     department = forms.ModelChoiceField(queryset=Departamento.objects.all().order_by('nome'), required=True, label="Departamento")
+    widget=autocomplete.ModelSelect2(url='products:department-autocomplete')
     brand = forms.ModelChoiceField(
         queryset=Brand.objects.all(),
-        required=False,
+        required=True,
         label='Marca',
         widget=ModelSelect2Widget(
             url='products:brands-autocomplete',
@@ -27,13 +28,11 @@ class ProductModelForm(forms.ModelForm):
         widgets = {
             'brand': autocomplete.ModelSelect2(url='products:brands-autocomplete'),
             'descricao': forms.Textarea(attrs={'rows': 5, 'cols': 40}),
-            'notas': forms.Textarea(attrs={'rows': 4, 'cols': 40}),  # Use o nome da sua app no lugar de 'products' se for diferente
+            'notas': forms.Textarea(attrs={'rows': 4, 'cols': 40}),
             'status': forms.Select(choices=[(True, 'Ativo'), (False, 'Inativo')]),
-            'department': autocomplete.ModelSelect2(url='products:department-autocomplete'),
-            'category': autocomplete.ModelSelect2(url='products:category-autocomplete',
-                                                  forward=['department']),
-            'subcategory': autocomplete.ModelSelect2(url='products:subcategory-autocomplete',
-                                                     forward=['category']),
+            'category': autocomplete.ModelSelect2(url='products:category-autocomplete', forward=['department']),
+            'subcategory': autocomplete.ModelSelect2(url='products:subcategory-autocomplete', forward=['category']),
+            'subcategory': autocomplete.ModelSelect2(url='products:subcategory-autocomplete', forward=['category']),
         }
 
     def __init__(self, *args, **kwargs):
