@@ -6,7 +6,7 @@ from django.contrib.auth.decorators import login_required
 from django.utils.decorators import method_decorator
 from django.views.generic import ListView, CreateView, DetailView, UpdateView, DeleteView
 from django.views.generic.edit import CreateView
-from .models import Brand, Product, Departamento, Category, Subcategory
+from .models import Brand, Product, Departamento, Category, Subcategory, ProductLine
 import csv
 import xml.etree.ElementTree as ET
 from .forms import ProductImportForm
@@ -20,6 +20,8 @@ from django.views.decorators.http import require_http_methods
 from .models import Brand
 from django.core.paginator import Paginator
 from django.http import HttpResponse
+from django.db.models import Q
+
 
 
 
@@ -110,13 +112,19 @@ class ProductListView(ListView):
 
     def get_queryset(self):
         queryset = super().get_queryset().order_by('name')
-        queryset = super().get_queryset().order_by('name')
+        query = self.request.GET.get('query', '')
         product_name = self.request.GET.get('product_name', '')
         department_id = self.request.GET.get('department', '')
         category_id = self.request.GET.get('category', '')
         subcategory_id = self.request.GET.get('subcategory', '')
+        brand_id = self.request.GET.get('brand', '')  # Adicione esta linha
+        product_line_id = self.request.GET.get('product_line', '')  # E esta linha
         status = self.request.GET.get('status', '')
 
+        if query:
+            queryset = queryset.filter(
+                Q(name__icontains=query) | Q(sku__icontains=query) | Q(ean__icontains=query)
+            )
         if product_name:
             queryset = queryset.filter(name__icontains=product_name)
         if department_id:
@@ -125,6 +133,10 @@ class ProductListView(ListView):
             queryset = queryset.filter(category__id=category_id)
         if subcategory_id:
             queryset = queryset.filter(subcategory__id=subcategory_id)
+        if brand_id:  # Adicione esta condição
+            queryset = queryset.filter(brand__id=brand_id)
+        if product_line_id:  # E esta condição
+            queryset = queryset.filter(product_line__id=product_line_id)
         if status:
             queryset = queryset.filter(status=(status.lower() == 'true'))
 
@@ -149,6 +161,8 @@ class ProductListView(ListView):
         context['current_department'] = department_id
         context['current_category'] = category_id
         context['current_subcategory'] = self.request.GET.get('subcategory', '')
+        context['brands'] = Brand.objects.all()
+        context['product_lines'] = ProductLine.objects.all()
 
         items_per_page = self.request.GET.get('items_per_page', 10)  
         self.paginate_by = int(items_per_page)

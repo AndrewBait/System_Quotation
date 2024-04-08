@@ -20,11 +20,10 @@
 
 <div class="container mt-0">
   <h2 class="mb-4">Catálogo de Produtos</h2>
-  <div class="row g-3 mb-0">
+  <div class="row g-4 mb-0">
     <div class="col-md-3">
       <form method="GET" action="{% url 'products:products_list' %}" class="input-group">
-        <input type="text" name="product_name" class="form-control" placeholder="Nome do Produto" value="{{ request.GET.product_name }}">
-        <!-- Campos ocultos para os filtros -->
+        <input type="text" name="product_name" id="product-search" class="form-control" placeholder="Nome, SKU ou EAN " value="{{ request.GET.product_name }}">
           <input type="hidden" name="department" value="{{ request.GET.department }}">
           <input type="hidden" name="category" value="{{ request.GET.category }}">
           <input type="hidden" name="subcategory" value="{{ request.GET.subcategory }}">
@@ -68,13 +67,19 @@
         </select>
       </div>
       <div class="col-md-3">
-        <select class="form-select" name="" onchange="this.form.submit()">
-          <option value="">Marca</option>
-        </select>
-      </div>
+      <select class="form-select" name="brand" onchange="this.form.submit()">
+        <option value="">Marcas</option>
+        {% for brand in brands %} 
+          <option value="{{ brand.id }}" {% if request.GET.brand == brand.id|stringformat:"s" %}selected{% endif %}>{{ brand.name }}</option>
+        {% endfor %}
+      </select>
+    </div>
       <div class="col-md-3">
-        <select class="form-select" name="" onchange="this.form.submit()">
-          <option value="">Linha</option>
+        <select class="form-select" name="product_line" onchange="this.form.submit()">
+          <option value="">Linha de Indústria</option>
+          {% for product_line in product_lines %}
+          <option value="{{ product_line.id }}" {% if request.GET.product_line == product_line.id|stringformat:"s" %}selected{% endif %}>{{ product_line.name }}</option>
+          {% endfor %}
         </select>
       </div>
     </div>
@@ -112,7 +117,6 @@
   <div class="row row-cols-0 row-cols-md-5 g-4">
     {% for product in products %}
       <div class="col">
-        <!-- Adiciona o atributo data-href com a URL de detalhe do produto -->
         <div class="card h-100 clickable" data-href="{% url 'products:product_detail' product.id %}">
           {% if product.photo %}
             <img src="{{ product.photo.url }}" class="card-img-top" alt="{{ product.name }}" style="max-height: 180px; object-fit: cover;">
@@ -134,8 +138,7 @@
         </div>
       </div>
 
-      <script>
-        // Adiciona um event listener para capturar cliques na div .clickable
+<script>
         document.querySelectorAll('.clickable').forEach(item => {
           item.addEventListener('click', event => {
             window.location.href = item.getAttribute('data-href');
@@ -174,12 +177,9 @@
   </nav>
 
   <div class="container">
-    <!-- Outros conteúdos da página aqui -->
-  
-    <!-- Itens por página alinhados à direita -->
     <div class="row">
       <div class="col">
-        <!-- Espaço reservado se necessário -->
+
       </div>
       <div class="col-auto">
         <div class="d-flex justify-content-end mb-4">
@@ -203,12 +203,42 @@
         var departmentSelect = document.querySelector('select[name="department"]');
         var categorySelect = document.querySelector('select[name="category"]');
         var subcategorySelect = document.querySelector('select[name="subcategory"]');
+        var productSearchInput = document.getElementById('product-search');
+        var typingTimer; // Timer para aguardar o término da digitação
+        var doneTypingInterval = 500;
     
-        departmentSelect.addEventListener('change', function() {       
+        function doneTyping() {
+            var query = productSearchInput.value.trim();
+    
+            // Verificar se a consulta está vazia
+            if (query === '') {
+                // Limpar os resultados de pesquisa, se necessário
+                return;
+            }
+    
+            // Enviar solicitação AJAX para buscar produtos
+            fetch(`/products/search/?query=${query}`)
+                .then(response => response.json())
+                .then(data => {
+                    // Atualize a visualização com os resultados da pesquisa
+                    console.log(data); // Exemplo: exibir resultados no console para depuração
+                })
+                .catch(error => {
+                    console.error('Ocorreu um erro ao buscar produtos:', error);
+                });
+        }
+    
+        // Adicionar evento de digitação ao campo de pesquisa
+        productSearchInput.addEventListener('keyup', function() {
+            // Limpar o timer anterior, se existir
+            clearTimeout(typingTimer);
+    
+            // Iniciar o timer para esperar o término da digitação
+            typingTimer = setTimeout(doneTyping, doneTypingInterval);
+        });
+    
+        departmentSelect.addEventListener('change', function() {
             var departmentId = this.value;
-
-            
-            
             fetch(`/products/get-categories/?department_id=${departmentId}`)
                 .then(response => response.json())
                 .then(data => {
@@ -226,17 +256,30 @@
             fetch(`/products/get-subcategories/?category_id=${categoryId}`)
                 .then(response => response.json())
                 .then(data => {
-                    
                     subcategorySelect.innerHTML = '<option value="">Todas as Subcategorias</option>';
-                    
                     data.forEach(function(subcategory) {
                         var option = new Option(subcategory.name, subcategory.id);
                         subcategorySelect.appendChild(option);
                     });
                 });
         });
+
+        document.addEventListener('DOMContentLoaded', function() {
+          fetch('/products/list-brands/')
+              .then(response => response.json())
+              .then(data => {
+                  const brandSelect = document.querySelector('select[name="brand"]');
+                  brandSelect.innerHTML = '<option value="">Todas as Marcas</option>';
+                  data.forEach(brand => {
+                      const option = new Option(brand.name, brand.id);
+                      brandSelect.appendChild(option);
+                  });
+              })
+              .catch(error => console.error('Erro ao carregar as marcas:', error));
+});
     });
-    </script>   
+    </script>
+    
     
     
     

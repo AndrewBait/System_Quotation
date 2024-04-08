@@ -1,7 +1,7 @@
 from django.urls import path
 from .views import (ProductListView, NewProductCreateView, ProductDetailView, ProductUpdatView,
                      ProductDeleteView, BrandCreateView, import_products, CategoryAutocomplete, SubcategoryAutocomplete, BrandAutocomplete,                    
-                      get_categories, get_subcategories , add_brand, download_xml_template, download_csv_template)
+                      get_categories, get_subcategories , add_brand, download_xml_template, download_csv_template, )
 from . import views
 
 
