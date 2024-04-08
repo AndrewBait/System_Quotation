@@ -2,11 +2,29 @@
 
 {% block content %}
 <div class="container mt-4">
-  <h2>Importar Produtos</h2>
-  <form method="post" enctype="multipart/form-data">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit" class="btn btn-primary">Importar</button>
-  </form>
+  <div class="row">
+    <div class="col-md-8">
+      <h2>Importar Produtos</h2>
+      <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <div class="mb-3">
+          <label for="id_file" class="form-label">Selecione o arquivo:</label>
+
+          <input type="file" class="form-control" name="file" id="id_file">
+        </div>
+        <button type="submit" class="btn btn-primary">Importar</button>
+      </form>
+    </div>
+    <div class="col-md-4">
+      <div class="mt-4">
+        <h3>Modelos para Download</h3>
+        <p>Para importar produtos, você pode baixar os modelos em formato CSV ou XML.</p>
+        <ul class="list-unstyled">
+          <li><a href="{% url 'products:download_csv_template' %}" class="btn btn-outline-success">Download do Modelo CSV</a></li>
+          <li><a href="{% url 'products:download_xml_template' %}" class="btn btn-outline-success mt-2">Download do Modelo XML</a></li>
+        </ul>
+      </div>
+    </div>
+  </div>
 </div>
 {% endblock %}

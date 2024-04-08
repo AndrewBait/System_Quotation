@@ -19,7 +19,44 @@ from django.http import JsonResponse
 from django.views.decorators.http import require_http_methods
 from .models import Brand
 from django.core.paginator import Paginator
+from django.http import HttpResponse
 
+
+
+# Para download do modelo CSV
+def download_csv_template(request):
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = 'attachment; filename="template.csv"'
+    response.write(u'\ufeff'.encode('utf8'))  # BOM (Byte Order Mark) para indicar UTF-8
+    csv_template = (
+        "ean,sku,name\n"  # Cabeçalho CSV com os campos mencionados
+        "1234567890123,SKU123,Exemplo de produto 1\n"  # Exemplo de linha de dados
+        "9876543210987,SKU456,Exemplo de produto 2\n"  # Outro exemplo de linha de dados
+    )
+    response.write(csv_template)
+    return response
+
+# Para download do modelo XML
+def download_xml_template(request):
+    response = HttpResponse(content_type='application/xml')
+    response['Content-Disposition'] = 'attachment; filename="template.xml"'
+    xml_template = (
+        "<?xml version='1.0' encoding='utf-8'?>\n"
+        "<products>\n"
+        "    <product>\n"
+        "        <ean>1234567890123</ean>\n"
+        "        <sku>SKU123</sku>\n"
+        "        <name>Exemplo de produto 1</name>\n"
+        "    </product>\n"
+        "    <product>\n"
+        "        <ean>9876543210987</ean>\n"
+        "        <sku>SKU456</sku>\n"
+        "        <name>Exemplo de produto 2</name>\n"
+        "    </product>\n"
+        "</products>\n"
+    )
+    response.write(xml_template)
+    return response
 
 
 def list_brands(request):
@@ -67,6 +104,7 @@ class ProductListView(ListView):
     model = Product
     template_name = 'products.html'
     context_object_name = 'products'
+    paginate_by = 10
     
     
 

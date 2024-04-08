@@ -62,7 +62,7 @@ class ProductAdmin(admin.ModelAdmin):
     form = ProductModelForm
     list_display = ('name', 'ean', 'sku', 'brand', 'product_line', 'department', 'category', 'subcategory', 'status')
     list_filter = ('department', 'category', 'subcategory', 'status')
-    search_fields = ['name', 'ean']
+    search_fields = ['name', 'ean', 'sku']
     fieldsets = (
         (None, {
             'fields': ('name', 'ean', 'sku', 'brand', 'product_line', 'department', 'category', 'subcategory', 'status')

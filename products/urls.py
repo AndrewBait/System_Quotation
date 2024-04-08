@@ -1,7 +1,7 @@
 from django.urls import path
 from .views import (ProductListView, NewProductCreateView, ProductDetailView, ProductUpdatView,
                      ProductDeleteView, BrandCreateView, import_products, CategoryAutocomplete, SubcategoryAutocomplete, BrandAutocomplete,                    
-                      get_categories, get_subcategories , add_brand)
+                      get_categories, get_subcategories , add_brand, download_xml_template, download_csv_template)
 from . import views
 
 
@@ -24,5 +24,7 @@ urlpatterns = [
     path('list-brands/', views.list_brands, name='list_brands'),
     path('products/get-categories/', views.get_categories, name='get-categories'),
     path('products/get-subcategories/', views.get_subcategories, name='get-subcategories'),
+    path('download/csv/', views.download_csv_template, name='download_csv_template'),
+    path('download/xml/', views.download_xml_template, name='download_xml_template'),
 
 ]
