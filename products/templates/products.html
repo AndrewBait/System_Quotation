@@ -36,17 +36,17 @@
     <div class="row g-2 mb-5">
       <div class="col-md-3">
         <select class="form-control" name="department" onchange="this.form.submit()">
-          <option value="">Todos os Departamentos</option>
+          <option value="">Departamentos</option>
           {% for department in departments %}
           <option value="{{ department.id }}" {% if current_department == department.id|stringformat:"s" %} selected {% endif %}>
               {{ department.name }}
           </option>
           {% endfor %}
       </select>
-      </div>
+    </div>
       <div class="col-md-3">
         <select class="form-select" name="category" onchange="this.form.submit()">
-          <option value="">Todas as Categorias</option>
+          <option value="">Categorias</option>
           {% for category in categories %}
           <option value="{{ category.id }}" {% if request.GET.category == category.id|stringformat:"s" %}selected{% endif %}>{{ category.name }}</option>
           {% endfor %}
@@ -54,7 +54,7 @@
       </div>
       <div class="col-md-3">
         <select class="form-select" name="subcategory" onchange="this.form.submit()">
-          <option value="">Todas as Subcategorias</option>
+          <option value="">Subcategorias</option>
           {% for subcategory in subcategories %}
           <option value="{{ subcategory.id }}" {% if request.GET.subcategory == subcategory.id|stringformat:"s" %}selected{% endif %}>{{ subcategory.name }}</option>
           {% endfor %}
@@ -122,7 +122,11 @@
             <img src="{{ product.photo.url }}" class="card-img-top" alt="{{ product.name }}" style="max-height: 180px; object-fit: cover;">
           {% else %}
             <!-- Placeholder para quando não há imagem -->
-            <svg class="bd-placeholder-img card-img-top" width="100%" height="180" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Placeholder: Thumbnail" preserveAspectRatio="xMidYMid slice" focusable="false"><title>Placeholder</title><rect width="100%" height="100%" fill="#eee"/><text x="50%" y="50%" fill="#aaa" dy=".3em">Sem imagem</text></svg>
+            <svg class="bd-placeholder-img card-img-top" width="100%" height="180" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Placeholder: Thumbnail" preserveAspectRatio="xMidYMid slice" focusable="false">
+              <title>Placeholder</title>
+              <rect width="100%" height="100%" fill="#eee"/>
+              <text x="50%" y="50%" fill="#aaa" dy=".3em" text-anchor="middle" dominant-baseline="middle">Sem imagem</text>
+            </svg>
           {% endif %}
           <div class="card-body">
             <h5 class="card-title">{{ product.name }}</h5>

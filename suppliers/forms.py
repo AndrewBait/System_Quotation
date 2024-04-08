@@ -1,5 +1,5 @@
 from django import forms
-from .models import Supplier, Departamento, Category, Brand
+from .models import Departamento, Category, Subcategory, Brand, Supplier
 from django.core.exceptions import ValidationError
 
 
@@ -34,10 +34,32 @@ class SupplierForm(forms.ModelForm):
         if value < 0:
             raise ValidationError(('Valor inválido. Deve ser maior ou igual a zero.'))
         return value    
+    
+class SupplierStatusFilterForm(forms.Form):
+    STATUS_CHOICES = [
+        ('', 'Todos'),
+        (True, 'Ativo'),
+        (False, 'Inativo'),
+    ]
+    status = forms.ChoiceField(choices=STATUS_CHOICES, required=False, label='Status', widget=forms.Select(attrs={'onchange': 'this.form.submit();'}))
 
 
 class SupplierFilterForm(forms.Form):
-    active = forms.ChoiceField(choices=[('', 'Todos'), (True, 'Ativo'), (False, 'Inativo')], required=False, label='Status')
-    department = forms.ModelChoiceField(queryset=Departamento.objects.all(), required=False, label='Departamento')
-    category = forms.ModelChoiceField(queryset=Category.objects.all(), required=False, label='Categoria')
-    brand = forms.ModelChoiceField(queryset=Brand.objects.all(), required=False, label='Marca')
+    STATUS_CHOICES = [('', 'Todos'), ('True', 'Ativo'), ('False', 'Inativo')]
+    active = forms.ChoiceField(choices=STATUS_CHOICES, required=False, label='Status', widget=forms.Select(attrs={'onchange': 'this.form.submit();', 'class': 'form-select'}))
+    department = forms.ModelChoiceField(queryset=Departamento.objects.all(), required=False, label='Departamento', widget=forms.Select(attrs={'onchange': 'this.form.submit();', 'class': 'form-select'}))
+    category = forms.ModelChoiceField(queryset=Category.objects.none(), required=False, label='Categoria', widget=forms.Select(attrs={'class': 'form-select'}))
+    subcategory = forms.ModelChoiceField(queryset=Subcategory.objects.none(), required=False, label='Subcategoria', widget=forms.Select(attrs={'class': 'form-select'}))
+    brand = forms.ModelChoiceField(queryset=Brand.objects.all(), required=False, label='Marca', widget=forms.Select(attrs={'onchange': 'this.form.submit();', 'class': 'form-select'}))
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if 'department' in self.data:
+            try:
+                department_id = int(self.data.get('department'))
+                self.fields['category'].queryset = Category.objects.filter(department_id=department_id).order_by('name')
+                if 'category' in self.data:
+                    category_id = int(self.data.get('category'))
+                    self.fields['subcategory'].queryset = Subcategory.objects.filter(category_id=category_id).order_by('name')
+            except (ValueError, TypeError):
+                pass  # invalid input; ignore and fallback to empty City queryset

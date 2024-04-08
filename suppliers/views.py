@@ -9,7 +9,23 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.hashers import make_password
 from django.shortcuts import redirect, render
 from .models import Departamento, Supplier
+from .forms import SupplierStatusFilterForm
+from .models import Category
+from django.http import JsonResponse
 
+
+def get_categories(request):
+    department_id = request.GET.get('department_id')
+    if department_id:  # Verifica se department_id não está vazio
+        try:
+            department_id = int(department_id)  # Tenta converter department_id para inteiro
+            categories = Category.objects.filter(department_id=department_id).values('id', 'name')
+        except ValueError:  # Caso department_id não seja um inteiro válido
+            categories = []
+    else:
+        categories = []  # Se department_id estiver vazio, define categories como uma lista vazia
+    
+    return JsonResponse(list(categories), safe=False)
 
 def supplier_list(request):
     form = SupplierFilterForm(request.GET)
@@ -102,3 +118,20 @@ def create_supplier(request):
         user = User.objects.create_user(username=request.POST['email'], password=request.POST['senha'])
         supplier = Supplier(user=user)
         supplier.save()
+
+
+def supplier_list(request):
+    form = SupplierStatusFilterForm(request.GET)
+    suppliers = Supplier.objects.all()
+
+    status = request.GET.get('status')
+    if status != '' and status is not None:
+        if status == 'True':
+            suppliers = suppliers.filter(active=True)
+        elif status == 'False':
+            suppliers = suppliers.filter(active=False)
+
+    return render(request, 'your_template_name.html', {
+        'object_list': suppliers,
+        'form': form,
+    })
