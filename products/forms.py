@@ -1,11 +1,21 @@
 from django import forms
-from products.models import Product, Category, Subcategory, Brand
+from products.models import Product, Category, Subcategory, Brand, Embalagem
 from cotacao.models import Departamento  
 from dal import autocomplete
 from django_select2.forms import ModelSelect2Widget
 
 
 class ProductModelForm(forms.ModelForm):
+    altura_embalagem = forms.FloatField(label='Altura', required=False)
+    largura_embalagem = forms.FloatField(label='Largura', required=False)
+    comprimento_embalagem = forms.FloatField(label='Comprimento', required=False)
+    espessura_embalagem = forms.FloatField(label='Espessura', required=False)
+    UNIDADE_CHOICES = (
+        ('mm', 'Milímetro'),
+        ('cm', 'Centímetro'),
+        ('m', 'Metro'),
+    )
+    unidade_dimensao = forms.ChoiceField(label='Unidade de Medida', choices=UNIDADE_CHOICES, required=False)
     department = forms.ModelChoiceField(queryset=Departamento.objects.all().order_by('nome'), required=True, label="Departamento")
     widget=autocomplete.ModelSelect2(url='products:department-autocomplete')
     brand = forms.ModelChoiceField(
@@ -34,6 +44,29 @@ class ProductModelForm(forms.ModelForm):
             'subcategory': autocomplete.ModelSelect2(url='products:subcategory-autocomplete', forward=['category']),
             'subcategory': autocomplete.ModelSelect2(url='products:subcategory-autocomplete', forward=['category']),
         }
+
+    def save(self, commit=True):
+        product = super().save(commit=False)
+        altura_embalagem = self.cleaned_data.get('altura_embalagem')
+        largura_embalagem = self.cleaned_data.get('largura_embalagem')
+        comprimento_embalagem = self.cleaned_data.get('comprimento_embalagem')
+        espessura_embalagem = self.cleaned_data.get('espessura_embalagem')
+        unidade_dimensao = self.cleaned_data.get('unidade_dimensao')
+
+        if altura_embalagem and largura_embalagem and comprimento_embalagem and espessura_embalagem and unidade_dimensao:
+            embalagem = Embalagem.objects.create(
+                altura=altura_embalagem,
+                largura=largura_embalagem,
+                comprimento=comprimento_embalagem,
+                espessura=espessura_embalagem,
+                unidade=unidade_dimensao
+            )
+            embalagem.save()
+            product.embalagem = embalagem
+
+        if commit:
+            product.save()
+        return product        
 
     def __init__(self, *args, **kwargs):
         super(ProductModelForm, self).__init__(*args, **kwargs)

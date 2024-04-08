@@ -1,111 +1,141 @@
 {% extends "base.html" %}
-
 {% load static %}
 {% load widget_tweaks %}
 {% include 'autocomplete_light/static.html' %}
 
-
 {% block extrahead %}
   {{ block.super }}
-  <!-- Certifique-se de incluir o CSS do Bootstrap -->
-
-{% include 'autocomplete_light/static.html' %}
-<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
-<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
-<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.bundle.min.js"></script>
-<link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" rel="stylesheet" />
-<script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
+  <!-- CSS do Bootstrap -->
+  {% include 'autocomplete_light/static.html' %}
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+  <!-- Scripts -->
+  <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.bundle.min.js"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" rel="stylesheet" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
+  <!-- Estilos para dimensionamento dos campos -->
+  <style>
+    .form-control {
+      width: 100%; /* Ajusta o tamanho dos campos de acordo com o container */
+    }
+    @media (max-width: 768px) { /* Ajustes para telas menores */
+      .form-control {
+        font-size: smaller; /* Diminui o tamanho da fonte */
+      }
+    }
+  </style>
 {% endblock %}
 
 {% block content %}
-<div class="container-fluid mt-4">  
-    <form action="" method="post" enctype="multipart/form-data" class="needs-validation" novalidate>
-        {% csrf_token %}
-        <h1 style="font-size: 2rem; margin-bottom: 20px;">Cadastrar Produto</h1>
-        <div class="row g-3">
-            <div class="col-lg-4">
-
-                <div class="mb-3">
-                    <label for="id_name" class="form-label">Nome do Produto:</label>
-                    {{ form.name|add_class:'form-control' }}
-                    {{ form.name.errors }}
-                </div>
-                <div class="mb-3">
-                    <label for="id_ean" class="form-label">Código de barras - EAN:</label>
-                    {{ form.ean|add_class:'form-control' }}
-                    {{ form.ean.errors }}
-                </div>
-                <div class="mb-3">
-                    <label for="id_sku" class="form-label">Código interno - SKU:</label>
-                    {{ form.sku|add_class:'form-control' }}
-                    {{ form.sku.errors }}
-                </div>   
-
-                <div class="mb-3">
-                    <label for="id_department" class="form-label">Departamento:</label>
-                    {{ form.department|add_class:'form-control' }}
-                    {{ form.department.errors }}
-                </div>
-                <div class="mb-3">
-                    <label for="id_category" class="form-label">Categoria:</label>
-                    {{ form.category|add_class:'form-control' }}
-                    {{ form.category.errors }}
-                </div>
-                <div class="mb-3">
-                    <label for="id_subcategory" class="form-label">Subcategoria:</label>
-                    {{ form.subcategory|add_class:'form-control' }}
-                    {{ form.subcategory.errors }}
-                </div>   
-                
-                <div class="mb-3">
-                    <label for="id_status" class="form-label">Status:</label>
-                    {{ form.status|add_class:'form-control' }}
-                    {{ form.status.errors }}
-                </div>
-            </div>
-            <div class="col-lg-4">
-
-                <div class="mb-3">
-                    <label for="id_brand" class="form-label">Marca:</label>
-                    {{ form.brand|add_class:'form-control select2' }}
-                    {{ form.brand.errors }}
-                </div>
-
-                <div class="mb-3">
-                    <label for="id_product_line" class="form-label">Linha de Produto:</label>
-                    {{ form.product_line|add_class:'form-control' }}
-                    {{ form.product_line.errors }}
-                </div>
-                
-                <div class="mb-3">
-                    <label for="id_photo" class="form-label">Imagem:</label>
-                    {{ form.photo|add_class:'form-control' }}
-                    {{ form.photo.errors }}
-                </div>
-                <div class="mb-3">
-                    <label for="id_descricao" class="form-label">Descrição:</label>
-                    {{ form.descricao|add_class:'form-control' }}
-                    {{ form.descricao.errors }}
-                </div>
-                <div class="mb-3">
-                    <label for="id_notas" class="form-label">Notas:</label>
-                    {{ form.notas|add_class:'form-control' }}
-                    {{ form.notas.errors }}
-                </div>
-                <div class="mb-3">
-                    <div class="text-end mt-4">
-                        <a href="{% url 'products:import_products' %}" class="btn btn-primary me-2">Importar Produtos</a>
-                        <input type="submit" value="Cadastrar" class="btn btn-primary me-2">
-                        <a href="{% url 'products:products_list' %}" class="btn btn-secondary me-2">Voltar</a>
-                    </div>
-                    
-            </div>
+<div class="container-fluid mt-4">
+  <form action="" method="post" enctype="multipart/form-data" class="needs-validation" novalidate>
+    {% csrf_token %}
+    <h1 style="font-size: 2rem; margin-bottom: 20px;">Cadastrar Produto</h1>
+    <div class="row">
+      <!-- Primeira Coluna -->
+      <div class="col-md-4">
+        <div class="mb-3">
+          <label for="id_name" class="form-label">Nome do Produto:</label>
+          {{ form.name|add_class:'form-control' }}
+          {{ form.name.errors }}
         </div>
+        <div class="mb-3">
+          <label for="id_ean" class="form-label">Código de barras - EAN:</label>
+          {{ form.ean|add_class:'form-control' }}
+          {{ form.ean.errors }}
+        </div>
+        <div class="mb-3">
+          <label for="id_sku" class="form-label">Código interno - SKU:</label>
+          {{ form.sku|add_class:'form-control' }}
+          {{ form.sku.errors }}
+        </div>
+        <div class="mb-3">
+          <label for="id_department" class="form-label">Departamento:</label>
+          {{ form.department|add_class:'form-control' }}
+          {{ form.department.errors }}
+        </div>
+        <div class="mb-3">
+          <label for="id_category" class="form-label">Categoria:</label>
+          {{ form.category|add_class:'form-control' }}
+          {{ form.category.errors }}
+        </div>
+        <div class="mb-3">
+          <label for="id_subcategory" class="form-label">Subcategoria:</label>
+          {{ form.subcategory|add_class:'form-control' }}
+          {{ form.subcategory.errors }}
+        </div>
+        <div class="mb-3">
+          <label for="id_status" class="form-label">Status:</label>
+          {{ form.status|add_class:'form-control' }}
+          {{ form.status.errors }}
+        </div>
+      </div>
+      <!-- Segunda Coluna -->
+      <div class="col-md-4">
+        <div class="mb-3">
+          <label for="id_brand" class="form-label">Marca:</label>
+          {{ form.brand|add_class:'form-control select2' }}
+          {{ form.brand.errors }}
+        </div>
+        <div class="mb-3">
+          <label for="id_product_line" class="form-label">Linha de Produto:</label>
+          {{ form.product_line|add_class:'form-control' }}
+          {{ form.product_line.errors }}
+        </div>
+        <div class="mb-3">
+          <label for="id_photo" class="form-label">Imagem:</label>
+          {{ form.photo|add_class:'form-control' }}
+          {{ form.photo.errors }}
+        </div>
+        <div class="mb-3">
+          <label for="id_descricao" class="form-label">Descrição:</label>
+          {{ form.descricao|add_class:'form-control' }}
+          {{ form.descricao.errors }}
+        </div>
+        <div class="mb-3">
+          <label for="id_notas" class="form-label">Notas:</label>
+          {{ form.notas|add_class:'form-control' }}
+          {{ form.notas.errors }}
+        </div>
+      </div>
+      <!-- Terceira Coluna -->
+      <div class="col-md-4">
+        <div class="mb-3">
+            <label for="id_unidade_dimensao" class="form-label">Und. de Medida Embalagem:</label>
+            {{ form.unidade_dimensao|add_class:'form-control' }}
+            {{ form.unidade_dimensao.errors }}
+        </div>
+        <div class="mb-3">
+          <label for="id_altura_embalagem" class="form-label">Altura da Embalagem:</label>
+          {{ form.altura_embalagem|add_class:'form-control' }}
+          {{ form.altura_embalagem.errors }}
+        </div>
+        <div class="mb-3">
+          <label for="id_largura_embalagem" class="form-label">Largura da Embalagem:</label>
+          {{ form.largura_embalagem|add_class:'form-control' }}
+          {{ form.largura_embalagem.errors }}
+        </div>
+        <div class="mb-3">
+          <label for="id_comprimento_embalagem" class="form-label">Comprimento da Embalagem:</label>
+          {{ form.comprimento_embalagem|add_class:'form-control' }}
+          {{ form.comprimento_embalagem.errors }}
+        </div>
+        <div class="mb-3">
+          <label for="id_espessura_embalagem" class="form-label">Espessura da Embalagem:</label>
+          {{ form.espessura_embalagem|add_class:'form-control' }}
+          {{ form.espessura_embalagem.errors }}
+        </div>
+        <div class="text-end mt-5">
+            <a href="{% url 'products:import_products' %}" class="btn btn-outline-success me-2">Importar Produtos</a>
+            <input type="submit" value="Cadastrar" class="btn btn-primary me-2">
+            <a href="{% url 'products:products_list' %}" class="btn btn-secondary me-2">Voltar</a>
+          </div>
+      </div>
+    </div>
 
-    </form>
-</div>
 
-        
+ 
+  </form>
 </div>
 
 

@@ -84,11 +84,11 @@ class Product(models.Model):
     notas = models.TextField("Notas", blank=True, null=True)
     # fornecedores = models.ManyToManyField(Supplier, related_name='produtos', blank=True, null=True)
     descricao = models.TextField(_("Descrição"), max_length=50, blank=True)
-    preco_de_custo = models.DecimalField(_("Preço de Custo"), max_digits=10, decimal_places=2, blank=True, null=True)
-    altura_embalagem = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True, verbose_name='Altura da Embalagem')
-    largura_embalagem = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True, verbose_name='Largura da Embalagem')
-    comprimento_embalagem = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True, verbose_name='Comprimento da Embalagem')
-    espessura_embalagem = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True, verbose_name='Espessura da Embalagem')
+    preco_de_custo = models.DecimalField(_("Preço de Custo"), max_digits=10, decimal_places=3, blank=True, null=True)
+    altura_embalagem = models.DecimalField(max_digits=10, decimal_places=3, blank=True, null=True, verbose_name='Altura da Embalagem')
+    largura_embalagem = models.DecimalField(max_digits=10, decimal_places=3, blank=True, null=True, verbose_name='Largura da Embalagem')
+    comprimento_embalagem = models.DecimalField(max_digits=10, decimal_places=3, blank=True, null=True, verbose_name='Comprimento da Embalagem')
+    espessura_embalagem = models.DecimalField(max_digits=10, decimal_places=3, blank=True, null=True, verbose_name='Espessura da Embalagem')
     UNIDADE_CHOICES = (
         ('mm', 'Milímetro'),
         ('cm', 'Centímetro'),
