@@ -3,9 +3,14 @@ from django.urls import reverse
 from django.utils.html import format_html
 from dal import autocomplete
 from django_select2.forms import ModelSelect2Widget
-from products.models import Product, Brand, Category, Subcategory, ProductPriceHistory, ProductLine
+from products.models import Product, Brand, Category, Subcategory, ProductPriceHistory, ProductLine, Embalagem
 from cotacao.models import Departamento
 from .forms import ProductModelForm
+from django.utils.translation import gettext as _
+from django.core.exceptions import ValidationError
+
+
+
 
 
 class CategoryInline(admin.TabularInline):
@@ -69,6 +74,9 @@ class ProductAdmin(admin.ModelAdmin):
         }),
         ('Detalhes adicionais', {
             'fields': ('photo', 'notas', 'descricao', 'preco_de_custo', 'unidade_de_medida', 'data_de_validade')
+        }),
+        ('Detalhes da Embalagem', {
+            'fields': (('altura_embalagem', 'unidade_altura'), ('largura_embalagem', 'unidade_largura'), ('comprimento_embalagem', 'unidade_comprimento'), ('espessura_embalagem', 'unidade_espessura'))
         }),
     )
     list_per_page = 15

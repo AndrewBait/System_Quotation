@@ -6,6 +6,18 @@ from django.contrib import messages
 from simple_history.models import HistoricalRecords
 
 
+class Embalagem(models.Model):
+    altura = models.DecimalField(max_digits=10, decimal_places=2)
+    largura = models.DecimalField(max_digits=10, decimal_places=2)
+    comprimento = models.DecimalField(max_digits=10, decimal_places=2)
+    UNIDADE_CHOICES = (
+        ('mm', 'Milímetro'),
+        ('cm', 'Centímetro'),
+        ('m', 'Metro'),
+    )
+    unidade = models.CharField(max_length=2, choices=UNIDADE_CHOICES) 
+
+
 class Departamento(models.Model):
     nome = models.CharField(max_length=100, unique=True)  
 
@@ -73,6 +85,20 @@ class Product(models.Model):
     # fornecedores = models.ManyToManyField(Supplier, related_name='produtos', blank=True, null=True)
     descricao = models.TextField(_("Descrição"), max_length=50, blank=True)
     preco_de_custo = models.DecimalField(_("Preço de Custo"), max_digits=10, decimal_places=2, blank=True, null=True)
+    altura_embalagem = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True, verbose_name='Altura da Embalagem')
+    largura_embalagem = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True, verbose_name='Largura da Embalagem')
+    comprimento_embalagem = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True, verbose_name='Comprimento da Embalagem')
+    espessura_embalagem = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True, verbose_name='Espessura da Embalagem')
+    UNIDADE_CHOICES = (
+        ('mm', 'Milímetro'),
+        ('cm', 'Centímetro'),
+        ('m', 'Metro'),
+    )
+    unidade_altura = models.CharField(max_length=2, choices=UNIDADE_CHOICES, blank=True, null=True, verbose_name='Unidade de Medida Altura')
+    unidade_largura = models.CharField(max_length=2, choices=UNIDADE_CHOICES, blank=True, null=True, verbose_name='Unidade de Medida Largura')
+    unidade_comprimento = models.CharField(max_length=2, choices=UNIDADE_CHOICES, blank=True, null=True, verbose_name='Unidade de Medida Comprimento')
+    unidade_espessura = models.CharField(max_length=2, choices=UNIDADE_CHOICES, blank=True, null=True, verbose_name='Unidade de Medida Espessura')
+
     unidade_de_medida = models.CharField(_("Unidade de Medida"), max_length=50, blank=True, null=True, choices=[
         ('Kg', 'Quilo'),
         ('L', 'Litro'),
@@ -107,11 +133,19 @@ class Product(models.Model):
 
     def save(self, *args, **kwargs):
         self.full_clean()
-        return super(Product, self).save(*args, **kwargs)
+        if any([self.altura_embalagem, self.largura_embalagem, self.comprimento_embalagem]):
+            if not all([self.altura_embalagem, self.largura_embalagem, self.comprimento_embalagem]):
+                raise ValidationError("Se uma dimensão da embalagem for preenchida, todas devem ser preenchidas.")
+        
+        # Salve o produto
+        super(Product, self).save(*args, **kwargs)
 
     def __str__(self):
         return self.name
     
+
+  
+
 
 class ProductPriceHistory(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='price_history')
