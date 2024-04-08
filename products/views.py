@@ -5,11 +5,11 @@ from django.contrib.auth.decorators import login_required
 from django.utils.decorators import method_decorator
 from django.views.generic import ListView, CreateView, DetailView, UpdateView, DeleteView
 from django.views.generic.edit import CreateView
-from .models import Brand, Product
+from .models import Brand, Product, Departamento, Category, Subcategory
 import csv
 import xml.etree.ElementTree as ET
 from .forms import ProductImportForm
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.http import JsonResponse
 from django.core import serializers
 from dal import autocomplete
@@ -17,6 +17,8 @@ from .models import Category, Subcategory
 from django.http import JsonResponse
 from django.views.decorators.http import require_http_methods
 from .models import Brand
+from django.core.paginator import Paginator
+
 
 
 def list_brands(request):
@@ -33,7 +35,7 @@ def add_brand(request):
     
     brand, created = Brand.objects.get_or_create(name=brand_name)
     return JsonResponse({'id': brand.id, 'name': brand.name}, status=201 if created else 200)
-    
+
 
 def brand_autocomplete(request):
     qs = Brand.objects.all()
@@ -54,25 +56,38 @@ class BrandCreateView(CreateView):
 
 class BrandAutocomplete(autocomplete.Select2QuerySetView):
     def get_queryset(self):
-        # Usuários podem editar apenas as marcas que podem ver.
         qs = Brand.objects.all()
-
         if self.q:
-            qs = qs.filter(name__istartswith=self.q)
-        return qs
-
+            qs = qs.filter(name__icontains=self.q)
+        return qs[:10]
 
 
 class ProductListView(ListView):
     model = Product
     template_name = 'products.html'
     context_object_name = 'products'
+    paginate_by = 20
 
     def get_queryset(self):
         queryset = super().get_queryset().order_by('name')
-        search = self.request.GET.get('search', '')
-        if search:
-            queryset = queryset.filter(name__icontains=search)
+        queryset = super().get_queryset().order_by('name')
+        product_name = self.request.GET.get('product_name', '')
+        department_id = self.request.GET.get('department', '')
+        category_id = self.request.GET.get('category', '')
+        subcategory_id = self.request.GET.get('subcategory', '')
+        status = self.request.GET.get('status', '')
+
+        if product_name:
+            queryset = queryset.filter(name__icontains=product_name)
+        if department_id:
+            queryset = queryset.filter(department__id=department_id)
+        if category_id:
+            queryset = queryset.filter(category__id=category_id)
+        if subcategory_id:
+            queryset = queryset.filter(subcategory__id=subcategory_id)
+        if status:
+            queryset = queryset.filter(status=(status.lower() == 'true'))
+
         return queryset
 
     def get(self, request, *args, **kwargs):
@@ -84,10 +99,19 @@ class ProductListView(ListView):
             return super().get(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['categories'] = Category.objects.all()
-        context['subcategories'] = Subcategory.objects.all()
+
+        context = super(ProductListView, self).get_context_data(**kwargs)
+        department_id = self.request.GET.get('department')
+        category_id = self.request.GET.get('category')
+        context['departments'] = Departamento.objects.all()
+        context['categories'] = Category.objects.filter(department_id=department_id) if department_id else Category.objects.none()
+        context['subcategories'] = Subcategory.objects.filter(category_id=category_id) if category_id else Subcategory.objects.none() # Se necessário, ajuste para filtrar com base na categoria selecionada
+        # Mantém os filtros atuais para serem selecionados após a recarga da página
+        context['current_department'] = department_id
+        context['current_category'] = category_id
+        context['current_subcategory'] = self.request.GET.get('subcategory', '')
         return context
+
     
 
 class ProductDetailView(DetailView):
@@ -211,13 +235,14 @@ def handle_xml_upload(f):
 
 def get_categories(request):
     department_id = request.GET.get('department_id')
-    categories = list(Category.objects.filter(department_id=department_id).values('id', 'name'))
-    return JsonResponse(categories, safe=False)
+    categories = Category.objects.filter(department_id=department_id).values('id', 'name')
+    return JsonResponse(list(categories), safe=False)
+
 
 def get_subcategories(request):
     category_id = request.GET.get('category_id')
-    subcategories = list(Subcategory.objects.filter(category_id=category_id).values('id', 'name'))
-    return JsonResponse(subcategories, safe=False)
+    subcategories = Subcategory.objects.filter(category_id=category_id).values('id', 'name')
+    return JsonResponse(list(subcategories), safe=False)
 
 
 class CategoryAutocomplete(autocomplete.Select2QuerySetView):
