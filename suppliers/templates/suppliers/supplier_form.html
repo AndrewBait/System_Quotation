@@ -7,11 +7,13 @@
 {{ block.super }}
 <!-- Bootstrap CSS -->
 <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
-<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" rel="stylesheet" />
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.mask/1.14.16/jquery.mask.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
 {% endblock %}
+
 
 {% block content %}
 <div class="container-fluid mt-4">  
@@ -24,31 +26,56 @@
                 <div class="mb-3">
                     <label for="id_name" class="form-label">Nome:</label>
                     {{ form.name|add_class:'form-control' }}
+                    {% if form.name.errors %}
+                        <div class="invalid-feedback" style="display:block;">
+                            {% for error in form.name.errors %}
+                                {{ error }}
+                            {% endfor %}
+                        </div>
+                    {% endif %}
                 </div>
+
                 <div class="mb-3">
                     <label for="id_email" class="form-label">E-mail:</label>
                     {{ form.email|add_class:'form-control' }}
+                    {% if form.email.errors %}
+                        <div class="invalid-feedback" style="display:block;">
+                            {% for error in form.email.errors %}
+                                {{ error }}
+                            {% endfor %}
+                        </div>
+                    {% endif %}
                 </div>
+                
                 <div class="mb-3">
                     <label for="id_phone" class="form-label">Telefone:</label>
                     {{ form.phone|add_class:'form-control' }}
+                    {% if form.phone.errors %}
+                        <div class="invalid-feedback" style="display:block;">
+                            {% for error in form.phone.errors %}
+                                {{ error }}
+                            {% endfor %}
+                        </div>
+                    {% endif %}
                 </div>
+
                 <div class="mb-3">
                     <label for="id_company" class="form-label">Empresa Representante:</label>
                     {{ form.company|add_class:'form-control' }}
                 </div>
+
                 <div class="mb-3">
                   <label for="id_cnpj" class="form-label">CNPJ:</label>
                   {{ form.cnpj|add_class:'form-control' }}
                   <!-- <small class="text-muted">Formato: 00.000.000/0000-00</small> -->
               </div>
-
                 <!-- Endereço -->
                 <h4>Endereço</h4>
                 <div class="mb-3">
                   <label for="id_zip_code" class="form-label">CEP:</label>
                   {{ form.zip_code }} <!-- Já incluirá a classe e o id especificados no forms.py -->
               </div>
+
                 <div class="mb-3">
                     <label for="id_address_line_1" class="form-label">Endereço:</label>
                     {{ form.address_line_1|add_class:'form-control' }}
@@ -58,10 +85,12 @@
                     <label for="id_address_line_2" class="form-label">Complemento:</label>
                     {{ form.address_line_2|add_class:'form-control' }}
                 </div>
+
                 <div class="mb-3">
                     <label for="id_city" class="form-label">Cidade:</label>
                     {{ form.city|add_class:'form-control' }}
                 </div>
+
                 <div class="mb-3">
                     <label for="id_state" class="form-label">Estado:</label>
                     {{ form.state|add_class:'form-control' }}
@@ -75,26 +104,28 @@
                     <label for="id_minimum_order_value" class="form-label">Valor Mínimo para Pedido:</label>
                     {{ form.minimum_order_value|add_class:'form-control' }}
                 </div>
+
                 <div class="mb-3">
                     <label for="id_order_response_deadline" class="form-label">Prazo de Resposta para Pedidos:</label>
                     {{ form.order_response_deadline|add_class:'form-control' }}
                 </div>
                 
-                <!-- Departamentos, Categorias, Subcategorias, Marcas -->
+                Departamentos, Categorias, Subcategorias, Marcas
                 <div class="mb-3">
                     <label for="id_departments" class="form-label">Departamentos:</label>
-                    {{ form.departments|add_class:'form-control' }}
-
-                    
+                    {{ form.departments|add_class:'form-control' }}                    
                 </div>
+
                 <div class="mb-3">
                     <label for="id_categories" class="form-label">Categorias:</label>
                     {{ form.categories|add_class:'form-control' }}
                 </div>
+
                 <div class="mb-3">
                     <label for="id_subcategories" class="form-label">Subcategorias:</label>
                     {{ form.subcategories|add_class:'form-control' }}
                 </div>
+
                 <div class="mb-3">
                     <label for="id_brands" class="form-label">Marcas:</label>
                     {{ form.brands|add_class:'form-control' }}
@@ -103,41 +134,69 @@
                 <div class="text-end mt-4">
                     <button type="submit" class="btn btn-primary">Cadastrar</button>
                 </div>
-            </div>
+                
+            </form>
         </div>
-    </form>
+  <!-- Modal de Confirmação -->
+<div class="modal fade" id="confirmationModal" tabindex="-1" aria-labelledby="confirmationModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="confirmationModalLabel">Cadastro Realizado</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          O cadastro foi realizado com sucesso!
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  
+{% endblock %}
+
+{% block javascript %}
+{{ block.super }}
 <script>
+    
+
+
+    
+
       document.addEventListener("DOMContentLoaded", function() {
-    var cepInput = document.getElementById('id_zip_code');
+        var cepInput = document.getElementById('id_zip_code');
 
-    cepInput.addEventListener('blur', function(e) {
-        var cep = e.target.value.replace(/\D/g, '');
+        cepInput.addEventListener('blur', function(e) {
+            var cep = e.target.value.replace(/\D/g, '');
 
-        // Se o CEP tiver 8 dígitos, tenta buscar o endereço
-        if(cep.length === 8) {
-            fetch(`https://brasilapi.com.br/api/cep/v1/${cep}`)
-                .then(response => response.json())
-                .then(data => {
-                    if(data) {
-                        document.getElementById('id_address_line_1').value = data.street;
-                        document.getElementById('id_city').value = data.city;
-                        document.getElementById('id_state').value = data.state;
-                    } else {
-                        alert('CEP não encontrado.');
-                    }
-                })
-                .catch(() => alert('Erro ao buscar o CEP.'));
-        } else {
-            // Se o CEP estiver vazio ou for removido, limpa os campos
-            document.getElementById('id_address_line_1').value = '';
-            document.getElementById('id_city').value = '';
-            document.getElementById('id_state').value = '';
-        }
+            // Se o CEP tiver 8 dígitos, tenta buscar o endereço
+            if(cep.length === 8) {
+                fetch(`https://brasilapi.com.br/api/cep/v1/${cep}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if(data) {
+                            document.getElementById('id_address_line_1').value = data.street;
+                            document.getElementById('id_city').value = data.city;
+                            document.getElementById('id_state').value = data.state;
+                        } else {
+                            alert('CEP não encontrado.');
+                        }
+                    })
+                    .catch(() => alert('Erro ao buscar o CEP.'));
+            } else {
+                // Se o CEP estiver vazio ou for removido, limpa os campos
+                document.getElementById('id_address_line_1').value = '';
+                document.getElementById('id_city').value = '';
+                document.getElementById('id_state').value = '';
+            }
+        });
     });
-});
 
 $(document).ready(function() {
-    // Máscaras
+
     $('#id_cnpj').mask('00.000.000/0000-00');
     $('#id_zip_code').mask('00000-000');
     $('#id_phone').mask('(00) 00000-0000');
@@ -166,7 +225,7 @@ $(document).ready(function() {
         }
     });
 });
-      </script>
+</script>
   
 </div>
 {% endblock %}

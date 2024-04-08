@@ -61,7 +61,7 @@ class ProductAdmin(admin.ModelAdmin):
     search_fields = ['name', 'ean']
     fieldsets = (
         (None, {
-            'fields': ('name', 'ean', 'sku', 'brand', 'department', 'category', 'subcategory', 'status', 'photo', 'fornecedores', 'descricao', 'preco_de_custo', 'unidade_de_medida', 'data_de_validade', 'notas')
+            'fields': ('name', 'ean', 'sku', 'brand', 'department', 'category', 'subcategory', 'status', 'photo', 'descricao', 'preco_de_custo', 'unidade_de_medida', 'data_de_validade', 'notas')
         }),
     )
     # filter_horizontal = ('fornecedores',)

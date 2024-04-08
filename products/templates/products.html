@@ -3,6 +3,21 @@
 {% block content %}
 <link href="https://stackpath.bootstrapcdn.com/bootstrap/5.1.3/css/bootstrap.min.css" rel="stylesheet">
 
+<style>
+  .clickable {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    cursor: pointer;
+  }
+
+  .clickable:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+  }
+
+
+</style>
+
+
 <div class="container mt-4">
   <h2 class="mb-4">Catálogo de Produtos</h2>
   <div class="row g-3 mb-4">
@@ -52,6 +67,16 @@
           <option value="False" {% if request.GET.status == 'False' %}selected{% endif %}>Inativo</option>
         </select>
       </div>
+      <div class="col-md-3">
+        <select class="form-select" name="" onchange="this.form.submit()">
+          <option value="">Marca</option>
+        </select>
+      </div>
+      <div class="col-md-3">
+        <select class="form-select" name="" onchange="this.form.submit()">
+          <option value="">Linha</option>
+        </select>
+      </div>
     </div>
       <div class="text-end mt-3 ">
         <a href="{% url 'products:new_product' %}" class="btn btn-primary">
@@ -91,11 +116,13 @@
   <div class="row row-cols-1 row-cols-md-5 g-4">
     {% for product in products %}
       <div class="col">
-        <div class="card h-100">
+        <!-- Adiciona o atributo data-href com a URL de detalhe do produto -->
+        <div class="card h-100 clickable" data-href="{% url 'products:product_detail' product.id %}">
           {% if product.photo %}
-            <img src="{{ product.photo.url }}" class="card-img-top" alt="{{ product.name }}" style="max-height: 140px; object-fit: cover;">
+            <img src="{{ product.photo.url }}" class="card-img-top" alt="{{ product.name }}" style="max-height: 180px; object-fit: cover;">
           {% else %}
-            <svg class="bd-placeholder-img card-img-top" width="100%" height="140" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Placeholder: Thumbnail" preserveAspectRatio="xMidYMid slice" focusable="false"><title>Placeholder</title><rect width="100%" height="100%" fill="#eee"/><text x="50%" y="50%" fill="#aaa" dy=".3em">Sem imagem</text></svg>
+            <!-- Placeholder para quando não há imagem -->
+            <svg class="bd-placeholder-img card-img-top" width="100%" height="180" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Placeholder: Thumbnail" preserveAspectRatio="xMidYMid slice" focusable="false"><title>Placeholder</title><rect width="100%" height="100%" fill="#eee"/><text x="50%" y="50%" fill="#aaa" dy=".3em">Sem imagem</text></svg>
           {% endif %}
           <div class="card-body">
             <h5 class="card-title">{{ product.name }}</h5>
@@ -106,10 +133,20 @@
               <p class="card-text">SKU: {{ product.sku }}</p>
             {% endif %}
             <a href="{% url 'products:product_update' product.pk %}" class="btn btn-primary">Editar</a>
-            <a href="{% url 'products:product_delete' product.pk %}" class="btn btn-danger">Excluir</a>
+            <a href="{% url 'products:product_detail' product.pk %}" class="btn btn-info">Visualizar</a>
+          </a>
           </div>
         </div>
       </div>
+
+      <script>
+        // Adiciona um event listener para capturar cliques na div .clickable
+        document.querySelectorAll('.clickable').forEach(item => {
+          item.addEventListener('click', event => {
+            window.location.href = item.getAttribute('data-href');
+          });
+        });
+      </script>
     {% endfor %}
   </div>
 

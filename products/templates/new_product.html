@@ -22,6 +22,12 @@
         <h1 style="font-size: 2rem; margin-bottom: 20px;">Cadastrar Produto</h1>
         <div class="row g-3">
             <div class="col-lg-4">
+
+                <div class="mb-3">
+                    <label for="id_name" class="form-label">Nome do Produto:</label>
+                    {{ form.name|add_class:'form-control' }}
+                    {{ form.name.errors }}
+                </div>
                 <div class="mb-3">
                     <label for="id_ean" class="form-label">Código de barras - EAN:</label>
                     {{ form.ean|add_class:'form-control' }}
@@ -32,11 +38,7 @@
                     {{ form.sku|add_class:'form-control' }}
                     {{ form.sku.errors }}
                 </div>
-                <div class="mb-3">
-                    <label for="id_name" class="form-label">Nome:</label>
-                    {{ form.name|add_class:'form-control' }}
-                    {{ form.name.errors }}
-                </div>
+                
                 <!-- <div class="mb-3">
                     <label for="id_brand" class="form-label">Marca:</label>
                     {{ form.brand|add_class:'form-control' }}

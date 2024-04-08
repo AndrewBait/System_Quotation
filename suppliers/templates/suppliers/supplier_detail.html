@@ -1,15 +1,66 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="supplier-form">
-  <h2>Detalhes do Fornecedor</h2>
-  <p><strong>Nome:</strong> {{ object.name }}</p>
-  <p><strong>E-mail:</strong> {{ object.email }}</p>
-  <p><strong>Telefone:</strong> {{ object.phone }}</p>
-  <p><strong>Empresa:</strong> {{ object.company }}</p>
-  <p><strong>CNPJ:</strong> {{ object.cnpj }}</p> <!-- Linha para exibir o CNPJ -->
-  <a href="{% url 'suppliers:supplier_update' object.id %}" class="btn btn-primary">Editar</a>
-  <a href="{% url 'suppliers:supplier_delete' object.id %}" class="btn btn-danger">Excluir</a> 
-  <a href="{% url 'suppliers:supplier_list' %}" class="btn btn-info btn-sm">Cancelar</a> 
+<div class="container mt-5">
+  <div class="card">
+    <div class="card-header">
+      Detalhes do Fornecedor
+    </div>
+    <div class="card-body">
+      <h5 class="card-title">{{ object.name }}</h5>
+      <p class="card-text"><strong>E-mail:</strong> {{ object.email }}</p>
+      <p class="card-text"><strong>Telefone:</strong> {{ object.phone }}</p>
+
+      {% if object.company %}
+      <p class="card-text"><strong>Empresa:</strong> {{ object.company }}</p>
+      {% endif %}
+
+      {% if object.cnpj %}
+      <p class="card-text"><strong>CNPJ:</strong> {{ object.cnpj }}</p>
+      {% endif %}
+
+      {% if object.address_line_1 or object.address_line_2 %}
+      <p class="card-text"><strong>Endereço:</strong> {{ object.address_line_1 }}{{ object.address_line_2|default_if_none:"" }}</p>
+      {% endif %}
+
+      {% if object.city or object.state %}
+      <p class="card-text"><strong>Cidade/Estado:</strong> {{ object.city }}/{{ object.state }}</p>
+      {% endif %}
+
+      {% if object.zip_code %}
+      <p class="card-text"><strong>CEP:</strong> {{ object.zip_code }}</p>
+      {% endif %}
+
+      {% if object.minimum_order_value %}
+      <p class="card-text"><strong>Valor Mínimo para Pedido:</strong> R$ {{ object.minimum_order_value }}</p>
+      {% endif %}
+
+      {% if object.order_response_deadline %}
+      <p class="card-text"><strong>Prazo de Resposta para Pedidos:</strong> {{ object.order_response_deadline }}</p>
+      {% endif %}
+
+      {% if object.departments.exists %}
+      <p class="card-text"><strong>Departamentos:</strong> {% for department in object.departments.all %}{{ department.name }}{% if not forloop.last %}, {% endif %}{% endfor %}</p>
+      {% endif %}
+      
+      {% if object.categories.exists %}
+      <p class="card-text"><strong>Categorias:</strong> {% for category in object.categories.all %}{{ category.name }}{% if not forloop.last %}, {% endif %}{% endfor %}</p>
+      {% endif %}
+      
+      {% if object.subcategories.exists %}
+      <p class="card-text"><strong>Subcategorias:</strong> {% for subcategory in object.subcategories.all %}{{ subcategory.name }}{% if not forloop.last %}, {% endif %}{% endfor %}</p>
+      {% endif %}
+      
+      {% if object.brands.exists %}
+      <p class="card-text"><strong>Marcas:</strong> {% for brand in object.brands.all %}{{ brand.name }}{% if not forloop.last %}, {% endif %}{% endfor %}</p>
+      {% endif %}
+
+      <div>
+        <!-- <a href="{% url 'suppliers:supplier_update' object.id %}" class="btn btn-primary">Editar</a>
+        <a href="{% url 'suppliers:supplier_delete' object.id %}" class="btn btn-danger">Excluir</a> -->
+        <a href="{% url 'suppliers:supplier_list' %}" class="btn btn-secondary">Voltar</a>
+      </div>
+    </div>
+  </div>
 </div>
 {% endblock %}

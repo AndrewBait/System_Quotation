@@ -1,10 +1,12 @@
 from django import forms
-from .models import Supplier
+from .models import Supplier, Departamento, Category, Brand
+from django.core.exceptions import ValidationError
+
+
 
 
 class SupplierForm(forms.ModelForm):
-    cep = forms.CharField(max_length=9, required=False, label='CEP')
-
+    
     class Meta:
         model = Supplier
         fields = '__all__'  # Inclui todos os campos do modelo no formulário
@@ -21,11 +23,21 @@ class SupplierForm(forms.ModelForm):
             'city': forms.TextInput(attrs={'class': 'form-control'}),
             'state': forms.TextInput(attrs={'class': 'form-control'}),
             'zip_code': forms.TextInput(attrs={'class': 'form-control', 'placeholder': '00000-000'}),
-            'minimum_order_value': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': '0.000,00'}),
+            'minimum_order_value': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01' ,'placeholder': '0.000,00'}),
             'order_response_deadline': forms.TimeInput(attrs={'class': 'form-control', 'type': 'time'}),
-            'departments': forms.SelectMultiple(attrs={'class': 'form-control'}),
-            'categories': forms.SelectMultiple(attrs={'class': 'form-control'}),
-            'subcategories': forms.SelectMultiple(attrs={'class': 'form-control'}),
-            'brands': forms.SelectMultiple(attrs={'class': 'form-control'}),
+
         }
         exclude = ['deleted']  # Exclui o campo 'deleted' do formulário
+
+    def clean_minimum_order_value(self):
+        value = self.cleaned_data['minimum_order_value']
+        if value < 0:
+            raise ValidationError(('Valor inválido. Deve ser maior ou igual a zero.'))
+        return value    
+
+
+class SupplierFilterForm(forms.Form):
+    active = forms.ChoiceField(choices=[('', 'Todos'), (True, 'Ativo'), (False, 'Inativo')], required=False, label='Status')
+    department = forms.ModelChoiceField(queryset=Departamento.objects.all(), required=False, label='Departamento')
+    category = forms.ModelChoiceField(queryset=Category.objects.all(), required=False, label='Categoria')
+    brand = forms.ModelChoiceField(queryset=Brand.objects.all(), required=False, label='Marca')

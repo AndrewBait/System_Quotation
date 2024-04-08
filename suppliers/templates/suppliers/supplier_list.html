@@ -1,49 +1,58 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="container mt-5">
-  <h2 class="mb-4">Fornecedores</h2>
-  <div class="d-flex justify-content-end mb-3">
-    <a href="{% url 'suppliers:supplier_new' %}" class="btn btn-success">
-      <i class="bi bi-plus-lg"></i> Cadastrar Fornecedor
-    </a>
-  </div>
-  <div class="table-responsive">
-    <table class="table table-striped table-hover">
-      <thead class="table-dark">
-        <tr>
-          <th scope="col">Nome</th>
-          <th scope="col">E-mail</th>
-          <th scope="col">Telefone</th>
-          <th scope="col">Empresa</th>
-          <th scope="col">CNPJ</th>
-          <th scope="col">Ações</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for supplier in object_list %}
-        <tr>
-          <td>{{ supplier.name }}</td>
-          <td>{{ supplier.email }}</td>
-          <td>{{ supplier.phone }}</td>
-          <td>{{ supplier.company }}</td>
-          <td>{{ supplier.cnpj }}</td>
-          <td>
-            <a href="{% url 'suppliers:supplier_detail' supplier.id %}" class="btn btn-info btn-sm me-1">
-              <i class="bi bi-eye-fill"></i> Detalhes
-            </a>
-            <a href="{% url 'suppliers:supplier_update' supplier.id %}" class="btn btn-primary btn-sm me-1">
-              <i class="bi bi-pencil-fill"></i> Editar
-            </a>
-            <a href="{% url 'suppliers:supplier_delete' supplier.id %}" class="btn btn-danger btn-sm">
-              <i class="bi bi-trash-fill"></i>
-            </a>
-          </td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-  </div>
-  <!-- Paginação pode ser adicionada aqui se necessário -->
+<div class="container py-5">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Fornecedores</h2>
+    </div>
+    <form method="GET" class="mb-3">
+      {{ form.as_p }}
+      <button type="submit" class="btn btn-primary">Filtrar</button>
+  </form>
+    
+    <div class="table-responsive">
+        <table class="table table-hover align-middle">
+            <thead class="table-dark">
+                <tr>
+                    <th scope="col">Nome</th>
+                    <th scope="col">E-mail</th>
+                    <th scope="col">Telefone</th>
+                    <th scope="col">Empresa</th>
+                    <!-- <th scope="col">CNPJ</th> -->
+                    <th scope="col">Faturamento Min.</th> 
+                    <th scope="col">Horario Fechamento</th>                                      
+                    <th scope="col">Status</th>
+                    <th scope="col">Vizualizar</th> 
+                </tr>
+            </thead>
+            <tbody>
+                {% for supplier in object_list %}
+                <tr>
+                    <td>{{ supplier.name }}</td>
+                    <td>{{ supplier.email }}</td>
+                    <td>{{ supplier.phone }}</td>
+                    <td>{{ supplier.company }}</td>
+                    <!-- <td>{{ supplier.cnpj }}</td> -->
+                    <td>{{ supplier.order_response_deadline }}</td>
+                    <td>{{ supplier.minimum_order_value }}</td>
+                    <td>{{ supplier.active|yesno:"Ativo,Inativo" }}</td>
+                    <td>
+                        <a href="{% url 'suppliers:supplier_detail' supplier.id %}" class="btn btn-info btn-sm">
+                            <i class="bi bi-eye-fill"></i>
+                        </a>
+                        <!-- <a href="{% url 'suppliers:supplier_update' supplier.id %}" class="btn btn-warning btn-sm">
+                            <i class="bi bi-pencil-square"></i>
+                        </a> -->
+                        <!-- <a href="{% url 'suppliers:supplier_delete' supplier.id %}" class="btn btn-danger btn-sm">
+                            <i class="bi bi-trash-fill"></i>
+                        </a> -->
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        
+    </div>
 </div>
 {% endblock %}
