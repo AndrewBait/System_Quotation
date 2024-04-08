@@ -23,6 +23,10 @@
         font-size: smaller; /* Diminui o tamanho da fonte */
       }
     }
+    .required-field label::after {
+        content: " *";
+        color: red;
+    }
   </style>
 {% endblock %}
 
@@ -31,11 +35,12 @@
   <form action="" method="post" enctype="multipart/form-data" class="needs-validation" novalidate>
     {% csrf_token %}
     <h1 style="font-size: 2rem; margin-bottom: 20px;">Cadastrar Produto</h1>
+    <p><small>* Campos obrigatórios</small></p>
     <div class="row">
       <!-- Primeira Coluna -->
       <div class="col-md-4">
         <div class="mb-3">
-          <label for="id_name" class="form-label">Nome do Produto:</label>
+          <label for="id_name" class="form-label">Nome do Produto:<span style="color: red;">*</span></label>
           {{ form.name|add_class:'form-control' }}
           {{ form.name.errors }}
         </div>
@@ -49,6 +54,11 @@
           {{ form.sku|add_class:'form-control' }}
           {{ form.sku.errors }}
         </div>
+        <div class="mb-3">
+            <label for="id_status" class="form-label">Status:<span style="color: red;">*</span></label>
+            {{ form.status|add_class:'form-control' }}
+            {{ form.status.errors }}
+          </div>
         <div class="mb-3">
           <label for="id_department" class="form-label">Departamento:</label>
           {{ form.department|add_class:'form-control' }}
@@ -64,11 +74,7 @@
           {{ form.subcategory|add_class:'form-control' }}
           {{ form.subcategory.errors }}
         </div>
-        <div class="mb-3">
-          <label for="id_status" class="form-label">Status:</label>
-          {{ form.status|add_class:'form-control' }}
-          {{ form.status.errors }}
-        </div>
+        
       </div>
       <!-- Segunda Coluna -->
       <div class="col-md-4">
@@ -173,5 +179,17 @@
                 });
             });
     });
+
+    const form = document.querySelector('form');
+
+    form.addEventListener('submit', (event) => {
+    const nameField = document.getElementById('id_name');
+    const statusField = document.getElementById('id_status');
+
+    if (nameField.value === '' || statusField.value === '') {
+        alert('Por favor, preencha os campos obrigatórios.');
+        event.preventDefault(); // Impede o envio do formulário
+    }
+});
 </script>
 {% endblock %}

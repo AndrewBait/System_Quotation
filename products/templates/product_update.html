@@ -128,14 +128,10 @@
                       {{ form.unidade_dimensao|add_class:'form-control' }}
                       {{ form.unidade_dimensao.errors }}
                   </div>
-  
-                  
-              </div>
-          </div>
-  
-          <div class="text-end mt-4">
-              <input type="submit" value="Atualizar" class="btn btn-primary me-2">
-              <a href="{% url 'products:product_detail' product.pk %}" class="btn btn-secondary me-2">Voltar</a>
+                  <input type="submit" value="Atualizar" class="btn btn-primary me-2">
+                  <a href="{% url 'products:product_detail' product.pk %}" class="btn btn-secondary me-2">Voltar</a>                  
+                 </div>
+             </div>
           </div>
       </form>
   </div>
