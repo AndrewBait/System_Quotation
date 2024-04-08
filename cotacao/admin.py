@@ -9,6 +9,7 @@ class ItemCotacaoInline(admin.TabularInline):
 @admin.register(Departamento)
 class DepartamentoAdmin(admin.ModelAdmin):
     list_display = ['nome']
+    search_fields = ['name']
 
 @admin.register(Cotacao)
 class CotacaoAdmin(admin.ModelAdmin):

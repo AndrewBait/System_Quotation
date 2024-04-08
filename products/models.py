@@ -45,7 +45,14 @@ class Subcategory(models.Model):
     name = models.CharField(max_length=200)
 
     def __str__(self):
-        return self.name   
+        return self.name
+    
+
+class ProductLine(models.Model):
+    name = models.CharField(max_length=200)
+
+    def __str__(self):
+        return self.name
 
       
 
@@ -56,6 +63,7 @@ class Product(models.Model):
     sku = models.CharField("SKU", max_length=255, unique=True, blank=True, null=True)
     name = models.CharField(max_length=255)
     brand = models.ForeignKey(Brand, on_delete=models.PROTECT, related_name='products', blank=True, null=True)
+    product_line = models.ForeignKey(ProductLine, on_delete=models.PROTECT, related_name='products', blank=True, null=True)
     department = models.ForeignKey(Departamento, on_delete=models.PROTECT, related_name='products', blank=True, null=True)
     category = models.ForeignKey(Category, on_delete=models.PROTECT, related_name='products', blank=True, null=True)
     subcategory = models.ForeignKey(Subcategory, on_delete=models.PROTECT, related_name='products', blank=True, null=True)

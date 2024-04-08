@@ -67,7 +67,8 @@ class ProductListView(ListView):
     model = Product
     template_name = 'products.html'
     context_object_name = 'products'
-    paginate_by = 20
+    
+    
 
     def get_queryset(self):
         queryset = super().get_queryset().order_by('name')
@@ -100,17 +101,20 @@ class ProductListView(ListView):
             return super().get(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
-
-        context = super(ProductListView, self).get_context_data(**kwargs)
+        # Remove a primeira chamada de super().get_context_data(**kwargs)
         department_id = self.request.GET.get('department')
         category_id = self.request.GET.get('category')
+        context = super().get_context_data(**kwargs)  # Mantém essa chamada
         context['departments'] = Departamento.objects.all()
         context['categories'] = Category.objects.filter(department_id=department_id) if department_id else Category.objects.none()
-        context['subcategories'] = Subcategory.objects.filter(category_id=category_id) if category_id else Subcategory.objects.none() # Se necessário, ajuste para filtrar com base na categoria selecionada
-        # Mantém os filtros atuais para serem selecionados após a recarga da página
+        context['subcategories'] = Subcategory.objects.filter(category_id=category_id) if category_id else Subcategory.objects.none()
         context['current_department'] = department_id
         context['current_category'] = category_id
         context['current_subcategory'] = self.request.GET.get('subcategory', '')
+
+        items_per_page = self.request.GET.get('items_per_page', 10)  
+        self.paginate_by = int(items_per_page)
+        context['current_items_per_page'] = items_per_page
         return context
 
     

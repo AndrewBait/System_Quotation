@@ -1,58 +1,60 @@
 {% extends "base.html" %}
 
 {% block content %}
-<style>
-  .product-detail {
-    max-width: 600px;
-    margin: auto;
-    padding: 20px;
-    background-color: #191919;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-  }
-  .product-detail img {
-    width: 80%;
-    height: auto;
-    display: block;
-    margin: 0 auto 20px;
-  }
-  .product-detail h2 {
-    margin-bottom: 20px;
-  }
-  .product-detail p {
-    line-height: 1.6;
-  }
-  .product-detail .btn-container {
-    margin-top: 20px;
-    text-align: center;
-  }
-  .btn {
-    margin-right: 10px;
-  }
-</style>
-<a href="{% url 'products:products_list' %}" class="btn btn-primary">Voltar</a>
 
-<div class="product-detail">
-  {% if object.photo %}
-  <img src="{{ object.photo.url }}" alt="{{ object.name }}">
-  {% else %}
-  <p class="no-photo">Foto não disponível</p>
-  {% endif %}
-  <h2>{{ object.name }} - {{ object.brand.name|default:"" }}  </h2>
-  <p><strong>EAN:</strong> {{ object.ean|default:"Não especificado" }}</p>
-  <p><strong>SKU:</strong> {{ object.sku|default:"Não especificado" }}</p>
-  <p><strong>Departamento:</strong> {{ object.department.nome|default:"Não especificado" }}</p>
-  <p><strong>Categoria:</strong> {{ object.category.name|default:"Não especificado" }}</p>
-  <p><strong>Subcategoria:</strong> {{ object.subcategory.name|default:"Não especificado" }}</p>
-  <p><strong>Status:</strong> {% if object.status %}Ativo{% else %}Inativo{% endif %}</p>
-  <p><strong>Notas:</strong> {{ object.notas|default:"Não especificado" }}</p>
-  <p><strong>Descrição:</strong> {{ object.descricao|default:"Não especificada" }}</p>
-  
-  <div class="btn-container">
-    {% if user.is_authenticated %}
-    <a href="{% url 'products:product_update' pk=object.pk %}" class="btn btn-primary">Editar</a>
-    {% endif %}
-    
+<div class="container mt-0">
+  <div class="row">
+    <div class="col-md-6 mx-auto">
+      <div class="card">
+        <div class="card-header bg-dark text-white">
+          
+          <h4 class="card-title">{{ object.name }} - {{ object.brand.name|default:"" }}</h4>
+        </div>
+        <div class="card-body">
+          {% if object.photo %}
+            <img src="{{ object.photo.url }}" alt="{{ object.name }}" class="img-fluid rounded mx-auto d-block mb-3" style="max-height: 300px;">
+          {% else %}
+            <img src="/media/products/sem imagem.gif" alt="Foto padrão" class="img-fluid rounded mx-auto d-block mb-3" style="max-height: 300px;">
+          {% endif %}
+
+          <dl class="row">
+            <dt class="col-sm-4">EAN:</dt>
+            <dd class="col-sm-8">{{ object.ean|default:"Não especificado" }}</dd>
+
+            <dt class="col-sm-4">SKU:</dt>
+            <dd class="col-sm-8">{{ object.sku|default:"Não especificado" }}</dd>
+
+            <dt class="col-sm-4">Departamento:</dt>
+            <dd class="col-sm-8">{{ object.department.nome|default:"Não especificado" }}</dd>
+
+            <dt class="col-sm-4">Categoria:</dt>
+            <dd class="col-sm-8">{{ object.category.name|default:"Não especificado" }}</dd>
+
+            <dt class="col-sm-4">Subcategoria:</dt>
+            <dd class="col-sm-8">{{ object.subcategory.name|default:"Não especificado" }}</dd>
+
+            <dt class="col-sm-4">Linha de produto:</dt>
+            <dd class="col-sm-8">{{ object.product_line.name|default:"Não especificado" }}</dd>
+
+            <dt class="col-sm-4">Status:</dt>
+            <dd class="col-sm-8">{% if object.status %}Ativo{% else %}Inativo{% endif %}</dd>
+
+            <dt class="col-sm-4">Descrição:</dt>
+            <dd class="col-sm-8">{{ object.descricao|default:"Não especificada" }}</dd>
+
+            <dt class="col-sm-4">Notas:</dt>
+            <dd class="col-sm-8">{{ object.notas|default:"Não especificado" }}</dd>
+          </dl>
+
+          {% if user.is_authenticated %}
+            <div class="text-center mt-3">
+              <a href="{% url 'products:product_update' pk=object.pk %}" class="btn btn-primary">Editar</a>
+              <a href="{% url 'products:products_list' %}" class="btn btn-outline-success">Voltar</a>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 

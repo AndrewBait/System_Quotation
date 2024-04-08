@@ -10,18 +10,18 @@ class ProductModelForm(forms.ModelForm):
     widget=autocomplete.ModelSelect2(url='products:department-autocomplete')
     brand = forms.ModelChoiceField(
         queryset=Brand.objects.all(),
-        required=True,
+        required=False,
         label='Marca',
-        widget=ModelSelect2Widget(
-            url='products:brands-autocomplete',
-            model=Brand,
-            search_fields=['name__icontains'],
-            attrs={'data-minimum-input-length': 2},  # O usuário deve digitar pelo menos 3 caracteres antes de iniciar a busca
-            # Aqui você define a URL configurada para a busca autocomplete
-            data_url='/products/list-brands/'
+        # widget=ModelSelect2Widget(
+        #     url='products:brands-autocomplete',
+        #     model=Brand,
+        #     search_fields=['name__icontains'],
+        #     attrs={'data-minimum-input-length': 2},  # O usuário deve digitar pelo menos 3 caracteres antes de iniciar a busca
+        #     # Aqui você define a URL configurada para a busca autocomplete
+        #     data_url='/products/list-brands/'
 
         )
-    )
+    
     class Meta:
         model = Product
         fields = '__all__'
@@ -37,6 +37,7 @@ class ProductModelForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super(ProductModelForm, self).__init__(*args, **kwargs)
+        self.fields['product_line'].widget.attrs['class'] = 'form-control'  # Adicione classes CSS ao campo se desejar
         # Inicializa as querysets para edição
         if self.instance.pk:
             self.fields['category'].queryset = Category.objects.filter(department=self.instance.department)
