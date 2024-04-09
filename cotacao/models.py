@@ -35,11 +35,16 @@ class Cotacao(models.Model):
 class ItemCotacao(models.Model):
 
     TIPO_VOLUME_CHOICES = (
-        ('kg', 'Quilo(s)'),
-        ('un', 'Unidade(s)'),
-        ('cx', 'Caixa(s)'),
-        ('dp', 'Display(s)'),
-        ('fd', 'Fardo(s)'),
+        ('Kg', 'Quilo'),
+        ('L', 'Litro'),
+        ('Dp', 'Display'),
+        ('Un', 'Unidade'),
+        ('Cx', 'Caixa'),
+        ('Fd', 'Fardo'),
+        ('Bd', 'Bandeija'),
+        ('Pc', 'Pacote'),
+        ('Sc', 'Sache'),
+        ('Tp', 'Take Profit'),
     )
 
     cotacao = models.ForeignKey(Cotacao, on_delete=models.CASCADE, related_name='itens_cotacao')

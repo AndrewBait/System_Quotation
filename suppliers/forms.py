@@ -25,6 +25,10 @@ class SupplierForm(forms.ModelForm):
             'zip_code': forms.TextInput(attrs={'class': 'form-control', 'placeholder': '00000-000'}),
             'minimum_order_value': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01' ,'placeholder': '0.000,00'}),
             'order_response_deadline': forms.TimeInput(attrs={'class': 'form-control', 'type': 'time'}),
+            'departments': forms.CheckboxSelectMultiple(),
+            'categories': forms.CheckboxSelectMultiple(),
+            'subcategories': forms.CheckboxSelectMultiple(),
+            'brands': forms.CheckboxSelectMultiple(),
 
         }
         exclude = ['deleted']  # Exclui o campo 'deleted' do formulário

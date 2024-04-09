@@ -93,6 +93,7 @@ class Product(models.Model):
         ('mm', 'Milímetro'),
         ('cm', 'Centímetro'),
         ('m', 'Metro'),
+        
     )
     unidade_altura = models.CharField(max_length=2, choices=UNIDADE_CHOICES, blank=True, null=True, verbose_name='Unidade de Medida Altura')
     unidade_largura = models.CharField(max_length=2, choices=UNIDADE_CHOICES, blank=True, null=True, verbose_name='Unidade de Medida Largura')
@@ -110,6 +111,7 @@ class Product(models.Model):
         ('Pct', 'Pacote'),
         ('Sch', 'Sache'),
         ('Tp', 'Take Profit'),
+        
         
     ])
     data_de_validade = models.DateField(_("Data de Validade"), blank=True, null=True)

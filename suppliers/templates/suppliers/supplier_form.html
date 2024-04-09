@@ -1,5 +1,4 @@
 {% extends "base.html" %}
-
 {% load static %}
 {% load widget_tweaks %}
 
@@ -12,131 +11,172 @@
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.mask/1.14.16/jquery.mask.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
+<style>
+  .required-field label::after {
+    content: " *";
+    color: red;
+  }
+</style>
 {% endblock %}
 
 
 {% block content %}
-<div class="container-fluid mt-4">  
+
+<div class="container-fluid mt-4"> 
+     
     <form action="" method="post" enctype="multipart/form-data" class="needs-validation" novalidate>
         {% csrf_token %}
+        
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }}" role="alert">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+
         <h1 style="font-size: 2rem; margin-bottom: 20px;">Cadastro de Fornecedor</h1>
-        <div class="row g-3">
-            <div class="col-lg-6">
-                <!-- Informações Básicas -->
-                <div class="mb-3">
-                    <label for="id_name" class="form-label">Nome:</label>
-                    {{ form.name|add_class:'form-control' }}
-                    {% if form.name.errors %}
-                        <div class="invalid-feedback" style="display:block;">
-                            {% for error in form.name.errors %}
-                                {{ error }}
-                            {% endfor %}
-                        </div>
-                    {% endif %}
-                </div>
+        <p>* Campos obrigatórios</p> <!-- Legenda para campos obrigatórios -->
 
-                <div class="mb-3">
-                    <label for="id_email" class="form-label">E-mail:</label>
-                    {{ form.email|add_class:'form-control' }}
-                    {% if form.email.errors %}
-                        <div class="invalid-feedback" style="display:block;">
-                            {% for error in form.email.errors %}
-                                {{ error }}
-                            {% endfor %}
-                        </div>
-                    {% endif %}
-                </div>
-                
-                <div class="mb-3">
-                    <label for="id_phone" class="form-label">Telefone:</label>
-                    {{ form.phone|add_class:'form-control' }}
-                    {% if form.phone.errors %}
-                        <div class="invalid-feedback" style="display:block;">
-                            {% for error in form.phone.errors %}
-                                {{ error }}
-                            {% endfor %}
-                        </div>
-                    {% endif %}
-                </div>
+        <!-- Nav tabs -->
+        <ul class="nav nav-tabs" id="myTab" role="tablist">
+          <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="info-tab" data-bs-toggle="tab" data-bs-target="#info" type="button" role="tab" aria-controls="info" aria-selected="true">Informações Básicas</button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link" id="vinculos-tab" data-bs-toggle="tab" data-bs-target="#vinculos" type="button" role="tab" aria-controls="vinculos" aria-selected="false">Vínculos</button>
+          </li>
+        </ul>
+        
+        <!-- Tab panes -->
+        <div class="tab-content">
+          <div class="tab-pane active" id="info" role="tabpanel" aria-labelledby="info-tab">
+            <div class="row g-3">
+                <div class="col-lg-6">
+                    <!-- Informações Básicas -->
+                    <div class="mb-3 required-field">
+                        <label for="id_name" class="form-label">Nome:</label>
+                        {{ form.name|add_class:'form-control' }}
+                        {% if form.name.errors %}
+                            <div class="invalid-feedback" style="display:block;">
+                                {% for error in form.name.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
 
-                <div class="mb-3">
-                    <label for="id_company" class="form-label">Empresa Representante:</label>
-                    {{ form.company|add_class:'form-control' }}
+                    <div class="mb-3 required-field">
+                        <label for="id_email" class="form-label">E-mail:</label>
+                        {{ form.email|add_class:'form-control' }}
+                        {% if form.email.errors %}
+                            <div class="invalid-feedback" style="display:block;">
+                                {% for error in form.email.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3 required-field">
+                        <label for="id_phone" class="form-label">Telefone:</label>
+                        {{ form.phone|add_class:'form-control' }}
+                        {% if form.phone.errors %}
+                            <div class="invalid-feedback" style="display:block;">
+                                {% for error in form.phone.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="id_company" class="form-label">Empresa Representante:</label>
+                        {{ form.company|add_class:'form-control' }}
+                    </div>
+
+                    <div class="mb-3">
+                      <label for="id_cnpj" class="form-label">CNPJ:</label>
+                      {{ form.cnpj|add_class:'form-control' }}
+                      <!-- <small class="text-muted">Formato: 00.000.000/0000-00</small> -->
+                  </div>
+                    <!-- Endereço -->
+                    <h4>Endereço</h4>
+                    <div class="mb-3">
+                      <label for="id_zip_code" class="form-label">CEP:</label>
+                      {{ form.zip_code }} 
+                  </div>
+
+                    <div class="mb-3">
+                        <label for="id_address_line_1" class="form-label">Endereço:</label>
+                        {{ form.address_line_1|add_class:'form-control' }}
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="id_address_line_2" class="form-label">Complemento:</label>
+                        {{ form.address_line_2|add_class:'form-control' }}
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="id_city" class="form-label">Cidade:</label>
+                        {{ form.city|add_class:'form-control' }}
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="id_state" class="form-label">Estado:</label>
+                        {{ form.state|add_class:'form-control' }}
+                    </div>
+
                 </div>
+                <div class="col-lg-6">
+                    <!-- Detalhes Adicionais -->
+                    <h4>Detalhes Adicionais</h4>
+                    <div class="mb-3">
+                        <label for="id_minimum_order_value" class="form-label">Valor Mínimo para Pedido:</label>
+                        {{ form.minimum_order_value|add_class:'form-control' }}
+                    </div>
 
-                <div class="mb-3">
-                  <label for="id_cnpj" class="form-label">CNPJ:</label>
-                  {{ form.cnpj|add_class:'form-control' }}
-                  <!-- <small class="text-muted">Formato: 00.000.000/0000-00</small> -->
-              </div>
-                <!-- Endereço -->
-                <h4>Endereço</h4>
-                <div class="mb-3">
-                  <label for="id_zip_code" class="form-label">CEP:</label>
-                  {{ form.zip_code }} <!-- Já incluirá a classe e o id especificados no forms.py -->
-              </div>
-
-                <div class="mb-3">
-                    <label for="id_address_line_1" class="form-label">Endereço:</label>
-                    {{ form.address_line_1|add_class:'form-control' }}
+                    <div class="mb-3">
+                        <label for="id_order_response_deadline" class="form-label">Prazo de Resposta para Pedidos:</label>
+                        {{ form.order_response_deadline|add_class:'form-control' }}
+                    </div>                
+                    
                 </div>
-
-                <div class="mb-3">
-                    <label for="id_address_line_2" class="form-label">Complemento:</label>
-                    {{ form.address_line_2|add_class:'form-control' }}
-                </div>
-
-                <div class="mb-3">
-                    <label for="id_city" class="form-label">Cidade:</label>
-                    {{ form.city|add_class:'form-control' }}
-                </div>
-
-                <div class="mb-3">
-                    <label for="id_state" class="form-label">Estado:</label>
-                    {{ form.state|add_class:'form-control' }}
-                </div>
-
             </div>
-            <div class="col-lg-6">
-                <!-- Detalhes Adicionais -->
-                <h4>Detalhes Adicionais</h4>
-                <div class="mb-3">
-                    <label for="id_minimum_order_value" class="form-label">Valor Mínimo para Pedido:</label>
-                    {{ form.minimum_order_value|add_class:'form-control' }}
-                </div>
+          </div>
+          <div class="tab-pane" id="vinculos" role="tabpanel" aria-labelledby="vinculos-tab">
+            <div class="row g-3">
+                <div class="col-lg-6">
+                    <div class="mb-3">
+                        <label for="id_departments" class="form-label">Departamentos:</label>
+                        {{ form.departments|add_class:'form-control'}}                    
+                    </div>
 
-                <div class="mb-3">
-                    <label for="id_order_response_deadline" class="form-label">Prazo de Resposta para Pedidos:</label>
-                    {{ form.order_response_deadline|add_class:'form-control' }}
-                </div>
-                
-                Departamentos, Categorias, Subcategorias, Marcas
-                <div class="mb-3">
-                    <label for="id_departments" class="form-label">Departamentos:</label>
-                    {{ form.departments|add_class:'form-control' }}                    
-                </div>
+                    <div class="mb-3">
+                        <label for="id_categories" class="form-label">Categorias:</label>
+                        {{ form.categories|add_class:'form-control' }}
+                    </div>
 
-                <div class="mb-3">
-                    <label for="id_categories" class="form-label">Categorias:</label>
-                    {{ form.categories|add_class:'form-control' }}
-                </div>
+                    <div class="mb-3">
+                        <label for="id_subcategories" class="form-label">Subcategorias:</label>
+                        {{ form.subcategories|add_class:'form-control' }}
+                    </div>
 
-                <div class="mb-3">
-                    <label for="id_subcategories" class="form-label">Subcategorias:</label>
-                    {{ form.subcategories|add_class:'form-control' }}
+                    <div class="mb-3">
+                        <label for="id_brands" class="form-label">Marcas:</label>
+                        {{ form.brands|add_class:'form-control' }}
+                    </div>
                 </div>
-
-                <div class="mb-3">
-                    <label for="id_brands" class="form-label">Marcas:</label>
-                    {{ form.brands|add_class:'form-control' }}
-                </div>
-
-                <div class="text-end mt-4">
-                    <button type="submit" class="btn btn-primary">Cadastrar</button>
-                </div>
-                
-            </form>
+            </div>
+          </div>
         </div>
+
+        <div class="text-end mt-4">
+            <button type="submit" class="btn btn-primary">Cadastrar</button>
+        </div>
+                
+    </form>
+</div>
   <!-- Modal de Confirmação -->
 <div class="modal fade" id="confirmationModal" tabindex="-1" aria-labelledby="confirmationModalLabel" aria-hidden="true">
     <div class="modal-dialog">

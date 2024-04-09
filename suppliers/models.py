@@ -17,7 +17,7 @@ def validate_cnpj(value):
     
 
 class Supplier(models.Model):
-    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, blank=True, null=True)
     name = models.CharField(max_length=255)
     email = models.EmailField(unique=True)
     phone_regex = RegexValidator(regex=r'^\+?\d{10,15}$', message="Número de telefone no formato: '+999999999'. Até 15 dígitos.", )
