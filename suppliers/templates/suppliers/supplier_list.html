@@ -1,54 +1,57 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="container py-5">
+<div class="container py-4">
 
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2>Fornecedores</h2>
+        <a href="{% url 'suppliers:supplier_new' %}" class="btn btn-success">Adicionar Novo Fornecedor</a> 
     </div>
 
-    <div class="table-responsive">
-        <table class="table table-hover align-middle">
-            <thead class="table-dark">
-                <tr>
-                    <th scope="col">Nome</th>
-                    <th scope="col">E-mail</th>
-                    <th scope="col">Telefone</th>
-                    <th scope="col">Empresa</th>
-                    <!-- <th scope="col">CNPJ</th> -->
-                    <th scope="col">Faturamento Min.</th> 
-                    <th scope="col">Horario Fechamento</th>                                      
-                    <th scope="col">Status</th>
-                    <th scope="col">Vizualizar</th> 
-                </tr>
-            </thead>
-            <tbody>
-                {% for supplier in object_list %}
-                <tr>
-                    <td>{{ supplier.name }}</td>
-                    <td>{{ supplier.email }}</td>
-                    <td>{{ supplier.phone }}</td>
-                    <td>{{ supplier.company }}</td>
-                    <!-- <td>{{ supplier.cnpj }}</td> -->
-                    <td>{{ supplier.order_response_deadline }}</td>
-                    <td>{{ supplier.minimum_order_value }}</td>
-                    <td>{{ supplier.active|yesno:"Ativo,Inativo" }}</td>
-                    <td>
-                        <a href="{% url 'suppliers:supplier_detail' supplier.id %}" class="btn btn-info btn-sm">
-                            <i class="bi bi-eye-fill"></i>
-                        </a>
-                         <a href="{% url 'suppliers:supplier_update' supplier.id %}" class="btn btn-warning btn-sm">
-                            <i class="bi bi-pencil-square"></i>
-                        </a> 
-                        <a href="{% url 'suppliers:supplier_delete' supplier.id %}" class="btn btn-danger btn-sm">
-                            <i class="bi bi-trash-fill"></i>
-                        </a> 
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-        
+    <div class="row row-cols-1 row-cols-md-3 g-4">
+        {% for supplier in object_list %}
+        <div class="col">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h5 class="card-title">{{ supplier.name }}</h5>
+                </div>
+                <div class="card-body">
+                    <p class="card-text"><strong>E-mail:</strong> {{ supplier.email }}</p>
+                    <p class="card-text"><strong>Telefone:</strong> {{ supplier.phone }}</p>
+                    <p class="card-text"><strong>Empresa:</strong> {{ supplier.company }}</p>
+                    <p class="card-text"><strong>Faturamento Mínimo:</strong> {{ supplier.minimum_order_value }}</p>
+                    <p class="card-text"><strong>Horário Fechamento:</strong> {{ supplier.order_response_deadline }}</p>
+                    <p class="card-text"><strong>Status:</strong> {{ supplier.active|yesno:"Ativo,Inativo" }}</p>
+                </div>
+                <div class="card-footer">
+                    <a href="{% url 'suppliers:supplier_detail' supplier.id %}" class="btn btn-info btn-sm">
+                        <i class="bi bi-eye-fill"></i> Visualizar
+                    </a>
+                    <a href="{% url 'suppliers:supplier_update' supplier.id %}" class="btn btn-warning btn-sm">
+                        <i class="bi bi-pencil-square"></i> Editar
+                    </a> 
+                    <a href="{% url 'suppliers:supplier_delete' supplier.id %}" class="btn btn-danger btn-sm">
+                        <i class="bi bi-trash-fill"></i> Excluir
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+            <p>Nenhum fornecedor encontrado.</p>
+        {% endfor %}
+    </div>
+    <div class="pagination justify-content-center">
+        {% if fornecedores.has_previous %}
+            <a class="btn btn-outline-secondary" href="?page=1">&laquo; Primeira</a>
+            <a class="btn btn-outline-secondary" href="?page={{ fornecedores.previous_page_number }}">Anterior</a>
+        {% endif %}
+    
+        <span class="current-page">Página {{ fornecedores.number }} de {{ fornecedores.paginator.num_pages }}</span>
+    
+        {% if fornecedores.has_next %}
+            <a class="btn btn-outline-secondary" href="?page={{ fornecedores.next_page_number }}">Próxima</a>
+            <a class="btn btn-outline-secondary" href="?page={{ fornecedores.paginator.num_pages }}">Última &raquo;</a>
+        {% endif %}
     </div>
 </div>
 {% endblock %}

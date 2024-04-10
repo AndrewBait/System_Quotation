@@ -2,8 +2,6 @@ from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.contrib.auth import authenticate, login, logout
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
-from django.utils.decorators import method_decorator
-from django.urls import reverse_lazy
 from django.contrib import messages
 
 
@@ -27,6 +25,7 @@ def register_view(request):
 
 def login_view(request):
     if request.method == 'POST':
+        login_form = AuthenticationForm(request, data=request.POST)
         username = request.POST.get("username")
         password = request.POST.get("password")
         user = authenticate(request, username=username, password=password)

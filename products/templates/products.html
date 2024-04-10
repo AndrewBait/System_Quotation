@@ -16,12 +16,10 @@
 
 
 </style>
-
-
-<div class="container ">
+<div class="container">
   <h2 class="mb-4">Catálogo de Produtos</h2>
-  <div class="row g-4 mb-0">
-    <div class="col-md-12">
+  <div class="row g-3">
+    <div class="col-md-15">
       <form method="GET" action="{% url 'products:products_list' %}" class="input-group">
         <input type="text" name="product_name" id="product-search" class="form-control" placeholder="Nome, SKU ou EAN " value="{{ request.GET.product_name }}">
           <input type="hidden" name="department" value="{{ request.GET.department }}">
@@ -32,7 +30,7 @@
       </form>
     </div>
   <form method="GET" action="{% url 'products:products_list' %}"> 
-    <div class="row g-2 mb-0">
+    <div class="row g-2 ">
       <div class="col-md-3">
         <select class="form-select" name="department" onchange="this.form.submit()">
           <option value="">Departamentos</option>

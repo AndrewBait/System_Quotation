@@ -1,8 +1,101 @@
-<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-    <div class="container-fluid">
-        <a class="navbar-brand" href="#">SISC - SISTEMA DE COTAÇÃO</a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-    </div>
-</nav>
+<style>
+    .nav-link:hover {
+        background-color: #007bff; /* Azul claro para o hover */
+        color: #ffffff; /* Texto branco para o hover */
+        border-radius: .25rem; /* Arredondamento dos cantos */
+    }
+    .nav-link.active {
+    background-color: #007bff; /* Cor de fundo para o item ativo */
+    color: white; /* Cor do texto para o item ativo */
+}
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+  const navLinks = document.querySelectorAll('.nav-link');
+  const currentUrl = window.location.href; 
+
+  navLinks.forEach(link => {
+    if (link.href === currentUrl) {
+      link.classList.add('active');
+    }
+  });
+});
+</script>
+
+<!-- <div class="d-flex flex-column flex-shrink-0 p-3 text-white bg-ligth" style="width: 250px;">
+    <a href="/" class="d-flex align-items-center mb-3 mb-md-0 me-md-auto text-white text-decoration-none">
+    </a>
+    <hr>
+    {% if user.is_authenticated %} -->
+    <!-- <ul class="nav nav-pills flex-column mb-auto">
+        <li class="nav-item">
+            <a href="{% url 'accounts:home' %}" class="nav-link text-white" aria-current="page" style="font-size: 25px;">
+                <i class="bi bi-house-door-fill fs-5"></i>
+                Olá, {{ user.username }}
+            </a>
+        </li>
+        <li>
+            <a href="{% url 'products:products_list' %}" class="nav-link text-white" style="font-size: 25px;">
+                <i class="bi bi-box-seam fs-4"></i>
+                Produtos
+            </a>
+        </li>
+        <li>
+            <a href="{% url 'suppliers:supplier_list' %}" class="nav-link text-white" style="font-size: 25px;">
+                <i class="bi bi-truck fs-4"></i>
+                Fornecedores
+            </a>
+        </li>
+         <li>
+            <a href="{% url 'cotacao:departamento_new' %}" class="nav-link text-white">
+                <i class="bi bi-plus-square fs-4"></i>
+                Departamento
+            </a>
+        </li> -->
+        <!-- <li>
+            <a href="{% url 'cotacao:cotacao_new' %}" class="nav-link text-white" style="font-size: 25px;">
+                <i class="bi bi-clipboard-check fs-4"></i>
+                Cotação
+            </a>
+        </li> -->
+        <!-- <li>
+            <a href="{% url 'cotacao:cotacao_list' %}" class="nav-link text-white">
+                <i class="bi bi-card-checklist fs-4"></i>
+                Listar Cotações
+            </a>
+        </li> -->
+        <!-- <li>
+            <a href="{% url 'answers:open_cotacao_list' %}" class="nav-link text-white">
+                <i class="bi bi-reply-all fs-4"></i> Responder Cotações
+            </a>
+        </li> -->
+        <!-- <li>
+            <a href="{% url 'answers:cotacao_respostas_list' %}" class="nav-link text-white">
+                <i class="bi bi-envelope-open fs-4"></i> Respostas
+            </a>
+        </li> -->
+
+        
+        <!-- <li>
+            <a href="{% url 'accounts:register' %}" class="nav-link text-white">
+                <i class="bi bi-person-plus fs-4"></i>
+                Novo Usuário
+            </a>
+        </li> -->
+        <!-- <br>
+        <li>
+            <a href="{% url 'accounts:logout' %}" class="nav-link text-white" style="font-size: 20px;">
+                <i class="bi bi-box-arrow-right"></i>
+                Sair
+            </a>
+        </li>
+    </ul> -->
+    {% else %}
+    <a href="{% url 'accounts:login' %}" class="nav-link text-white">
+        <i class="bi bi-box-arrow-in-right"></i>
+        Login
+    </a>
+    {% endif %}
+ <br>
+</div>

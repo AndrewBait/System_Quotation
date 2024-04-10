@@ -34,10 +34,11 @@ class SupplierForm(forms.ModelForm):
         exclude = ['deleted']  # Exclui o campo 'deleted' do formulário
 
     def clean_minimum_order_value(self):
-        value = self.cleaned_data['minimum_order_value']
-        if value < 0:
-            raise ValidationError(('Valor inválido. Deve ser maior ou igual a zero.'))
-        return value    
+        minimum_order_value = self.cleaned_data.get('minimum_order_value')
+        if minimum_order_value is not None:
+            if minimum_order_value < 0:  # Ou qualquer outra comparação
+                raise forms.ValidationError("O valor mínimo do pedido deve ser maior ou igual a zero.")
+        return minimum_order_value   
     
 class SupplierStatusFilterForm(forms.Form):
     STATUS_CHOICES = [

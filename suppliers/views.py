@@ -14,6 +14,8 @@ from .forms import SupplierStatusFilterForm
 from .models import Category
 from django.http import JsonResponse
 from django.contrib import messages
+from django.core.paginator import Paginator
+
 
 class SupplierFormMixin:
     def form_valid(self, form):
@@ -42,27 +44,45 @@ def get_categories(request):
     
     return JsonResponse(list(categories), safe=False)
 
+
+
+
+
+
 def supplier_list(request):
     form = SupplierFilterForm(request.GET)
+    status_form = SupplierStatusFilterForm(request.GET)
     queryset = Supplier.objects.all()
 
-    if request.GET.get('active') != '' and request.GET.get('active') is not None:
-        queryset = queryset.filter(active=request.GET.get('active'))
+    if form.is_valid():
+        if form.cleaned_data['department']:
+            queryset = queryset.filter(department=form.cleaned_data['department'])
+        if form.cleaned_data['category']:
+            queryset = queryset.filter(category=form.cleaned_data['category'])
+        if form.cleaned_data['subcategory']:
+            queryset = queryset.filter(subcategory=form.cleaned_data['subcategory'])
+        if form.cleaned_data['brand']:
+            queryset = queryset.filter(brand=form.cleaned_data['brand'])
 
-    if request.GET.get('department'):
-        queryset = queryset.filter(department=request.GET.get('department'))
 
-    if request.GET.get('category'):
-        queryset = queryset.filter(category=request.GET.get('category'))
+    status = request.GET.get('status')
+    if status != '' and status is not None:
+        if status == 'True':
+            suppliers = suppliers.filter(active=True)
+        elif status == 'False':
+            suppliers = suppliers.filter(active=False)
+    
 
-    if request.GET.get('brand'):
-        queryset = queryset.filter(brand=request.GET.get('brand'))
+    paginator = Paginator(queryset, 6)
+    page_number = request.GET.get('page')
+    suppliers = paginator.get_page(page_number)
 
     context = {
         'form': form,
-        'object_list': queryset,
+        'status_form': status_form,
+        'fornecedores': suppliers,
     }
-    return render(request, 'your_template.html', context)
+    return render(request, 'suppliers/supplier_list.html', context)
 
 
 def sua_view_para_o_formulário(request):
@@ -92,17 +112,11 @@ class SupplierCreateView(LoginRequiredMixin, SupplierFormMixin, CreateView):
         return context
 
     def form_valid(self, form):
-        user = form.cleaned_data.get('user')
-        if not user:
-            # Criação do usuário, se necessário
-            user = User.objects.create_user(username=form.cleaned_data['email'],
-                                            email=form.cleaned_data['email'],
-                                            password=form.cleaned_data['resposta']) # Ajuste conforme sua lógica
-        supplier = form.save(commit=False)
-        supplier.user = user
+        supplier = form.save(commit=False) 
+        supplier.user = self.request.user  # Associa o fornecedor ao usuário atual
         supplier.save()
-        form.save_m2m()  # Não esqueça de salvar ManyToMany fields se houver
-        return redirect(self.get_success_url())
+        form.save_m2m()  
+        return super().form_valid(form)
 
 
 
@@ -145,18 +159,3 @@ def create_supplier(request):
         supplier.save()
 
 
-def supplier_list(request):
-    form = SupplierStatusFilterForm(request.GET)
-    suppliers = Supplier.objects.all()
-
-    status = request.GET.get('status')
-    if status != '' and status is not None:
-        if status == 'True':
-            suppliers = suppliers.filter(active=True)
-        elif status == 'False':
-            suppliers = suppliers.filter(active=False)
-
-    return render(request, 'your_template_name.html', {
-        'object_list': suppliers,
-        'form': form,
-    })
