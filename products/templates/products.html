@@ -18,7 +18,7 @@
 </style>
 
 
-<div class="container mt-0">
+<div class="container ">
   <h2 class="mb-4">Catálogo de Produtos</h2>
   <div class="row g-4 mb-0">
     <div class="col-md-12">
@@ -34,7 +34,7 @@
   <form method="GET" action="{% url 'products:products_list' %}"> 
     <div class="row g-2 mb-0">
       <div class="col-md-3">
-        <select class="form-control" name="department" onchange="this.form.submit()">
+        <select class="form-select" name="department" onchange="this.form.submit()">
           <option value="">Departamentos</option>
           {% for department in departments %}
           <option value="{{ department.id }}" {% if current_department == department.id|stringformat:"s" %} selected {% endif %}>
@@ -131,8 +131,10 @@
             {% if product.sku %}
               <p class="card-text">SKU: {{ product.sku }}</p>
             {% endif %}
-            <a href="{% url 'products:product_update' product.pk %}" class="btn btn-primary">Editar</a>
-            <a href="{% url 'products:product_detail' product.pk %}" class="btn btn-info">Visualizar</a>
+            <a href="{% url 'products:product_update' product.pk %}" class="btn btn-warning btn-sm me-2">
+              <i class="bi bi-pencil-square"></i>
+            <a href="{% url 'products:product_detail' product.pk %}" class="btn btn-info btn-sm">
+              <i class="bi bi-eye-fill"></i>
           </a>
           </div>
         </div>
@@ -180,7 +182,7 @@
     <div class="row">
       <div class="col">
 
-      </div>
+    </div>
       <div class="col-auto">
         <div class="d-flex justify-content-end mb-4">
           <form action="" method="get" class="d-inline">

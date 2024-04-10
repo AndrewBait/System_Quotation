@@ -31,7 +31,7 @@
 {% endblock %}
 
 {% block content %}
-<div class="container-fluid mt-4">
+<div class="container-fluid ">
   <form action="" method="post" enctype="multipart/form-data" class="needs-validation" novalidate>
     {% csrf_token %}
     <h1 style="font-size: 2rem; margin-bottom: 20px;">Cadastrar Produto</h1>
@@ -132,7 +132,7 @@
           {{ form.espessura_embalagem.errors }}
         </div>
         <div class="text-end mt-5">
-            <a href="{% url 'products:import_products' %}" class="btn btn-outline-success me-2">Importar Produtos</a>
+            <a href="{% url 'products:import_products' %}" class="btn btn-outline-success me-2">Importar</a>
             <input type="submit" value="Cadastrar" class="btn btn-primary me-2">
             <a href="{% url 'products:products_list' %}" class="btn btn-secondary me-2">Voltar</a>
           </div>

@@ -11,11 +11,14 @@
 </head>
 <body>
     {% include 'components/_header.html' %}
+    <button id="themeToggleBtn" class="btn btn-secondary">
+      <i class="bi bi-brightness-high-fill"></i> 
+    </button>
     <div class="container-fluid">
         <div class="row">
             {% if user.is_authenticated %}
                 {% include 'components/_sidebar.html' %}
-                <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+                <main class="col-md-9 ms-sm-auto col-lg-09 px-md-4">
                     {% if show_cotacao_tabs %}  
                       <ul class="nav nav-tabs">
                         <li class="nav-item">
@@ -41,7 +44,30 @@
                     {% endblock %}
                 </main>
         </div>
-    </div>
-    
+    </div>    
 </body>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const themeToggleBtn = document.getElementById('themeToggleBtn');
+  const htmlElement = document.documentElement;
+
+  const currentTheme = localStorage.getItem('theme') || 'dark'; // Obtém o tema do localStorage ou usa 'dark' como padrão
+  htmlElement.setAttribute('data-bs-theme', currentTheme); 
+
+  themeToggleBtn.addEventListener('click', function() {
+    let newTheme;
+    if (htmlElement.getAttribute('data-bs-theme') === 'dark') {
+      newTheme = 'light';
+    } else {
+      newTheme = 'dark';
+    }
+
+    htmlElement.setAttribute('data-bs-theme', newTheme);
+    localStorage.setItem('theme', newTheme); // Armazena o novo tema no localStorage
+  });
+});
+
+
+</script>
 </html>

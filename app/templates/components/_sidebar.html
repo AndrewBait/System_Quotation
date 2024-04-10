@@ -4,7 +4,24 @@
         color: #ffffff; /* Texto branco para o hover */
         border-radius: .25rem; /* Arredondamento dos cantos */
     }
+    .nav-link.active {
+    background-color: #007bff; /* Cor de fundo para o item ativo */
+    color: white; /* Cor do texto para o item ativo */
+}
 </style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+  const navLinks = document.querySelectorAll('.nav-link');
+  const currentUrl = window.location.href; 
+
+  navLinks.forEach(link => {
+    if (link.href === currentUrl) {
+      link.classList.add('active');
+    }
+  });
+});
+</script>
 
 <div class="d-flex flex-column flex-shrink-0 p-3 text-white bg-ligth" style="width: 250px;">
     <a href="/" class="d-flex align-items-center mb-3 mb-md-0 me-md-auto text-white text-decoration-none">
