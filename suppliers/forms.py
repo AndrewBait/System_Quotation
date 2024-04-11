@@ -1,11 +1,18 @@
 from django import forms
 from .models import Departamento, Category, Subcategory, Brand, Supplier
 from django.core.exceptions import ValidationError
-
+from .models import Supplier
 
 
 
 class SupplierForm(forms.ModelForm):
+
+    # quality_rating = forms.IntegerField(required=False, widget=forms.HiddenInput())
+    # delivery_time_rating = forms.IntegerField(required=False, widget=forms.HiddenInput())
+    # price_rating = forms.IntegerField(required=False, widget=forms.HiddenInput())
+    # reliability_rating = forms.IntegerField(required=False, widget=forms.HiddenInput())
+    # flexibility_rating = forms.IntegerField(required=False, widget=forms.HiddenInput())
+    # partnership_rating = forms.IntegerField(required=False, widget=forms.HiddenInput())
     
     class Meta:
         model = Supplier
@@ -29,7 +36,17 @@ class SupplierForm(forms.ModelForm):
             'categories': forms.CheckboxSelectMultiple(),
             'subcategories': forms.CheckboxSelectMultiple(),
             'brands': forms.CheckboxSelectMultiple(),
-
+            'holiday_cover_name': forms.TextInput(attrs={'class': 'form-control'}),
+            'holiday_cover_email': forms.EmailInput(attrs={'class': 'form-control'}),
+            'holiday_cover_phone': forms.TextInput(attrs={'class': 'form-control'}),            
+            'observation': forms.Textarea(attrs={'class': 'form-control'}),
+            'quality_rating': forms.HiddenInput(),
+            'delivery_time_rating': forms.HiddenInput(),
+            'price_rating': forms.HiddenInput(),
+            'reliability_rating': forms.HiddenInput(),
+            'flexibility_rating': forms.HiddenInput(),
+            'partnership_rating': forms.HiddenInput(),
+            
         }
         exclude = ['deleted']  # Exclui o campo 'deleted' do formulário
 
@@ -38,7 +55,15 @@ class SupplierForm(forms.ModelForm):
         if minimum_order_value is not None:
             if minimum_order_value < 0:  # Ou qualquer outra comparação
                 raise forms.ValidationError("O valor mínimo do pedido deve ser maior ou igual a zero.")
-        return minimum_order_value   
+        return minimum_order_value
+    
+    def clean_quality_rating(self):
+        quality_rating = self.cleaned_data.get('quality_rating')
+        if quality_rating is not None:
+            if not 0 <= quality_rating <= 5:
+                raise forms.ValidationError("A avaliação de qualidade deve estar entre 0 e 5.")
+        return quality_rating
+
     
 class SupplierStatusFilterForm(forms.Form):
     STATUS_CHOICES = [

@@ -12,11 +12,34 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap-select@1.13.14/dist/js/bootstrap-select.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.mask/1.14.16/jquery.mask.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
+<link href="https://cdn.jsdelivr.net/npm/select2/dist/css/select2.min.css" rel="stylesheet" />
+<script src="https://seu-cdn-ou-caminho-local/jquery.raty.js"></script>
+<script src="path/to/jquery.js"></script>
+<script src="path/to/jquery.raty.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 <style>
-  .required-field label::after {
-    content: " *";
-    color: red;
-  }
+    .required-field label::after {
+        content: " *";
+        color: red;
+    }
+    .rating {
+        unicode-bidi: bidi-override;
+        direction: rtl;
+        text-align: left;
+    }
+
+    .rating > span {
+        display: inline-block;
+        position: relative;
+        width: 1.5em; /* Aumentar o tamanho */
+        font-size: 2rem; /* Torna as estrelas maiores */
+        cursor: pointer; /* Muda o cursor para indicar interatividade */
+    }
+
+    .rating > span:hover,
+    .rating > span:hover ~ span {
+        color: gold;
+    }
 </style>
 {% endblock %}
 
@@ -42,7 +65,7 @@
         <!-- Nav tabs -->
         <ul class="nav nav-tabs" id="myTab" role="tablist">
           <li class="nav-item" role="presentation">
-            <button class="nav-link active" id="info-tab" data-bs-toggle="tab" data-bs-target="#info" type="button" role="tab" aria-controls="info" aria-selected="true">Informações Básicas</button>
+            <button class="nav-link active" id="info-tab" data-bs-toggle="tab" data-bs-target="#info" type="button" role="tab" aria-controls="info" aria-selected="true">Cadastro</button>
           </li>
           <li class="nav-item" role="presentation">
             <button class="nav-link" id="vinculos-tab" data-bs-toggle="tab" data-bs-target="#vinculos" type="button" role="tab" aria-controls="vinculos" aria-selected="false">Vínculos</button>
@@ -54,9 +77,10 @@
           <div class="tab-pane active" id="info" role="tabpanel" aria-labelledby="info-tab">
             <div class="row g-3">
                 <div class="col-lg-6">
-                    <!-- Informações Básicas -->
+                    <br>
+                    <h4>Informaçoes Básicas</h4>
                     <div class="mb-3 required-field">
-                        <label for="id_name" class="form-label">Nome:</label>
+                        <label for="id_name" class="form-label">Nome do Vendedor:</label>
                         {{ form.name|add_class:'form-control' }}
                         {% if form.name.errors %}
                             <div class="invalid-feedback" style="display:block;">
@@ -131,7 +155,9 @@
                 </div>
                 <div class="col-lg-6">
                     <!-- Detalhes Adicionais -->
+                    <br>
                     <h4>Detalhes Adicionais</h4>
+
                     <div class="mb-3">
                         <label for="id_minimum_order_value" class="form-label">Valor Mínimo para Pedido:</label>
                         {{ form.minimum_order_value|add_class:'form-control' }}
@@ -140,7 +166,51 @@
                     <div class="mb-3">
                         <label for="id_order_response_deadline" class="form-label">Prazo de Resposta para Pedidos:</label>
                         {{ form.order_response_deadline|add_class:'form-control' }}
-                    </div>                
+                    </div>
+                    <!-- Repita para TER, QUA, QUI, SEX, SAB, DOM com seus respectivos IDs e valores -->
+                    <div id="delivery-days-container" class="mb-3">
+                        <label class="form-label d-block mb-2">Dias de Entrega:</label>
+                        <div class="checkbox-group d-flex flex-wrap gap-2">
+                            {% for day in delivery_days_list %}
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="checkbox" id="day-{{ day|lower }}" value="{{ day }}" name="delivery_days[]" {% if day in selected_days %}checked{% endif %}>
+                                    <label class="form-check-label" for="day-{{ day|lower }}">{{ day }}</label>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    
+                    
+
+                    <br> <br>
+                    <div class="mb-3">
+                        <label for="id_holiday_cover_name" class="form-label">Nome do Fornecedor de Férias:</label>
+                        {{ form.holiday_cover_name|add_class:'form-control' }}
+                    </div>
+                    
+                    <!-- Campo Email do Fornecedor de Férias -->
+                    <div class="mb-3">
+                        <label for="id_holiday_cover_email" class="form-label">Email do Fornecedor de Férias:</label>
+                        {{ form.holiday_cover_email|add_class:'form-control' }}
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="id_holiday_cover_phone" class="form-label">Telefone do Fornecedor de Férias:</label>
+                        {{ form.holiday_cover_phone|add_class:'form-control' }}
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="id_observation" class="form-label">Observação:</label>
+                        {{ form.observation|add_class:'form-control' }}
+                    </div>
+                    
+                    
+
+                   
+                    
+
+                    
                     
                 </div>
             </div>
@@ -175,10 +245,7 @@
                         </select> 
                     </div>
 
-                    <!-- <div class="mb-3">
-                        <label for="id_brands" class="form-label">Marcas:</label>
-                        {{ form.brands|add_class:'form-control' }}
-                    </div> -->
+                    
                 </div>
             </div>
           </div>
@@ -186,6 +253,7 @@
 
         <div class="text-end mt-4">
             <button type="submit" class="btn btn-primary">Cadastrar</button>
+            <a href="{% url 'suppliers:supplier_list' %}" class="btn btn-secondary">Voltar</a>
         </div>
                 
     </form>
@@ -207,29 +275,50 @@
       </div>
     </div>
   </div>
-  
+
+
   
 {% endblock %}
 
 {% block javascript %}
 {{ block.super }}
 <script>
-
-$(document).ready(function() {
-    $('.selectpicker').selectpicker();
-});
+    $(document).ready(function() {
+        $('.selectpicker').selectpicker();
+        $('#id_cnpj').mask('00.000.000/0000-00');
+        $('#id_zip_code').mask('00000-000');
+        $('#id_phone').mask('(00) 00000-0000');
+        $('#id_minimum_order_value').mask('000.000.000.000.000,00', {reverse: true});
     
+        // Função para atualizar visualmente as estrelas e o valor do campo oculto correspondente
+        function updateStars(ratingElement, value) {
+            const stars = ratingElement.querySelectorAll('span');
+            stars.forEach(star => {
+                star.innerHTML = parseInt(star.dataset.value) <= parseInt(value) ? '&#9733;' : '&#9734;';
+                star.style.color = parseInt(star.dataset.value) <= parseInt(value) ? 'gold' : 'grey';
+            });
 
-
+            // Esta linha assume que cada grupo de classificação tem um campo oculto correspondente
+            // com um id que corresponde ao data-field-name da div.rating.
+            const fieldName = ratingElement.dataset.fieldName;
+            if (fieldName) {
+                document.getElementById(fieldName).value = value;
+        }
+    }
     
-
-      document.addEventListener("DOMContentLoaded", function() {
+        // Adiciona evento de clique nas estrelas para cada grupo de avaliação
+        document.querySelectorAll('.rating span').forEach(star => {
+            star.addEventListener('click', function() {
+                const ratingElement = this.parentNode;
+                const value = this.dataset.value;
+                updateStars(ratingElement, value);
+            });
+        });
+    
+        // Evento de perda de foco no CEP para busca de endereço
         var cepInput = document.getElementById('id_zip_code');
-
         cepInput.addEventListener('blur', function(e) {
             var cep = e.target.value.replace(/\D/g, '');
-
-            // Se o CEP tiver 8 dígitos, tenta buscar o endereço
             if(cep.length === 8) {
                 fetch(`https://brasilapi.com.br/api/cep/v1/${cep}`)
                     .then(response => response.json())
@@ -244,45 +333,15 @@ $(document).ready(function() {
                     })
                     .catch(() => alert('Erro ao buscar o CEP.'));
             } else {
-                // Se o CEP estiver vazio ou for removido, limpa os campos
                 document.getElementById('id_address_line_1').value = '';
                 document.getElementById('id_city').value = '';
                 document.getElementById('id_state').value = '';
             }
         });
     });
-
-$(document).ready(function() {
-
-    $('#id_cnpj').mask('00.000.000/0000-00');
-    $('#id_zip_code').mask('00000-000');
-    $('#id_phone').mask('(00) 00000-0000');
-    $('#id_minimum_order_value').mask('000.000.000.000.000,00', {reverse: true});
-
-    // Preenchimento automático do CEP
-    $('#id_zip_code').on('blur', function(e) {
-        var cep = e.target.value.replace(/\D/g, '');
-        if(cep.length === 8) {
-            fetch(`https://brasilapi.com.br/api/cep/v1/${cep}`)
-                .then(response => response.json())
-                .then(data => {
-                    if(data) {
-                        $('#id_address_line_1').val(data.street);
-                        $('#id_city').val(data.city);
-                        $('#id_state').val(data.state);
-                    } else {
-                        alert('CEP não encontrado.');
-                    }
-                }).catch(() => alert('Erro ao buscar o CEP.'));
-        } else {
-            // Limpa os campos se o CEP for removido
-            $('#id_address_line_1').val('');
-            $('#id_city').val('');
-            $('#id_state').val('');
-        }
-    });
-});
-</script>
+    </script>
+    
+    
   
 </div>
 {% endblock %}

@@ -8,7 +8,7 @@ from .models import Supplier
 from .forms import SupplierForm, SupplierFilterForm
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.hashers import make_password
-from django.shortcuts import redirect, render
+from django.shortcuts import get_object_or_404, redirect, render
 from .models import Departamento, Supplier
 from .forms import SupplierStatusFilterForm
 from .models import Category
@@ -108,14 +108,20 @@ class SupplierCreateView(LoginRequiredMixin, SupplierFormMixin, CreateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        context['delivery_days_list'] = ["SEG", "TER", "QUA", "QUI", "SEX", "SAB", "DOM"]
         context['departamentos'] = Departamento.objects.all()
+        context['selected_days'] = self.object.delivery_days.split(',') if self.object and self.object.delivery_days else []
         return context
 
     def form_valid(self, form):
         supplier = form.save(commit=False) 
+        delivery_days = ','.join(self.request.POST.getlist('delivery_days[]'))
+        form.instance.delivery_days = delivery_days
+        response = super().form_valid(form)
         supplier.user = self.request.user  # Associa o fornecedor ao usuário atual
         supplier.save()
-        form.save_m2m()  
+        form.save_m2m()
+        messages.success(self.request, 'Fornecedor salvo com sucesso!')
         return super().form_valid(form)
 
 
@@ -139,11 +145,20 @@ class SupplierUpdateView(LoginRequiredMixin, SupplierFormMixin, UpdateView):
     template_name = 'suppliers/supplier_form.html'
     success_url = reverse_lazy('suppliers:supplier_list') 
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['delivery_days_list'] = ["SEG", "TER", "QUA", "QUI", "SEX", "SAB", "DOM"]
+        if self.kwargs.get('pk'):
+            supplier = get_object_or_404(Supplier, pk=self.kwargs['pk'])
+            context['selected_days'] = supplier.delivery_days.split(',') if supplier.delivery_days else []
+        return context
+
     def form_valid(self, form):
         supplier = form.save(commit=False)  # Salva o objeto Supplier
+        form.instance.delivery_days = ','.join(self.request.POST.getlist('delivery_days[]'))
         supplier.save()                 # Salva o objeto Supplier
         form.save_m2m()        # Salva as relações ManyToMany
-        return redirect(self.get_success_url())
+        return super().form_valid(form)
 
 
 @method_decorator(login_required(login_url='login'), name='dispatch')
