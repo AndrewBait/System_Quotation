@@ -42,7 +42,7 @@ class Supplier(models.Model):
     holiday_cover_name = models.CharField("Nome do Fornecedor de Férias", max_length=255, null=True, blank=True)
     holiday_cover_email = models.EmailField("Email do Fornecedor de Férias", null=True, blank=True)
     holiday_cover_phone = models.CharField("Telefone do Fornecedor de Férias", validators=[phone_regex], max_length=17, blank=True, null=True)   
-    delivery_days = models.CharField("Dias de Entrega", max_length=100, blank=True, null=True)    
+    # delivery_days = models.CharField("Dias de Entrega", max_length=100, blank=True, null=True)    
     observation = models.TextField("Observação", null=True, blank=True)
     delivery_days = models.TextField("Dias de Entrega", blank=True, null=True)
     quality_rating = models.IntegerField(default=0, blank=True, null=True)

@@ -10,6 +10,26 @@
     <input type="submit" value="Confirmar" class="btn btn-danger">
     <a href="{% url 'suppliers:supplier_list' %}" class="btn btn-secondary">Cancelar</a>
   </form>
+
+
+  <div class="mb-3">
+    <label>Qualidade do Fornecedor:</label>
+    <div class="rating" data-field-name="quality_rating">
+        <span data-value="1">&#9734;</span>
+        <span data-value="2">&#9734;</span>
+        <span data-value="3">&#9734;</span>
+        <span data-value="4">&#9734;</span>
+        <span data-value="5">&#9734;</span>
+    </div>
+    <input type="hidden" id="quality_rating" name="quality_rating" value="">
+</div>
+
+
   
 </div>
+
+
+  
+  
+  
 {% endblock %}

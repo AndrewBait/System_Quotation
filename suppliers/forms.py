@@ -7,13 +7,7 @@ from .models import Supplier
 
 class SupplierForm(forms.ModelForm):
 
-    # quality_rating = forms.IntegerField(required=False, widget=forms.HiddenInput())
-    # delivery_time_rating = forms.IntegerField(required=False, widget=forms.HiddenInput())
-    # price_rating = forms.IntegerField(required=False, widget=forms.HiddenInput())
-    # reliability_rating = forms.IntegerField(required=False, widget=forms.HiddenInput())
-    # flexibility_rating = forms.IntegerField(required=False, widget=forms.HiddenInput())
-    # partnership_rating = forms.IntegerField(required=False, widget=forms.HiddenInput())
-    
+   
     class Meta:
         model = Supplier
         fields = '__all__'  # Inclui todos os campos do modelo no formulário

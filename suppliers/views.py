@@ -68,9 +68,9 @@ def supplier_list(request):
     status = request.GET.get('status')
     if status != '' and status is not None:
         if status == 'True':
-            suppliers = suppliers.filter(active=True)
+            queryset = queryset.filter(active=True)  # Correção feita aqui
         elif status == 'False':
-            suppliers = suppliers.filter(active=False)
+            queryset = queryset.filter(active=False)  # E aqui
     
 
     paginator = Paginator(queryset, 6)

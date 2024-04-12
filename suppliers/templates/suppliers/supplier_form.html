@@ -179,72 +179,40 @@
                             {% endfor %}
                         </div>
                     </div>
-
+                   
                     
                     
-
                     <br> <br>
+                    <h4>Cobrir Férias</h4>
                     <div class="mb-3">
-                        <label for="id_holiday_cover_name" class="form-label">Nome do Fornecedor de Férias:</label>
+                        <label for="id_holiday_cover_name" class="form-label">Nome do Fornecedor:</label>
                         {{ form.holiday_cover_name|add_class:'form-control' }}
                     </div>
                     
                     <!-- Campo Email do Fornecedor de Férias -->
                     <div class="mb-3">
-                        <label for="id_holiday_cover_email" class="form-label">Email do Fornecedor de Férias:</label>
+                        <label for="id_holiday_cover_email" class="form-label">Email do Fornecedor</label>
                         {{ form.holiday_cover_email|add_class:'form-control' }}
                     </div>
 
                     <div class="mb-3">
-                        <label for="id_holiday_cover_phone" class="form-label">Telefone do Fornecedor de Férias:</label>
+                        <label for="id_holiday_cover_phone" class="form-label">Telefone do Fornecedor</label>
                         {{ form.holiday_cover_phone|add_class:'form-control' }}
                     </div>
 
                     <div class="mb-3">
                         <label for="id_observation" class="form-label">Observação:</label>
                         {{ form.observation|add_class:'form-control' }}
-                    </div>
-                    
-                    
-
-                   
-                    
-
-                    
-                    
+                    </div>                
                 </div>
             </div>
           </div>
-          <div class="tab-pane" id="vinculos" role="tabpanel" aria-labelledby="vinculos-tab">
-            <div class="row g-3">
-                <div class="col-lg-6">
-                    <div class="mb-3">
-                        <label for="id_departments" class="form-label">Departamentos:</label>
-                        <select id="id_departments" name="departments" class="selectpicker form-control" multiple data-live-search="true">
-                            {% for department in departments %}
-                                <option value="{{ department.id }}">{{ department.name }}</option>
-                            {% endfor %}
-                        </select>                    
-                    </div>
 
-                    <div class="mb-3">
-                        <label for="id_categories" class="form-label">Categorias:</label>
-                        <select id="id_categories" name="categories" class="selectpicker form-control" multiple data-live-search="true">
-                            {% for category in categories %}
-                                <option value="{{ category.id }}">{{ category.name }}</option>
-                            {% endfor %}
-                        </select> 
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label for="id_subcategories" class="form-label">Subcategorias:</label>
-                        <select id="id_subcategories" name="subcategories" class="selectpicker form-control" multiple data-live-search="true">
-                            {% for subcategory in subcategories %}
-                                <option value="{{ subcategory.id }}">{{ subcategory.name }}</option>
-                            {% endfor %}
-                        </select> 
-                    </div>
 
+        <div class="tab-pane" id="vinculos" role="tabpanel" aria-labelledby="vinculos-tab">
+            {% include 'isolated/_vinculos_tab.html' %}
+        </div>
+            
                     
                 </div>
             </div>
@@ -252,29 +220,31 @@
         </div>
 
         <div class="text-end mt-4">
-            <button type="submit" class="btn btn-primary">Cadastrar</button>
+            <button type="submit" class="btn btn-primary">Salvar</button>
             <a href="{% url 'suppliers:supplier_list' %}" class="btn btn-secondary">Voltar</a>
         </div>
+
+        <div class="modal fade" id="confirmationModal" tabindex="-1" aria-labelledby="confirmationModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h5 class="modal-title" id="confirmationModalLabel">Cadastro Realizado</h5>
+                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                  O cadastro foi realizado com sucesso!
+                </div>
+                <div class="modal-footer">
+                  <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                </div>
+              </div>
+            </div>
+          </div>
                 
     </form>
 </div>
   <!-- Modal de Confirmação -->
-<div class="modal fade" id="confirmationModal" tabindex="-1" aria-labelledby="confirmationModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title" id="confirmationModalLabel">Cadastro Realizado</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body">
-          O cadastro foi realizado com sucesso!
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
-        </div>
-      </div>
-    </div>
-  </div>
+
 
 
   
@@ -292,54 +262,34 @@
     
         // Função para atualizar visualmente as estrelas e o valor do campo oculto correspondente
         function updateStars(ratingElement, value) {
-            const stars = ratingElement.querySelectorAll('span');
-            stars.forEach(star => {
-                star.innerHTML = parseInt(star.dataset.value) <= parseInt(value) ? '&#9733;' : '&#9734;';
-                star.style.color = parseInt(star.dataset.value) <= parseInt(value) ? 'gold' : 'grey';
-            });
-
-            // Esta linha assume que cada grupo de classificação tem um campo oculto correspondente
-            // com um id que corresponde ao data-field-name da div.rating.
-            const fieldName = ratingElement.dataset.fieldName;
-            if (fieldName) {
-                document.getElementById(fieldName).value = value;
-        }
-    }
-    
-        // Adiciona evento de clique nas estrelas para cada grupo de avaliação
-        document.querySelectorAll('.rating span').forEach(star => {
-            star.addEventListener('click', function() {
-                const ratingElement = this.parentNode;
-                const value = this.dataset.value;
-                updateStars(ratingElement, value);
-            });
-        });
-    
-        // Evento de perda de foco no CEP para busca de endereço
-        var cepInput = document.getElementById('id_zip_code');
-        cepInput.addEventListener('blur', function(e) {
-            var cep = e.target.value.replace(/\D/g, '');
-            if(cep.length === 8) {
-                fetch(`https://brasilapi.com.br/api/cep/v1/${cep}`)
-                    .then(response => response.json())
-                    .then(data => {
-                        if(data) {
-                            document.getElementById('id_address_line_1').value = data.street;
-                            document.getElementById('id_city').value = data.city;
-                            document.getElementById('id_state').value = data.state;
-                        } else {
-                            alert('CEP não encontrado.');
-                        }
-                    })
-                    .catch(() => alert('Erro ao buscar o CEP.'));
+        const stars = ratingElement.querySelectorAll('span');
+        stars.forEach((star, index) => {
+            if (index < value) {
+                star.innerHTML = '&#9733;'; // Estrela sólida
+                star.style.color = 'gold';
             } else {
-                document.getElementById('id_address_line_1').value = '';
-                document.getElementById('id_city').value = '';
-                document.getElementById('id_state').value = '';
+                star.innerHTML = '&#9734;'; // Estrela vazia
+                star.style.color = 'grey';
             }
         });
+
+        const fieldName = ratingElement.getAttribute('data-field-name');
+        document.getElementById(fieldName).value = value;
+    }
+
+    $('.rating span').click(function() {
+        const ratingElement = this.parentNode;
+        const value = parseInt(this.dataset.value);
+        updateStars(ratingElement, value);
     });
-    </script>
+
+    $('.rating').each(function() {
+        const fieldName = $(this).data('field-name');
+        const initialValue = $('#' + fieldName).val() || 0;
+        updateStars(this, parseInt(initialValue));
+    });
+});
+</script>
     
     
   

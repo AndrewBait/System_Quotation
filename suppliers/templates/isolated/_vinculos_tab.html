@@ -1,0 +1,156 @@
+<div class="container mt-3">
+    <!-- Departamentos -->
+    <div class="row g-3">
+        <div class="col-md-6">
+            <label for="available_departments" class="form-label">Departamentos Disponíveis:</label>
+            <select id="available_departments" class="form-control" multiple>
+                <!-- Opções de departamentos carregadas aqui -->
+                {% for department in departments %}
+                <option value="{{ department.id }}">{{ department.name }}</option>
+                {% endfor %}
+            </select>
+            <button id="add_department" class="btn btn-primary mt-2">Adicionar &gt;&gt;</button>
+        </div>
+        <div class="col-md-6">
+            <label for="selected_departments" class="form-label">Departamentos Selecionados:</label>
+            <select id="selected_departments" name="departments" class="form-control" multiple>
+                <!-- Opções de departamentos selecionados serão movidas para aqui -->
+            </select>
+            <button id="remove_department" class="btn btn-secondary mt-2">&lt;&lt; Remover</button>
+        </div>
+    </div>
+
+    <!-- Categorias e Subcategorias -->
+    <div class="row g-3 mt-3">
+        <div class="col-md-6">
+            <label for="id_categories" class="form-label">Categorias:</label>
+            <select id="id_categories" name="categories" class="selectpicker form-control" multiple data-live-search="true">
+                <!-- Opções de categorias carregadas dinamicamente com base na seleção do departamento -->
+            </select>
+        </div>
+        <div class="col-md-6">
+            <label for="id_subcategories" class="form-label">Subcategorias:</label>
+            <select id="id_subcategories" name="subcategories" class="selectpicker form-control" multiple data-live-search="true">
+                <!-- Opções de subcategorias carregadas dinamicamente com base na seleção da categoria -->
+            </select>
+        </div>
+    </div>
+
+    <!-- Avaliação por Estrelas -->
+    <div class="row g-3 mt-3">
+        <div class="col-12">
+            <label>Qualidade do Fornecedor:</label>
+            <div class="rating" data-field-name="quality_rating">
+                <!-- Estrelas para avaliação; clique altera o valor do campo oculto -->
+                <span data-value="1">&#9734;</span>
+                <span data-value="2">&#9734;</span>
+                <span data-value="3">&#9734;</span>
+                <span data-value="4">&#9734;</span>
+                <span data-value="5">&#9734;</span>
+            </div>
+            <input type="hidden" id="quality_rating" name="quality_rating" value="">
+        </div>
+    </div>
+</div>
+
+
+<script type="text/javascript">
+    // Defina as URLs como variáveis JavaScript
+    
+$(document).ready(function() {
+
+    var getCategoriesUrl = "{% url 'products:get-categories' %}";
+    var getSubcategoriesUrl = "{% url 'products:get-subcategories' %}";
+
+    $("#add_department").click(function() {
+        var selectedDepartments = $("#selected_departments").val(); // Captura os IDs dos departamentos selecionados
+        if (selectedDepartments.length > 0) {
+            // Se houver departamentos selecionados, faz uma chamada AJAX para cada um
+            selectedDepartments.forEach(function(departmentId) {
+                $.ajax({
+                    url: getCategoriesUrl,
+                    data: {'department_id': departmentId},
+                    success: function(data) {
+                        $('#id_categories').html('<option value="">---------</option>');
+                        data.forEach(function(item) {
+                            $('#id_categories').append($('<option>', {
+                                value: item.id,
+                                text : item.name
+                            }));
+                        });
+                        $('#id_categories').selectpicker('refresh'); // Atualiza o selectpicker com os novos dados
+                        $('#id_subcategories').html('<option value="">---------</option>').selectpicker('refresh'); // Limpa subcategorias
+                    }
+                });
+            });
+        }
+    });
+
+    
+    // Função para atualizar visualmente as estrelas e o valor do campo oculto correspondente
+    function updateStars(ratingElement, value) {
+        const stars = ratingElement.querySelectorAll('span');
+        stars.forEach(star => {
+            star.innerHTML = parseInt(star.dataset.value) <= parseInt(value) ? '&#9733;' : '&#9734;';
+            star.style.color = parseInt(star.dataset.value) <= parseInt(value) ? 'gold' : 'grey';
+        });
+
+        // Esta linha assume que cada grupo de classificação tem um campo oculto correspondente
+        // com um id que corresponde ao data-field-name da div.rating.
+        const fieldName = ratingElement.dataset.fieldName;
+        if (fieldName) {
+            document.getElementById(fieldName).value = value;
+        }
+    }
+
+    // Adiciona evento de clique nas estrelas
+    document.querySelectorAll('.rating span').forEach(star => {
+        star.addEventListener('click', function() {
+            const ratingElement = this.parentNode;
+            const value = this.dataset.value;
+            updateStars(ratingElement, value);
+        });
+    });
+
+    // Evento de mudança para Departamentos com AJAX para buscar Categorias
+    $('#id_departments').change(function() {
+            var departmentId = $(this).val();
+            $.ajax({
+                url: getCategoriesUrl, // Usa a variável JavaScript
+                data: {'department_id': departmentId},
+                success: function(data) {
+                    $('#id_categories').html('<option value="">---------</option>');
+                    data.forEach(function(item) {
+                        $('#id_categories').append($('<option>', {
+                            value: item.id,
+                            text : item.name
+                        }));
+                    });
+                    $('#id_categories').selectpicker('refresh');
+                    $('#id_subcategories').html('<option value="">---------</option>').selectpicker('refresh');
+                }
+            });
+        });
+
+        // Evento de mudança para Categorias com AJAX para buscar Subcategorias
+        $('#id_categories').change(function() {
+            var categoryId = $(this).val();
+            $.ajax({
+                url: getSubcategoriesUrl,
+                data: {'category_id': categoryId},
+                success: function(data) {
+                    $('#id_subcategories').html('<option value="">---------</option>');
+                    data.forEach(function(item) {
+                        $('#id_subcategories').append($('<option>', {
+                            value: item.id,
+                            text : item.name
+                        }));
+                    });
+                    $('#id_subcategories').selectpicker('refresh');
+                }
+            });
+        });
+
+        // Seus outros scripts JavaScript podem continuar aqui
+    });
+</script>
