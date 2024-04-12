@@ -4,18 +4,16 @@ from django.views.generic import CreateView, ListView, DetailView, UpdateView, D
 from django.contrib.auth.decorators import login_required
 from django.utils.decorators import method_decorator
 from django.contrib.auth.models import User
-from .models import Supplier
-from .forms import SupplierForm, SupplierFilterForm
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.hashers import make_password
 from django.shortcuts import get_object_or_404, redirect, render
-from .models import Departamento, Supplier
-from .forms import SupplierStatusFilterForm
-from .models import Category
 from django.http import JsonResponse
 from django.contrib import messages
 from django.core.paginator import Paginator
-
+from .forms import SupplierForm, SupplierFilterForm, SupplierStatusFilterForm
+from .models import Departamento, Supplier, Category, Subcategory
+from django.test import TestCase
+from django.urls import reverse
 
 class SupplierFormMixin:
     def form_valid(self, form):
@@ -45,15 +43,14 @@ def get_categories(request):
     return JsonResponse(list(categories), safe=False)
 
 
-
-
-
-
 def supplier_list(request):
-    form = SupplierFilterForm(request.GET)
-    status_form = SupplierStatusFilterForm(request.GET)
     queryset = Supplier.objects.all()
+    print("supplier_list view is called")
+    form = SupplierFilterForm(request.GET or None)    
+    status_form = SupplierStatusFilterForm(request.GET or None)
+    suppliers = Supplier.objects.all().order_by('id')
 
+    
     if form.is_valid():
         if form.cleaned_data['department']:
             queryset = queryset.filter(department=form.cleaned_data['department'])
@@ -66,11 +63,10 @@ def supplier_list(request):
 
 
     status = request.GET.get('status')
-    if status != '' and status is not None:
-        if status == 'True':
-            queryset = queryset.filter(active=True)  # Correção feita aqui
-        elif status == 'False':
-            queryset = queryset.filter(active=False)  # E aqui
+    if status == 'True':
+        queryset = queryset.filter(active=True)
+    elif status == 'False':
+        queryset = queryset.filter(active=False)
     
 
     paginator = Paginator(queryset, 6)
@@ -80,7 +76,7 @@ def supplier_list(request):
     context = {
         'form': form,
         'status_form': status_form,
-        'fornecedores': suppliers,
+        'suppliers': suppliers,
     }
     return render(request, 'suppliers/supplier_list.html', context)
 
@@ -130,6 +126,49 @@ class SupplierCreateView(LoginRequiredMixin, SupplierFormMixin, CreateView):
 class SupplierListView(ListView):
     model = Supplier
     template_name = 'suppliers/supplier_list.html'
+    context_object_name = 'suppliers'
+    paginate_by = 10
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        form = SupplierFilterForm(self.request.GET or None)
+        department_id = self.request.GET.get('department')
+        category_id = self.request.GET.get('category')
+        subcategory_id = self.request.GET.get('subcategory')
+
+
+        if form.is_valid():
+            department_id = self.request.GET.get('department')
+            category_id = self.request.GET.get('category')
+            subcategory_id = self.request.GET.get('subcategory')
+            brand_id = form.cleaned_data.get('brand')
+
+            if department_id:
+                queryset = queryset.filter(departments__id=department_id)
+            if category_id:
+                queryset = queryset.filter(categories__id=category_id)
+            if subcategory_id:
+                queryset = queryset.filter(subcategories__id=subcategory_id)
+            if brand_id:
+                queryset = queryset.filter(brand__id=brand_id)        
+
+        status = self.request.GET.get('status')
+        if status == 'True':
+            queryset = queryset.filter(active=True)
+        elif status == 'False':
+            queryset = queryset.filter(active=False)
+
+        return queryset
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['suppliers'] = context['object_list']  # Adiciona 'suppliers' ao contexto
+        context['departments'] = Departamento.objects.all()
+        context['categories'] = Category.objects.all()
+        context['subcategories'] = Subcategory.objects.all()
+        context['form'] = SupplierFilterForm(self.request.GET or None)
+        context['status_form'] = SupplierStatusFilterForm(self.request.GET or None)
+        return context
 
 
 @method_decorator(login_required(login_url='login'), name='dispatch')
@@ -174,3 +213,26 @@ def create_supplier(request):
         supplier.save()
 
 
+def get_categories(request):
+    department_id = request.GET.get('department_id')
+    if department_id:
+        try:
+            department_id = int(department_id)  # Certifique-se que é um inteiro
+            categories = Category.objects.filter(department_id=department_id).values('id', 'name')
+            return JsonResponse(list(categories), safe=False)
+        except ValueError:
+            # Lidar com a conversão falha
+            return JsonResponse({'error': 'Invalid department ID'}, status=400)
+    else:
+        return JsonResponse({'error': 'Department ID is missing'}, status=400)
+    
+
+def get_subcategories(request):
+    category_id = request.GET.get('category_id')
+    subcategories = list(Subcategory.objects.filter(category_id=category_id).values('id', 'name'))
+    return JsonResponse(subcategories, safe=False)
+
+class TestCategoryView(TestCase):
+    def test_get_categories(self):
+        response = self.client.get(reverse('ajax_get_categories'), {'department_id': 1})
+        self.assertEqual(response.status_code, 200)

@@ -52,6 +52,9 @@ class Supplier(models.Model):
     flexibility_rating = models.IntegerField(default=0, blank=True, null=True)
     partnership_rating = models.IntegerField(default=0, blank=True, null=True)
 
+    class Meta:
+        ordering = ['name']
+
     def get_departments(self):
         return ", ".join([d.name for d in self.departments.all()])
 

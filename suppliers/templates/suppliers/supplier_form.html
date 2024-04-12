@@ -59,7 +59,7 @@
             {% endfor %}
         {% endif %}
 
-        <h1 style="font-size: 2rem; margin-bottom: 20px;">Cadastro de Fornecedor</h1>
+        <!-- <h1 style="font-size: 2rem; margin-bottom: 20px;">Cadastro de Fornecedor</h1> -->
         <!-- <p>* Campos obrigatórios</p> Legenda para campos obrigatórios -->
 
         <!-- Nav tabs -->
@@ -152,11 +152,25 @@
                         {{ form.state|add_class:'form-control' }}
                     </div>
 
+                    
+
                 </div>
                 <div class="col-lg-6">
                     <!-- Detalhes Adicionais -->
                     <br>
                     <h4>Detalhes Adicionais</h4>
+
+                    <div class="mb-3">
+                        <label for="id_active" class="form-label">Status:</label>
+                        {{ form.active|add_class:'form-control' }}
+                        {% if form.active.errors %}
+                            <div class="invalid-feedback" style="display:block;">
+                                {% for error in form.active.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
 
                     <div class="mb-3">
                         <label for="id_minimum_order_value" class="form-label">Valor Mínimo para Pedido:</label>
@@ -178,11 +192,10 @@
                                 </div>
                             {% endfor %}
                         </div>
-                    </div>
-                   
+                    </div>                   
                     
                     
-                    <br> <br>
+                    <br> 
                     <h4>Cobrir Férias</h4>
                     <div class="mb-3">
                         <label for="id_holiday_cover_name" class="form-label">Nome do Fornecedor:</label>

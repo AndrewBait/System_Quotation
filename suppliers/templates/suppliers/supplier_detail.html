@@ -20,7 +20,7 @@
       {% endif %}
 
       {% if object.address_line_1 or object.address_line_2 %}
-      <p class="card-text"><strong>Endereço:</strong> {{ object.address_line_1 }}{{ object.address_line_2|default_if_none:"" }}</p>
+      <p class="card-text"><strong>Endereço:</strong> {{ object.address_line_1 }}, {{ object.address_line_2|default_if_none:"" }}</p>
       {% endif %}
 
       {% if object.city or object.state %}

@@ -2,14 +2,52 @@
 
 {% block content %}
 <div class="container py-4">
-
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2>Fornecedores</h2>
-        <a href="{% url 'suppliers:supplier_new' %}" class="btn btn-success">Adicionar Novo Fornecedor</a> 
-    </div>
+        <a href="{% url 'suppliers:supplier_new' %}" class="btn btn-success">Adicionar Novo Fornecedor</a>
+    </div>   
+
+    <form method="GET" action="{% url 'suppliers:supplier_list' %}"> 
+        <div class="row g-2">
+            <!-- Filtro por Departamento -->
+            <div class="col-md-4">
+                <select class="form-select" name="department">
+                    <option value="">Departamentos</option>
+                    {% for department in departments %}
+                    <option value="{{ department.id }}" {% if request.GET.department == department.id|stringformat:"s" %}selected{% endif %}>
+                        {{ department.nome }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Filtro por Categoria -->
+            <div class="col-md-4">
+                <select class="form-select" name="category">
+                    <option value="">Categorias</option>
+                </select>
+            </div>  
+
+            <!-- Filtro por Sub-categoria -->
+            <div class="col-md-4">
+                <select class="form-select" name="subcategory">
+                    <option value="">Subcategorias</option>
+                </select>
+            </div>
+
+            <div class="col-md-4">
+                <select class="form-select" name="status" onchange="this.form.submit()">
+                    <option value="">Qualquer Status</option>
+                    <option value="True" {% if request.GET.status == 'True' %}selected{% endif %}>Ativo</option>
+                    <option value="False" {% if request.GET.status == 'False' %}selected{% endif %}>Inativo</option>
+                </select>
+            </div>
+        </div>  
+    </form>
+    <br>
 
     <div class="row row-cols-1 row-cols-md-3 g-4">
-        {% for supplier in object_list %}
+        {% for supplier in suppliers %}
         <div class="col">
             <div class="card h-100">
                 <div class="card-header">
@@ -41,17 +79,49 @@
         {% endfor %}
     </div>
     <div class="pagination justify-content-center">
-        {% if fornecedores.has_previous %}
-            <a class="btn btn-outline-secondary" href="?page=1">&laquo; Primeira</a>
-            <a class="btn btn-outline-secondary" href="?page={{ fornecedores.previous_page_number }}">Anterior</a>
+        {% if suppliers.has_previous %}
+            <a class="btn btn-outline-secondary" href="?{{ request.GET.urlencode|add:"&" }}page=1">&laquo; Primeira</a>
+            <a class="btn btn-outline-secondary" href="?{{ request.GET.urlencode|add:"&" }}page={{ suppliers.previous_page_number }}">Anterior</a>
         {% endif %}
-    
-        <span class="current-page">Página {{ fornecedores.number }} de {{ fornecedores.paginator.num_pages }}</span>
-    
-        {% if fornecedores.has_next %}
-            <a class="btn btn-outline-secondary" href="?page={{ fornecedores.next_page_number }}">Próxima</a>
-            <a class="btn btn-outline-secondary" href="?page={{ fornecedores.paginator.num_pages }}">Última &raquo;</a>
+        
+        <span class="current-page">Página {{ suppliers.number }} de {{ suppliers.paginator.num_pages }}</span>
+        
+        {% if suppliers.has_next %}
+            <a class="btn btn-outline-secondary" href="?{{ request.GET.urlencode|add:"&" }}page={{ suppliers.next_page_number }}">Próxima</a>
+            <a class="btn btn-outline-secondary" href="?{{ request.GET.urlencode|add:"&" }}page={{ suppliers.paginator.num_pages }}">Última &raquo;</a>
         {% endif %}
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const departmentSelect = document.querySelector('select[name="department"]');
+    const categorySelect = document.querySelector('select[name="category"]');
+    const subcategorySelect = document.querySelector('select[name="subcategory"]');
+
+    departmentSelect.addEventListener('change', function() {
+        const departmentId = this.value;
+        fetch(`/products/get-categories/?department_id=${departmentId}`)
+            .then(response => response.json())
+            .then(data => {
+                categorySelect.innerHTML = '<option value="">Selecione uma Categoria</option>';
+                data.forEach(category => {
+                    categorySelect.options.add(new Option(category.name, category.id));
+                });
+            });
+    });
+
+    categorySelect.addEventListener('change', function() {
+        const categoryId = this.value;
+        fetch(`/products/get-subcategories/?category_id=${categoryId}`)
+            .then(response => response.json())
+            .then(data => {
+                subcategorySelect.innerHTML = '<option value="">Selecione uma Subcategoria</option>';
+                data.forEach(subcategory => {
+                    subcategorySelect.options.add(new Option(subcategory.name, subcategory.id));
+                });
+            });
+    });
+});
+</script>
 {% endblock %}

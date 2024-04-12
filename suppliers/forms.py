@@ -40,6 +40,7 @@ class SupplierForm(forms.ModelForm):
             'reliability_rating': forms.HiddenInput(),
             'flexibility_rating': forms.HiddenInput(),
             'partnership_rating': forms.HiddenInput(),
+            'active': forms.Select(choices=[(True, 'Ativo'), (False, 'Inativo')], attrs={'class': 'form-control'}),
             
         }
         exclude = ['deleted']  # Exclui o campo 'deleted' do formulário
