@@ -34,12 +34,6 @@ class SupplierForm(forms.ModelForm):
             'holiday_cover_email': forms.EmailInput(attrs={'class': 'form-control'}),
             'holiday_cover_phone': forms.TextInput(attrs={'class': 'form-control'}),            
             'observation': forms.Textarea(attrs={'class': 'form-control'}),
-            'quality_rating': forms.HiddenInput(),
-            'delivery_time_rating': forms.HiddenInput(),
-            'price_rating': forms.HiddenInput(),
-            'reliability_rating': forms.HiddenInput(),
-            'flexibility_rating': forms.HiddenInput(),
-            'partnership_rating': forms.HiddenInput(),
             'active': forms.Select(choices=[(True, 'Ativo'), (False, 'Inativo')], attrs={'class': 'form-control'}),
             
         }
@@ -88,3 +82,19 @@ class SupplierFilterForm(forms.Form):
                     self.fields['subcategory'].queryset = Subcategory.objects.filter(category_id=category_id).order_by('name')
             except (ValueError, TypeError):
                 pass  # invalid input; ignore and fallback to empty City queryset
+
+class SupplierRatingsForm(forms.ModelForm):
+    class Meta:
+        model = Supplier
+        fields = [
+            'quality_rating', 'delivery_time_rating', 'price_rating',
+            'reliability_rating', 'flexibility_rating', 'partnership_rating', 'comments'
+        ]
+        widgets = {
+            'quality_rating': forms.HiddenInput(),
+            'delivery_time_rating': forms.HiddenInput(),
+            'price_rating': forms.HiddenInput(),
+            'reliability_rating': forms.HiddenInput(),
+            'flexibility_rating': forms.HiddenInput(),
+            'partnership_rating': forms.HiddenInput(),
+        }

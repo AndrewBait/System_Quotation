@@ -51,6 +51,7 @@ class Supplier(models.Model):
     reliability_rating = models.IntegerField(default=0, blank=True, null=True)
     flexibility_rating = models.IntegerField(default=0, blank=True, null=True)
     partnership_rating = models.IntegerField(default=0, blank=True, null=True)
+    comments = models.TextField("Comentários", max_length=100, blank=True, null=True)
 
     class Meta:
         ordering = ['name']

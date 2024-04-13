@@ -35,22 +35,7 @@
             </select>
         </div>
     </div>
-
-    <!-- Avaliação por Estrelas -->
-    <div class="row g-3 mt-3">
-        <div class="col-12">
-            <label>Qualidade do Fornecedor:</label>
-            <div class="rating" data-field-name="quality_rating" data-score="{{ object.quality_rating }}">
-                <!-- Estrelas para avaliação; clique altera o valor do campo oculto -->
-                <span data-value="1">&#9734;</span>
-                <span data-value="2">&#9734;</span>
-                <span data-value="3">&#9734;</span>
-                <span data-value="4">&#9734;</span>
-                <span data-value="5">&#9734;</span>
-            </div>
-            <input type="hidden" id="quality_rating" name="quality_rating" value="{{ object.quality_rating }}">
-        </div>
-    </div>
+   
 </div>
 
 
@@ -58,39 +43,6 @@
 
 
     
-<script type="text/javascript">
-    $(document).ready(function() {
-        // Inicializar estrelas baseadas nos valores existentes
-        $('.rating').each(function() {
-            const ratingElement = this;
-            const value = $(this).attr('data-score');  // Lê o valor do atributo data-score
-            updateStars(ratingElement, value);
-        });
-    
-        function updateStars(ratingElement, value) {
-            const stars = ratingElement.querySelectorAll('span');
-            stars.forEach((star, index) => {
-                if (index < value) {
-                    star.innerHTML = '&#9733;'; // Estrela sólida
-                    star.style.color = 'gold';  // Assegure-se de que a cor está correta
-                } else {
-                    star.innerHTML = '&#9734;'; // Estrela vazia
-                    star.style.color = 'grey';
-                }
-            });
-            $(ratingElement).next('input[type="hidden"]').val(value); // Atualiza o campo oculto
-        }
-    
-        // Evento de clique nas estrelas
-        document.querySelectorAll('.rating span').forEach(star => {
-            star.addEventListener('click', function() {
-                const ratingElement = this.parentNode;
-                const value = parseInt(this.dataset.value);
-                updateStars(ratingElement, value);
-            });
-        });
-        console.log("Valor de inicialização:", value);
-    });
-    </script>
+
     
 

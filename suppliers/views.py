@@ -1,5 +1,6 @@
 from pyexpat.errors import messages
 from django.urls import reverse_lazy
+from django.views import View
 from django.views.generic import CreateView, ListView, DetailView, UpdateView, DeleteView
 from django.contrib.auth.decorators import login_required
 from django.utils.decorators import method_decorator
@@ -10,10 +11,11 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.http import JsonResponse
 from django.contrib import messages
 from django.core.paginator import Paginator
-from .forms import SupplierForm, SupplierFilterForm, SupplierStatusFilterForm
+from .forms import SupplierForm, SupplierFilterForm, SupplierRatingsForm, SupplierStatusFilterForm
 from .models import Departamento, Supplier, Category, Subcategory
 from django.test import TestCase
 from django.urls import reverse
+from django.http import HttpResponseRedirect
 import logging
 logger = logging.getLogger(__name__)
 
@@ -113,7 +115,9 @@ class SupplierCreateView(LoginRequiredMixin, SupplierFormMixin, CreateView):
         return context
 
     def form_valid(self, form):
-        supplier = form.save(commit=False) 
+        supplier = form.save(commit=False)
+        supplier.price_rating = self.request.POST.get('price_rating')
+        supplier.reliability_rating = self.request.POST.get('reliability_rating')
         delivery_days = ','.join(self.request.POST.getlist('delivery_days[]'))
         form.instance.delivery_days = delivery_days
         response = super().form_valid(form)
@@ -175,6 +179,21 @@ class SupplierListView(ListView):
 class SupplierDetailView(DetailView):
     model = Supplier
     template_name = 'suppliers/supplier_detail.html'
+    
+
+class RatingsUpdateView(LoginRequiredMixin, View):
+    def post(self, request, *args, **kwargs):
+        supplier = get_object_or_404(Supplier, pk=kwargs.get('pk'))
+        supplier.update_ratings(
+            quality=request.POST.get('quality_rating'),
+            delivery_time=request.POST.get('delivery_time_rating'),
+            price=request.POST.get('price_rating'),
+            reliability=request.POST.get('reliability_rating'),
+            flexibility=request.POST.get('flexibility_rating'),
+            partnership=request.POST.get('partnership_rating'),
+            comments=request.POST.get('comments')
+        )
+        return HttpResponseRedirect(reverse('suppliers:supplier_detail', kwargs={'pk': supplier.pk}))
 
 
 @method_decorator(login_required(login_url='login'), name='dispatch')
@@ -184,6 +203,32 @@ class SupplierUpdateView(LoginRequiredMixin, SupplierFormMixin, UpdateView):
     template_name = 'suppliers/supplier_form.html'
     success_url = reverse_lazy('suppliers:supplier_list') 
 
+    def post(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        if 'save_ratings' in request.POST:
+            ratings_form = SupplierRatingsForm(request.POST, instance=self.object)
+            if ratings_form.is_valid():
+                ratings_form.save()
+                messages.success(request, "Avaliações atualizadas com sucesso.")
+                return HttpResponseRedirect(self.get_success_url() + '?success=true')
+            else:
+                messages.error(request, "Erro ao salvar avaliações. Por favor, verifique os dados fornecidos.")
+                return self.form_invalid(ratings_form)
+        else:
+            return super().post(request, *args, **kwargs)
+
+    def handle_ratings(self, request):
+        form = self.get_form_class()(instance=self.object, data=request.POST)
+        if form.is_valid():
+            return self.form_valid_ratings(form)
+        else:
+            return self.form_invalid(form)   
+        
+    def form_valid_ratings(self, form):
+        # Aqui você salva apenas os dados relacionados às avaliações e comentários
+        form.instance.save_ratings_only()
+        return HttpResponseRedirect(self.get_success_url())
+    
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['delivery_days_list'] = ["SEG", "TER", "QUA", "QUI", "SEX", "SAB", "DOM"]
@@ -191,13 +236,37 @@ class SupplierUpdateView(LoginRequiredMixin, SupplierFormMixin, UpdateView):
             supplier = get_object_or_404(Supplier, pk=self.kwargs['pk'])
             context['selected_days'] = supplier.delivery_days.split(',') if supplier.delivery_days else []
         return context
-
+    
     def form_valid(self, form):
-        supplier = form.save(commit=False)  # Salva o objeto Supplier
-        form.instance.delivery_days = ','.join(self.request.POST.getlist('delivery_days[]'))
-        supplier.save()                 # Salva o objeto Supplier
-        form.save_m2m()        # Salva as relações ManyToMany
+        self.object = form.save(commit=False)
+
+        # Processar dados de avaliações somente se o formulário de avaliações for enviado
+        if 'save_ratings' in self.request.POST:
+            price_rating = self.request.POST.get('price_rating')
+            reliability_rating = self.request.POST.get('reliability_rating')
+            self.object.price_rating = price_rating
+            self.object.reliability_rating = reliability_rating
+
+        self.object.save()
+        messages.success(self.request, 'Fornecedor salvo com sucesso!')
         return super().form_valid(form)
+
+    # def form_valid(self, form):
+    #     supplier = form.save(commit=False)  # Salva o objeto Supplier 
+    #     delivery_days = self.request.POST.getlist('delivery_days[]')
+    #     if delivery_days:
+    #         supplier.delivery_days = ','.join(delivery_days)
+    #     supplier.save()                 # Salva o objeto Supplier com todos os dados atualizados
+    #     form.save_m2m()                 # Salva as relações ManyToMany
+    #     return super().form_valid(form)
+    
+    def form_invalid(self, form):
+        # Exibir mensagem de erro
+        messages.error(self.request, 'Erro ao salvar o fornecedor. Por favor, verifique os dados fornecidos.')
+        return super().form_invalid(form)
+
+    def get_success_url(self):
+        return reverse_lazy('suppliers:supplier_detail', kwargs={'pk': self.object.pk})
 
 
 @method_decorator(login_required(login_url='login'), name='dispatch')
