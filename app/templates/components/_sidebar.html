@@ -1,205 +1,115 @@
 <!DOCTYPE html>
 <html>
 <head>
-  
-  <!-- Bootstrap CSS -->
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-KK94CHFLLe+nY2dmCWGMq91rCGa5gtU4mk92HdvYe+M/SXH301p5ILy+dN9+nJOZ" crossorigin="anonymous">
-  <!-- Bootstrap Icons -->
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-KK94CHFLLe+nY2dmCWGMq91rCGa5gtU4mk92HdvYe+M/SXH301p5ILy+dN9+nJOZ" crossorigin="anonymous">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
 
-<style>
-    /* Estilos da Sidebar */
-    .sidebar {
-      width: 250px;
-      height: 100vh;
-      position: fixed;
-      top: 0;
-      left: 0;
-      background-color: #f8f9fa; /* Cor de fundo da sidebar */
-      transition: left 0.3s ease-in-out; /* Transição suave */
-      transform: translateX(0); /* Nenhuma transformação por padrão */
-      z-index: 1000;
-    }
-    .sidebar.collapsed {
-      left: -250px; /* Oculta a sidebar */
-    }
-    /* Estilos do Hambúrguer */
-    .hamburger {
-      display: none;
-      cursor: pointer;
-      position: absolute;
-      top: 10px;
-      right: 10px;
-    }
-    /* Exibe o hambúrguer em telas menores */
-    @media (max-width: 968px) {
-      .hamburger {
-        display: block;
-      }
-    }
-    @media (max-width: 968px) {
+    <style>
+        /* Estilos da Sidebar */
         .sidebar {
-            transform: translateX(-100%); /* Desloca a sidebar para a esquerda, escondendo-a */
+            width: 250px;
+            height: 100vh;
+            position: fixed;
+            top: 0;
+            left: 0;
+            background-color: #343a40; /* Cor de fundo da sidebar */
+            transition: all 0.3s;
+            z-index: 1000;
         }
-    }
-    /* Seus estilos originais */
-    .nav-link:hover {
-        background-color: #007bff; /* Azul claro para o hover */
-        color: #ffffff; /* Texto branco para o hover */
-        border-radius: .25rem; /* Arredondamento dos cantos */
-    }
-    .nav-link.active {
-        background-color: #007bff; /* Cor de fundo para o item ativo */
-        color: white; /* Cor do texto para o item ativo */
-    }
-
-    .sidebar {
-        z-index: 1000; /* Ajuste o valor conforme necessário */
-    }
-    .hamburger {
-        display: block; 
-    }
-  </style>
-  </head>
-  <body>
+        /* Estilos para telas menores */
+        @media (max-width: 768px) {
+            .sidebar {
+                left: -250px; /* Oculta a sidebar para a esquerda */
+            }
+            .sidebar.collapsed {
+                left: 0; /* Mostra a sidebar quando não colapsada */
+            }
+        }
+        /* Estilos de hambúrguer visível apenas em telas menores */
+        .hamburger {
+            display: none;
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            cursor: pointer;            
+        }
+        @media (max-width: 768px) {
+            .hamburger {
+                display: block;
+            }
+        }
+        /* Estilo dos links */
+        .nav-link:hover, .nav-link.active {
+            background-color: #007bff;
+            color: white;
+            border-radius: .25rem;
+        }
+    </style>
+</head>
+<body>
     <!-- Botão Hambúrguer -->
-    <!-- <button class="btn btn-black hamburger" type="button" data-bs-toggle="collapse" data-bs-target="#sidebar" aria-controls="sidebar" aria-expanded="false" aria-label="Toggle navigation">
-      <i class="bi bi-list"></i>
-    </button> -->
+    <button class="btn btn-secondary hamburger" type="button" onclick="toggleSidebar()">
+        <i class="bi bi-list"></i>
+    </button>
 
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const navLinks = document.querySelectorAll('.nav-link');
-        const currentUrl = window.location.href; 
+    <div class="sidebar d-flex flex-column flex-shrink-0 p-3 text-white bg-dark" id="sidebar">
+        <a href="#" class="d-flex align-items-center mb-3 mb-md-0 me-md-auto text-white text-decoration-none">
+            <span class="fs-4">SISC</span>
+        </a>
+        <hr>
+        {% if user.is_authenticated %}
+            <ul class="nav nav-pills flex-column mb-auto">
+                <li class="nav-item">
+                    <a href="{% url 'accounts:home' %}" class="nav-link text-white" aria-current="page" style="font-size: 25px;">
+                        <i class="bi bi-house-door-fill fs-5"></i>
+                        Olá, {{ user.username }}
+                    </a>
+                </li>
+                <li>
+                    <a href="{% url 'products:products_list' %}" class="nav-link text-white" style="font-size: 25px;">
+                        <i class="bi bi-box-seam fs-4"></i>
+                        Produtos
+                    </a>
+                </li>
+                <li>
+                    <a href="{% url 'suppliers:supplier_list' %}" class="nav-link text-white" style="font-size: 25px;">
+                        <i class="bi bi-truck fs-4"></i>
+                        Fornecedores
+                    </a>
+                </li>
+            <li>
+                    <a href="{% url 'cotacao:cotacao_new' %}" class="nav-link text-white" style="font-size: 25px;">
+                        <i class="bi bi-clipboard-check fs-4"></i>
+                        Cotação
+                    </a>
+                </li>
+            <br>
+                <li>
+                    <!-- <a href="{% url 'accounts:logout' %}" class="nav-link text-white" style="font-size: 20px;">
+                        <i class="bi bi-box-arrow-right"></i>
+                        Sair
+                    </a> -->
+                </li>
+                <!-- Outros links de navegação -->
+            </ul>
+            <a href="{% url 'accounts:logout' %}" class="nav-link text-white" style="font-size: 25px;">
+                <i class="bi bi-box-arrow-right"></i> Sair
+            </a>
+        {% else %}
+            <a href="{% url 'accounts:login' %}" class="nav-link text-white" >
+                <i class="bi bi-box-arrow-in-right"></i> Login
+            </a>
+        {% endif %}
+    </div>
 
-    navLinks.forEach(link => {
-        if (link.href === currentUrl) {
-        link.classList.add('active');
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ENjdO4Dr2bkBIFxQpeoTz1HIcje39Wm4jDKdf19U8gI4ddQ3GYNS7NTKfAdVQSZe" crossorigin="anonymous"></script>
+    <script>
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('collapsed');
         }
-    });
-});
-</script>
-
-<div class="sidebar d-flex flex-column flex-shrink-0 p-3 text-white bg-dark" id="sidebar">
-    <a href="/" class="d-flex align-items-center mb-3 mb-md-0 me-md-auto text-white text-decoration-none">
-        <span class="fs-4">SISC</span>
-    </a>
-    <hr>
-    
- 
-    {% if user.is_authenticated %}
-    <ul class="nav nav-pills flex-column mb-auto">
-        <li class="nav-item">
-            <a href="{% url 'accounts:home' %}" class="nav-link text-white" aria-current="page" style="font-size: 25px;">
-                <i class="bi bi-house-door-fill fs-5"></i>
-                Olá, {{ user.username }}
-            </a>
-        </li>
-        <li>
-            <a href="{% url 'products:products_list' %}" class="nav-link text-white" style="font-size: 25px;">
-                <i class="bi bi-box-seam fs-4"></i>
-                Produtos
-            </a>
-        </li>
-        <li>
-            <a href="{% url 'suppliers:supplier_list' %}" class="nav-link text-white" style="font-size: 25px;">
-                <i class="bi bi-truck fs-4"></i>
-                Fornecedores
-            </a>
-        </li>
-        <!-- <li>
-            <a href="{% url 'cotacao:departamento_new' %}" class="nav-link text-white">
-                <i class="bi bi-plus-square fs-4"></i>
-                Departamento
-            </a>
-        </li> -->
-        <li>
-            <a href="{% url 'cotacao:cotacao_new' %}" class="nav-link text-white" style="font-size: 25px;">
-                <i class="bi bi-clipboard-check fs-4"></i>
-                Cotação
-            </a>
-        </li>
-        <!-- <li>
-            <a href="{% url 'cotacao:cotacao_list' %}" class="nav-link text-white">
-                <i class="bi bi-card-checklist fs-4"></i>
-                Listar Cotações
-            </a>
-        </li> -->
-        <!-- <li>
-            <a href="{% url 'answers:open_cotacao_list' %}" class="nav-link text-white">
-                <i class="bi bi-reply-all fs-4"></i> Responder Cotações
-            </a>
-        </li> -->
-        <!-- <li>
-            <a href="{% url 'answers:cotacao_respostas_list' %}" class="nav-link text-white">
-                <i class="bi bi-envelope-open fs-4"></i> Respostas
-            </a>
-        </li> -->
-
-        
-        <!-- <li>
-            <a href="{% url 'accounts:register' %}" class="nav-link text-white">
-                <i class="bi bi-person-plus fs-4"></i>
-                Novo Usuário
-            </a>
-        </li> -->
-        <br>
-        <li>
-            <a href="{% url 'accounts:logout' %}" class="nav-link text-white" style="font-size: 20px;">
-                <i class="bi bi-box-arrow-right"></i>
-                Sair
-            </a>
-        </li>
-    </ul>
-    {% else %}
-    <a href="{% url 'accounts:login' %}" class="nav-link text-white">
-        <i class="bi bi-box-arrow-in-right"></i>
-        Login
-    </a>
-    {% endif %}
-
-  </div>
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ENjdO4Dr2bkBIFxQpeoTz1HIcje39Wm4jDKdf19U8gI4ddQ3GYNS7NTKfAdVQSZe" crossorigin="anonymous">
-
-  </script>
-
-  <!-- Script para alternar a classe collapsed da sidebar -->
-  <script>
-
-    
-document.addEventListener('DOMContentLoaded', function() {
-        // Seleciona o botão de hambúrguer e a sidebar
-        const sidebar = document.getElementById('sidebar');
-        const toggleButton = document.querySelector('.navbar-toggler'); // Certifique-se de que este seletor corresponde ao botão de hambúrguer
-        
-        // Adiciona evento de clique ao botão para alternar a visibilidade da sidebar
-        toggleButton.addEventListener('click', function() {
-            const isCollapsed = sidebar.style.left === '-250px';
-            sidebar.style.left = isCollapsed ? '0' : '-250px';
-        });
-
-        // Função para destacar o link ativo na sidebar
-        function highlightActiveLink() {
-            const navLinks = document.querySelectorAll('.nav-link');
-            const currentUrl = window.location.href;
-            
-            navLinks.forEach(link => {
-                if (link.href === currentUrl) {
-                    link.classList.add('active');
-                } else {
-                    link.classList.remove('active');
-                }
-            });
-        }
-        
-        // Chama a função ao carregar a página e ao clicar nos links
-        window.addEventListener('DOMContentLoaded', highlightActiveLink);
-        document.querySelectorAll('.nav-link').forEach(link => {
-            link.addEventListener('click', highlightActiveLink);
-        });
-    });
-  </script>
+    </script>
 </body>
 </html>
-    <hr>
-</div>
