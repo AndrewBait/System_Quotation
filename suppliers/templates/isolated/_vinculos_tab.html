@@ -40,7 +40,7 @@
     <div class="row g-3 mt-3">
         <div class="col-12">
             <label>Qualidade do Fornecedor:</label>
-            <div class="rating" data-field-name="quality_rating">
+            <div class="rating" data-field-name="quality_rating" data-score="{{ object.quality_rating }}">
                 <!-- Estrelas para avaliação; clique altera o valor do campo oculto -->
                 <span data-value="1">&#9734;</span>
                 <span data-value="2">&#9734;</span>
@@ -48,109 +48,49 @@
                 <span data-value="4">&#9734;</span>
                 <span data-value="5">&#9734;</span>
             </div>
-            <input type="hidden" id="quality_rating" name="quality_rating" value="">
+            <input type="hidden" id="quality_rating" name="quality_rating" value="{{ object.quality_rating }}">
         </div>
     </div>
 </div>
 
 
+
+
+
+    
 <script type="text/javascript">
-    // Defina as URLs como variáveis JavaScript
-    
-$(document).ready(function() {
-
-    var getCategoriesUrl = "{% url 'products:get-categories' %}";
-    var getSubcategoriesUrl = "{% url 'products:get-subcategories' %}";
-
-    $("#add_department").click(function() {
-        var selectedDepartments = $("#selected_departments").val(); // Captura os IDs dos departamentos selecionados
-        if (selectedDepartments.length > 0) {
-            // Se houver departamentos selecionados, faz uma chamada AJAX para cada um
-            selectedDepartments.forEach(function(departmentId) {
-                $.ajax({
-                    url: getCategoriesUrl,
-                    data: {'department_id': departmentId},
-                    success: function(data) {
-                        $('#id_categories').html('<option value="">---------</option>');
-                        data.forEach(function(item) {
-                            $('#id_categories').append($('<option>', {
-                                value: item.id,
-                                text : item.name
-                            }));
-                        });
-                        $('#id_categories').selectpicker('refresh'); // Atualiza o selectpicker com os novos dados
-                        $('#id_subcategories').html('<option value="">---------</option>').selectpicker('refresh'); // Limpa subcategorias
-                    }
-                });
-            });
-        }
-    });
-
-    
-    // Função para atualizar visualmente as estrelas e o valor do campo oculto correspondente
-    function updateStars(ratingElement, value) {
-        const stars = ratingElement.querySelectorAll('span');
-        stars.forEach(star => {
-            star.innerHTML = parseInt(star.dataset.value) <= parseInt(value) ? '&#9733;' : '&#9734;';
-            star.style.color = parseInt(star.dataset.value) <= parseInt(value) ? 'gold' : 'grey';
-        });
-
-        // Esta linha assume que cada grupo de classificação tem um campo oculto correspondente
-        // com um id que corresponde ao data-field-name da div.rating.
-        const fieldName = ratingElement.dataset.fieldName;
-        if (fieldName) {
-            document.getElementById(fieldName).value = value;
-        }
-    }
-
-    // Adiciona evento de clique nas estrelas
-    document.querySelectorAll('.rating span').forEach(star => {
-        star.addEventListener('click', function() {
-            const ratingElement = this.parentNode;
-            const value = this.dataset.value;
+    $(document).ready(function() {
+        // Inicializar estrelas baseadas nos valores existentes
+        $('.rating').each(function() {
+            const ratingElement = this;
+            const value = $(this).attr('data-score');  // Lê o valor do atributo data-score
             updateStars(ratingElement, value);
         });
-    });
-
-    // Evento de mudança para Departamentos com AJAX para buscar Categorias
-    $('#id_departments').change(function() {
-            var departmentId = $(this).val();
-            $.ajax({
-                url: getCategoriesUrl, // Usa a variável JavaScript
-                data: {'department_id': departmentId},
-                success: function(data) {
-                    $('#id_categories').html('<option value="">---------</option>');
-                    data.forEach(function(item) {
-                        $('#id_categories').append($('<option>', {
-                            value: item.id,
-                            text : item.name
-                        }));
-                    });
-                    $('#id_categories').selectpicker('refresh');
-                    $('#id_subcategories').html('<option value="">---------</option>').selectpicker('refresh');
+    
+        function updateStars(ratingElement, value) {
+            const stars = ratingElement.querySelectorAll('span');
+            stars.forEach((star, index) => {
+                if (index < value) {
+                    star.innerHTML = '&#9733;'; // Estrela sólida
+                    star.style.color = 'gold';  // Assegure-se de que a cor está correta
+                } else {
+                    star.innerHTML = '&#9734;'; // Estrela vazia
+                    star.style.color = 'grey';
                 }
             });
-        });
-
-        // Evento de mudança para Categorias com AJAX para buscar Subcategorias
-        $('#id_categories').change(function() {
-            var categoryId = $(this).val();
-            $.ajax({
-                url: getSubcategoriesUrl,
-                data: {'category_id': categoryId},
-                success: function(data) {
-                    $('#id_subcategories').html('<option value="">---------</option>');
-                    data.forEach(function(item) {
-                        $('#id_subcategories').append($('<option>', {
-                            value: item.id,
-                            text : item.name
-                        }));
-                    });
-                    $('#id_subcategories').selectpicker('refresh');
-                }
+            $(ratingElement).next('input[type="hidden"]').val(value); // Atualiza o campo oculto
+        }
+    
+        // Evento de clique nas estrelas
+        document.querySelectorAll('.rating span').forEach(star => {
+            star.addEventListener('click', function() {
+                const ratingElement = this.parentNode;
+                const value = parseInt(this.dataset.value);
+                updateStars(ratingElement, value);
             });
         });
-
-        // Seus outros scripts JavaScript podem continuar aqui
+        console.log("Valor de inicialização:", value);
     });
-</script>
+    </script>
+    
+

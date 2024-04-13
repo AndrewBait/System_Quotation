@@ -1,6 +1,17 @@
 {% extends "base.html" %}
 
+{% load static %}
+{% load i18n %}
+{% load tz %}
+
 {% block content %}
+<style>
+    .card-hover:hover {
+        cursor: pointer;
+        box-shadow: 0 8px 16px 0 rgba(0,0,0,0.2); /* Efeito de sombra ao passar o mouse */
+    }
+</style>
+
 <div class="container py-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2>Fornecedores</h2>
@@ -49,7 +60,7 @@
     <div class="row row-cols-1 row-cols-md-3 g-4">
         {% for supplier in suppliers %}
         <div class="col">
-            <div class="card h-100">
+            <div class="card h-100 card-hover" onclick="location.href='{% url 'suppliers:supplier_detail' supplier.id %}'">
                 <div class="card-header">
                     <h5 class="card-title">{{ supplier.name }}</h5>
                 </div>
@@ -68,9 +79,9 @@
                     <a href="{% url 'suppliers:supplier_update' supplier.id %}" class="btn btn-warning btn-sm">
                         <i class="bi bi-pencil-square"></i> Editar
                     </a> 
-                    <a href="{% url 'suppliers:supplier_delete' supplier.id %}" class="btn btn-danger btn-sm">
+                    <button class="btn btn-danger btn-sm delete-btn" data-bs-toggle="modal" data-bs-target="#deleteModal" data-supplier-id="{{ supplier.id }}">
                         <i class="bi bi-trash-fill"></i> Excluir
-                    </a>
+                    </button>
                 </div>
             </div>
         </div>
@@ -93,35 +104,71 @@
     </div>
 </div>
 
+<!-- Modal para confirmação de exclusão -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="deleteModalLabel">Confirmar Exclusão</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        Tem certeza que deseja excluir este fornecedor?
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button class="btn btn-danger btn-sm delete-btn" data-bs-toggle="modal" data-bs-target="#deleteModal" data-supplier-id="{{ supplier.id }}">
+            {% csrf_token %}
+            <i class="bi bi-trash-fill"></i> Excluir
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    const departmentSelect = document.querySelector('select[name="department"]');
-    const categorySelect = document.querySelector('select[name="category"]');
-    const subcategorySelect = document.querySelector('select[name="subcategory"]');
-
-    departmentSelect.addEventListener('change', function() {
-        const departmentId = this.value;
-        fetch(`/products/get-categories/?department_id=${departmentId}`)
-            .then(response => response.json())
-            .then(data => {
-                categorySelect.innerHTML = '<option value="">Selecione uma Categoria</option>';
-                data.forEach(category => {
-                    categorySelect.options.add(new Option(category.name, category.id));
+    document.addEventListener('DOMContentLoaded', function() {
+        const departmentSelect = document.querySelector('select[name="department"]');
+        const categorySelect = document.querySelector('select[name="category"]');
+        const subcategorySelect = document.querySelector('select[name="subcategory"]');
+    
+        departmentSelect.addEventListener('change', function() {
+            const departmentId = this.value;
+            fetch(`/products/get-categories/?department_id=${departmentId}`)
+                .then(response => response.json())
+                .then(data => {
+                    categorySelect.innerHTML = '<option value="">Selecione uma Categoria</option>';
+                    data.forEach(category => {
+                        categorySelect.options.add(new Option(category.name, category.id));
+                    });
                 });
-            });
-    });
-
-    categorySelect.addEventListener('change', function() {
-        const categoryId = this.value;
-        fetch(`/products/get-subcategories/?category_id=${categoryId}`)
-            .then(response => response.json())
-            .then(data => {
-                subcategorySelect.innerHTML = '<option value="">Selecione uma Subcategoria</option>';
-                data.forEach(subcategory => {
-                    subcategorySelect.options.add(new Option(subcategory.name, subcategory.id));
+        });
+    
+        categorySelect.addEventListener('change', function() {
+            const categoryId = this.value;
+            fetch(`/products/get-subcategories/?category_id=${categoryId}`)
+                .then(response => response.json())
+                .then(data => {
+                    subcategorySelect.innerHTML = '<option value="">Selecione uma Subcategoria</option>';
+                    data.forEach(subcategory => {
+                        subcategorySelect.options.add(new Option(subcategory.name, subcategory.id));
+                    });
                 });
+        });
+        
+        const deleteButtons = document.querySelectorAll('.delete-btn');    
+        deleteButtons.forEach(button => {
+            button.addEventListener('click', function(event) {
+                event.stopPropagation();
+                const supplierId = this.getAttribute('data-supplier-id');
+                const deleteUrl = `{% url 'suppliers:supplier_delete' '123' %}`.replace('123', supplierId);
+                const confirmDeleteButton = document.getElementById('confirmDelete');
+                confirmDeleteButton.onclick = function() {
+                    document.location.href = deleteUrl;
+                };
             });
+        });
     });
-});
-</script>
+    </script>
+    
 {% endblock %}

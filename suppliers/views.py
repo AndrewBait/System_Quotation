@@ -14,6 +14,8 @@ from .forms import SupplierForm, SupplierFilterForm, SupplierStatusFilterForm
 from .models import Departamento, Supplier, Category, Subcategory
 from django.test import TestCase
 from django.urls import reverse
+import logging
+logger = logging.getLogger(__name__)
 
 class SupplierFormMixin:
     def form_valid(self, form):
@@ -44,6 +46,7 @@ def get_categories(request):
 
 
 def supplier_list(request):
+    logger.debug("Dados recebidos: %s", request.GET)
     queryset = Supplier.objects.all()
     print("supplier_list view is called")
     form = SupplierFilterForm(request.GET or None)    
@@ -132,10 +135,7 @@ class SupplierListView(ListView):
     def get_queryset(self):
         queryset = super().get_queryset()
         form = SupplierFilterForm(self.request.GET or None)
-        department_id = self.request.GET.get('department')
-        category_id = self.request.GET.get('category')
-        subcategory_id = self.request.GET.get('subcategory')
-
+     
 
         if form.is_valid():
             department_id = self.request.GET.get('department')

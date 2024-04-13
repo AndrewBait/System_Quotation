@@ -270,38 +270,20 @@
         $('.selectpicker').selectpicker();
         $('#id_cnpj').mask('00.000.000/0000-00');
         $('#id_zip_code').mask('00000-000');
-        $('#id_phone').mask('(00) 00000-0000');
+        $('#id_phone').mask('+55(00)00000-0000');
         $('#id_minimum_order_value').mask('000.000.000.000.000,00', {reverse: true});
-    
-        // Função para atualizar visualmente as estrelas e o valor do campo oculto correspondente
-        function updateStars(ratingElement, value) {
-        const stars = ratingElement.querySelectorAll('span');
-        stars.forEach((star, index) => {
-            if (index < value) {
-                star.innerHTML = '&#9733;'; // Estrela sólida
-                star.style.color = 'gold';
-            } else {
-                star.innerHTML = '&#9734;'; // Estrela vazia
-                star.style.color = 'grey';
+        $('.rating').each(function() {
+        const fieldName = $(this).data('field-name');
+        $(this).raty({
+            score: function() {
+                return $(this).attr('data-score');
+            },
+            scoreName: fieldName,
+            click: function(score, evt) {
+                $('#' + fieldName).val(score);
             }
         });
-
-        const fieldName = ratingElement.getAttribute('data-field-name');
-        document.getElementById(fieldName).value = value;
-    }
-
-    $('.rating span').click(function() {
-        const ratingElement = this.parentNode;
-        const value = parseInt(this.dataset.value);
-        updateStars(ratingElement, value);
     });
-
-    $('.rating').each(function() {
-        const fieldName = $(this).data('field-name');
-        const initialValue = $('#' + fieldName).val() || 0;
-        updateStars(this, parseInt(initialValue));
-    });
-});
 </script>
     
     

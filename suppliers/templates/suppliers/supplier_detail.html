@@ -3,8 +3,28 @@
 {% block content %}
 <div class="container mt-5">
   <div class="card">
-    <div class="card-header">
-      Detalhes do Fornecedor
+    <div class="card-header d-flex justify-content-between align-items-center">
+      <h2>Detalhes do Fornecedor</h2>
+      <div class="d-flex align-items-center">
+        <!-- Campos de seleção de datas com estilo Bootstrap -->
+        <div class="me-3">
+          <label for="startDate" class="form-label">Data Início:</label>
+          <input type="date" id="startDate" name="startDate" class="form-control">
+        </div>
+        <div class="me-3">
+          <label for="endDate" class="form-label">Data Fim:</label>
+          <input type="date" id="endDate" name="endDate" class="form-control">
+        </div>
+
+        <!-- Dropdown de cotações respondidas com estilo Bootstrap -->
+        <div class="me-3">
+          <label for="quotations" class="form-label">Cotações Respondidas:</label>
+          <select id="quotations" name="quotations" class="form-select">
+            <option value="">Selecione uma cotação</option>
+            <!-- Opções serão adicionadas aqui via JavaScript ou backend -->
+          </select>
+        </div>
+      </div>
     </div>
     <div class="card-body">
       <h5 class="card-title">{{ object.name }}</h5>
@@ -32,7 +52,7 @@
       {% endif %}
 
       {% if object.minimum_order_value %}
-      <p class="card-text"><strong>Valor Mínimo para Pedido:</strong> R$ {{ object.minimum_order_value }}</p>
+      <p class="card-text"><strong>Valor Mínimo para Pedido:</strong> R$ {{ object.minimum_order_value|floatformat:2 }}</p>
       {% endif %}
 
       {% if object.order_response_deadline %}
@@ -40,7 +60,9 @@
       {% endif %}
 
       {% if object.departments.exists %}
-      <p class="card-text"><strong>Departamentos:</strong> {% for department in object.departments.all %}{{ department.name }}{% if not forloop.last %}, {% endif %}{% endfor %}</p>
+      <p class="card-text"><strong>Departamentos:</strong> {% for department in object.departments.all %}{{ department.name }}{% if not forloop.last %}, {% endif %}{% endfor %}
+      {% else %}
+      <p class="card-text"><strong>Departamentos:</strong> Nenhum cadastrado.</p>
       {% endif %}
       
       {% if object.categories.exists %}
@@ -54,13 +76,83 @@
       {% if object.brands.exists %}
       <p class="card-text"><strong>Marcas:</strong> {% for brand in object.brands.all %}{{ brand.name }}{% if not forloop.last %}, {% endif %}{% endfor %}</p>
       {% endif %}
+      <div class="col-md-4">
+        <div class="rating-section">
+          <h5>Avaliações</h5>
+          {% for rating_label, rating_value, rating_field in ratings %}
+          <div>
+            <label>{{ rating_label }}:</label>
+            <div class="rating" data-field-name="{{ rating_field }}" data-score="{{ rating_value }}">
+              <span data-value="1">&#9734;</span>
+              <span data-value="2">&#9734;</span>
+              <span data-value="3">&#9734;</span>
+              <span data-value="4">&#9734;</span>
+              <span data-value="5">&#9734;</span>
+            </div>
+            <input type="hidden" id="{{ rating_field }}" name="{{ rating_field }}" value="{{ rating_value }}">
+          </div>
+          {% endfor %}
+        </div>
+      </div>
 
       <div>
-        <a href="{% url 'suppliers:supplier_update' object.id %}" class="btn btn-primary">Editar</a>
-        <a href="{% url 'suppliers:supplier_delete' object.id %}" class="btn btn-danger">Excluir</a>
-        <a href="{% url 'suppliers:supplier_list' %}" class="btn btn-secondary">Voltar</a>
+        <a href="{% url 'suppliers:supplier_update' object.id %}" class="btn btn-primary" alt="Editar Fornecedor">Editar</a>
+        <a href="{% url 'suppliers:supplier_list' %}" class="btn btn-secondary" alt="Voltar">Voltar</a>
+        <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal">
+          Excluir
+        </button>
       </div>
     </div>
   </div>
 </div>
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="deleteModalLabel">Confirmar Exclusão</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        Tem certeza que deseja excluir este fornecedor?
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <form method="post" action="{% url 'suppliers:supplier_delete' object.id %}">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-danger">Excluir</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+  $(document).ready(function() {
+      $('.rating').each(function() {
+          const ratingElement = this;
+          const value = $(this).attr('data-score');
+          updateStars(ratingElement, value);
+      });
+  
+      function updateStars(ratingElement, value) {
+          const stars = ratingElement.querySelectorAll('span');
+          stars.forEach((star, index) => {
+              if (index < value) {
+                  star.innerHTML = '&#9733;'; // Estrela sólida
+                  star.style.color = 'gold';
+              } else {
+                  star.innerHTML = '&#9734;'; // Estrela vazia
+                  star.style.color = 'grey';
+              }
+          });
+          $(ratingElement).next('input[type="hidden"]').val(value);
+      }
+  
+      $('.rating span').on('click', function() {
+          const ratingElement = this.parentNode;
+          const value = parseInt(this.dataset.value);
+          updateStars(ratingElement, value);
+      });
+  });
+  </script>
+  
 {% endblock %}
