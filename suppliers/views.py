@@ -16,6 +16,8 @@ from .models import Departamento, Supplier, Category, Subcategory
 from django.test import TestCase
 from django.urls import reverse
 from django.http import HttpResponseRedirect
+from django.db.models import Avg
+
 import logging
 logger = logging.getLogger(__name__)
 
@@ -81,7 +83,7 @@ def supplier_list(request):
     context = {
         'form': form,
         'status_form': status_form,
-        'suppliers': suppliers,
+        'suppliers': suppliers,  # Adicione a lista de fornecedores ao contexto
     }
     return render(request, 'suppliers/supplier_list.html', context)
 

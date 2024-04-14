@@ -58,6 +58,13 @@ class Supplier(models.Model):
 
     def get_departments(self):
         return ", ".join([d.name for d in self.departments.all()])
+    
+    def average_rating(self):
+        ratings = [self.quality_rating, self.delivery_time_rating, self.flexibility_rating, self.partnership_rating]
+        ratings = [rating for rating in ratings if rating is not None]  # Remova valores None
+        if ratings:
+            return sum(ratings) / len(ratings)
+        return None
 
 
 

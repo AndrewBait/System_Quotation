@@ -1,6 +1,41 @@
 {% extends "base.html" %}
 
 {% block content %}
+<style>
+
+  .star {
+        position: relative;
+        display: inline-block;
+        font-size: 24px; /* Tamanho das estrelas */
+        color: grey; /* Cor padrão das estrelas */
+    }
+    .star-full {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 0%; /* Largura inicial */
+        overflow: hidden;
+        color: gold; /* Cor das estrelas preenchidas */
+        pointer-events: none; /* Ignora eventos de mouse */
+    }
+    .star-empty {
+        pointer-events: none; /* Ignora eventos de mouse */
+    }
+  .rating span {
+      cursor: pointer; /* Muda o cursor para o estilo de 'mãozinha' ao passar o mouse */
+      font-size: 1.5em; /* Aumenta o tamanho da fonte das estrelas */
+      color: grey; /* Cor padrão das estrelas */
+  }
+
+  .rating span.active {
+      color: gold; /* Cor das estrelas ativas */
+  }
+
+  .card-hover:hover {
+      cursor: pointer;
+      box-shadow: 0 8px 16px 0 rgba(0,0,0,0.2); /* Efeito de sombra ao passar o mouse */
+  }
+</style>
 <div class="container mt-5">
   <div class="row">
     <div class="col-md-8">
@@ -51,7 +86,11 @@
           <p class="card-text"><strong>Prazo de Resposta para Pedidos:</strong> {{ object.order_response_deadline }}</p>
           {% endif %}
           {% if object.departments.exists %}
-          <p class="card-text"><strong>Departamentos:</strong> {% for department in object.departments.all %}{{ department.name }}{% if not forloop.last %}, {% endif %}{% endfor %}
+          <p class="card-text"><strong>Departamentos:</strong> 
+              {% for department in object.departments.all %}
+                  {{ department.nome }}
+                  {% if not forloop.last %}, {% endif %}
+              {% endfor %}
           {% else %}
           <p class="card-text"><strong>Departamentos:</strong> Nenhum cadastrado.</p>
           {% endif %}
@@ -104,26 +143,7 @@
               <span data-value="5">&#9734;</span>
             </div>
             <input type="hidden" name="delivery_time_rating" value="{{ object.delivery_time_rating | default:'0' }}">
-            <!-- <label>Preço:</label>
-            <div class="rating" data-field-name="price_rating" data-score="{{ object.price_rating | default_if_none:'0' }}">
-
-              <span data-value="1">&#9734;</span>
-              <span data-value="2">&#9734;</span>
-              <span data-value="3">&#9734;</span>
-              <span data-value="4">&#9734;</span>
-              <span data-value="5">&#9734;</span>    
-            <input type="hidden" name="price_rating" value="{{ object.price_rating | default:'0' }}">
-            </div>
-            <label>Confiança:</label>
-            <div class="rating" data-field-name="reliability_rating" data-score="{{ object.reliability_rating | default_if_none:'0' }}">
-
-              <span data-value="1">&#9734;</span>
-              <span data-value="2">&#9734;</span>
-              <span data-value="3">&#9734;</span>
-              <span data-value="4">&#9734;</span>
-              <span data-value="5">&#9734;</span>
-            <input type="hidden" name="reliability_rating" value="{{ object.reliability_rating | default:'0' }}">
-            </div> -->
+            
             <label>Preço:</label>
             <div class="rating" data-field-name="flexibility_rating" data-score="{{ object.flexibility_rating | default_if_none:'0' }}">
               <!-- Estrelas para avaliação; clique altera o valor do campo oculto -->
@@ -202,29 +222,26 @@
 
 <script>
   $(window).on('load', function() {
-      // Atualiza as estrelas baseado nos valores iniciais
       $('.rating').each(function() {
           const ratingElement = this;
           const value = $(this).data('score');
           updateStars(ratingElement, parseInt(value));
       });
 
-      // Função para atualizar as estrelas
       function updateStars(ratingElement, value) {
           const stars = ratingElement.querySelectorAll('span');
           stars.forEach((star, index) => {
+              star.classList.remove('active'); // Remove a classe 'active'
               if (index < value) {
                   star.innerHTML = '&#9733;'; // Estrela sólida
-                  star.style.color = 'gold';
+                  star.classList.add('active'); // Adiciona a classe 'active'
               } else {
                   star.innerHTML = '&#9734;'; // Estrela vazia
-                  star.style.color = 'grey';
               }
           });
           $(ratingElement).next('input[type="hidden"]').val(value);
       }
 
-      // Adiciona evento de clique para cada estrela
       document.querySelectorAll('.rating span').forEach(star => {
           star.addEventListener('click', function() {
               const ratingElement = this.parentNode;
@@ -233,13 +250,12 @@
           });
       });
 
-      // Exibe a modal de sucesso se a URL contiver o parâmetro 'success=true'
-      const urlParams = new URLSearchParams(window.location.search);
-      if (urlParams.get('success') === 'true') {
+      if (new URLSearchParams(window.location.search).get('success') === 'true') {
           $('#successModal').modal('show');
       }
   });
 </script>
+
 
 
 {% endblock %}

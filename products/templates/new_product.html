@@ -131,6 +131,13 @@
           {{ form.espessura_embalagem|add_class:'form-control' }}
           {{ form.espessura_embalagem.errors }}
         </div>
+        <div class="mb-3">
+          <label for="id_raio_embalagem" class="form-label">Raio da Embalagem:</label>
+          {{ form.raio_embalagem|add_class:'form-control' }}
+          {{ form.raio_embalagem.errors }} 
+        </div>
+        
+
         <div class="text-end mt-5">
             <a href="{% url 'products:import_products' %}" class="btn btn-outline-success me-2">Importar</a>
             <input type="submit" value="Cadastrar" class="btn btn-primary me-2">

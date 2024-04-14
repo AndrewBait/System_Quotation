@@ -10,6 +10,7 @@ class ProductModelForm(forms.ModelForm):
     largura_embalagem = forms.FloatField(label='Largura', required=False)
     comprimento_embalagem = forms.FloatField(label='Comprimento', required=False)
     espessura_embalagem = forms.FloatField(label='Espessura', required=False)
+    raio_embalagem = forms.FloatField(label='Raio', required=False)
     UNIDADE_CHOICES = (
         ('mm', 'Milímetro'),
         ('cm', 'Centímetro'),
@@ -51,6 +52,7 @@ class ProductModelForm(forms.ModelForm):
         largura_embalagem = self.cleaned_data.get('largura_embalagem')
         comprimento_embalagem = self.cleaned_data.get('comprimento_embalagem')
         espessura_embalagem = self.cleaned_data.get('espessura_embalagem')
+        raio_embalagem = self.cleaned_data.get('raio_embalagem')
         unidade_dimensao = self.cleaned_data.get('unidade_dimensao')
 
         if altura_embalagem and largura_embalagem and comprimento_embalagem and espessura_embalagem and unidade_dimensao:
@@ -59,6 +61,7 @@ class ProductModelForm(forms.ModelForm):
                 largura=largura_embalagem,
                 comprimento=comprimento_embalagem,
                 espessura=espessura_embalagem,
+                raio=raio_embalagem,
                 unidade=unidade_dimensao
             )
             embalagem.save()

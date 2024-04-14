@@ -10,6 +10,9 @@ class Embalagem(models.Model):
     altura = models.DecimalField(max_digits=10, decimal_places=2)
     largura = models.DecimalField(max_digits=10, decimal_places=2)
     comprimento = models.DecimalField(max_digits=10, decimal_places=2)
+    espessura = models.DecimalField(max_digits=10, decimal_places=2)
+    raio = models.DecimalField(max_digits=10, decimal_places=2)
+
     UNIDADE_CHOICES = (
         ('mm', 'Milímetro'),
         ('cm', 'Centímetro'),
@@ -89,17 +92,17 @@ class Product(models.Model):
     largura_embalagem = models.DecimalField(max_digits=10, decimal_places=3, blank=True, null=True, verbose_name='Largura da Embalagem')
     comprimento_embalagem = models.DecimalField(max_digits=10, decimal_places=3, blank=True, null=True, verbose_name='Comprimento da Embalagem')
     espessura_embalagem = models.DecimalField(max_digits=10, decimal_places=3, blank=True, null=True, verbose_name='Espessura da Embalagem')
+    raio_embalagem = models.DecimalField(max_digits=10, decimal_places=3, blank=True, null=True, verbose_name='Raio da Embalagem')
     UNIDADE_CHOICES = (
         ('mm', 'Milímetro'),
         ('cm', 'Centímetro'),
-        ('m', 'Metro'),
-        
+        ('m', 'Metro'),       
     )
     unidade_altura = models.CharField(max_length=2, choices=UNIDADE_CHOICES, blank=True, null=True, verbose_name='Unidade de Medida Altura')
     unidade_largura = models.CharField(max_length=2, choices=UNIDADE_CHOICES, blank=True, null=True, verbose_name='Unidade de Medida Largura')
     unidade_comprimento = models.CharField(max_length=2, choices=UNIDADE_CHOICES, blank=True, null=True, verbose_name='Unidade de Medida Comprimento')
     unidade_espessura = models.CharField(max_length=2, choices=UNIDADE_CHOICES, blank=True, null=True, verbose_name='Unidade de Medida Espessura')
-
+    unidade_raio = models.CharField(max_length=2, choices=UNIDADE_CHOICES, blank=True, null=True, verbose_name='Unidade de Medida Raio')
     unidade_de_medida = models.CharField(_("Unidade de Medida"), max_length=50, blank=True, null=True, choices=[
         ('Kg', 'Quilo'),
         ('L', 'Litro'),
@@ -144,9 +147,6 @@ class Product(models.Model):
 
     def __str__(self):
         return self.name
-    
-
-  
 
 
 class ProductPriceHistory(models.Model):
