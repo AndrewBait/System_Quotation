@@ -102,9 +102,8 @@
                     <h3 class="card-title">
                         {{ supplier.name }}
                     </h3>
-                    <h5>     Média:  </h5>
                     <div>
-                        <span class="text-warning">{{ supplier.average_rating|floatformat:"1" }}</span>
+                        <span class="text-warning">Nota: {{ supplier.average_rating|floatformat:"1" }}</span>
                         <div class="rating ms-2 d-inline-block">
                             {% for i in "12345" %}
                                 {% if forloop.counter <= supplier.average_rating|floatformat:"0"|add:"0" %}
@@ -135,9 +134,7 @@
                     <a href="{% url 'suppliers:supplier_update' supplier.id %}" class="btn btn-warning btn-sm">
                         <i class="bi bi-pencil-square"></i> Editar
                     </a> 
-                    <button class="btn btn-danger btn-sm delete-btn" data-bs-toggle="modal" data-bs-target="#deleteModal" data-supplier-id="{{ supplier.id }}">
-                        <i class="bi bi-trash-fill"></i> Excluir
-                    </button>
+                    
                 </div>
             </div>
         </div>

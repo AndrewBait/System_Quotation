@@ -25,7 +25,7 @@ class SupplierFormMixin:
     def form_valid(self, form):
         self.object = form.save()
         form.save_m2m()
-        messages.success(self.request, 'Fornecedor salvo com sucesso!')
+        
         return super().form_valid(form)
 
     def form_invalid(self, form):
@@ -100,34 +100,40 @@ class SupplierCreateView(LoginRequiredMixin, SupplierFormMixin, CreateView):
     template_name = 'suppliers/supplier_form.html'
     success_url = reverse_lazy('suppliers:supplier_list')
 
-    def get_initial(self):
-        initial = super().get_initial()
-        initial['user'] = self.request.user
-        return initial
-
+    
     def form_invalid(self, form):
         # Retorna para o template com o formulário preenchido e os erros
         return self.render_to_response(self.get_context_data(form=form))
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['delivery_days_list'] = ["SEG", "TER", "QUA", "QUI", "SEX", "SAB", "DOM"]
-        context['departamentos'] = Departamento.objects.all()
-        context['selected_days'] = self.object.delivery_days.split(',') if self.object and self.object.delivery_days else []
-        return context
-
+    
     def form_valid(self, form):
         supplier = form.save(commit=False)
         supplier.price_rating = self.request.POST.get('price_rating')
         supplier.reliability_rating = self.request.POST.get('reliability_rating')
         delivery_days = ','.join(self.request.POST.getlist('delivery_days[]'))
-        form.instance.delivery_days = delivery_days
-        response = super().form_valid(form)
+        supplier.delivery_days = delivery_days      
         supplier.user = self.request.user  # Associa o fornecedor ao usuário atual
         supplier.save()
         form.save_m2m()
         messages.success(self.request, 'Fornecedor salvo com sucesso!')
         return super().form_valid(form)
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['delivery_days_list'] = ["SEG", "TER", "QUA", "QUI", "SEX", "SAB", "DOM"]
+        if self.object:
+            context['selected_days'] = self.object.delivery_days.split(',') if self.object.delivery_days else []
+        context['departamentos'] = Departamento.objects.all()
+        context['selected_days'] = self.object.delivery_days.split(',') if self.object and self.object.delivery_days else []
+        return context
+
+
+    
+    def get_initial(self):
+        initial = super().get_initial()
+        initial['user'] = self.request.user
+        return initial
+
 
 
 
@@ -233,14 +239,20 @@ class SupplierUpdateView(LoginRequiredMixin, SupplierFormMixin, UpdateView):
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        # Assegure que self.object está disponível e possui a propriedade delivery_days
+        if self.object and self.object.delivery_days:
+            context['selected_days'] = self.object.delivery_days.split(',')
+        else:
+            context['selected_days'] = []
         context['delivery_days_list'] = ["SEG", "TER", "QUA", "QUI", "SEX", "SAB", "DOM"]
-        if self.kwargs.get('pk'):
-            supplier = get_object_or_404(Supplier, pk=self.kwargs['pk'])
-            context['selected_days'] = supplier.delivery_days.split(',') if supplier.delivery_days else []
         return context
     
     def form_valid(self, form):
         self.object = form.save(commit=False)
+        supplier = form.save(commit=False)
+        delivery_days = self.request.POST.getlist('delivery_days[]')
+        supplier.delivery_days = ','.join(delivery_days)
+        supplier.user = self.request.user  # Associa o fornecedor ao usuário atual
 
         # Processar dados de avaliações somente se o formulário de avaliações for enviado
         if 'save_ratings' in self.request.POST:
@@ -248,9 +260,10 @@ class SupplierUpdateView(LoginRequiredMixin, SupplierFormMixin, UpdateView):
             reliability_rating = self.request.POST.get('reliability_rating')
             self.object.price_rating = price_rating
             self.object.reliability_rating = reliability_rating
-
+        supplier.save()
+        form.save_m2m()
         self.object.save()
-        messages.success(self.request, 'Fornecedor salvo com sucesso!')
+        
         return super().form_valid(form)
 
     # def form_valid(self, form):
@@ -261,6 +274,10 @@ class SupplierUpdateView(LoginRequiredMixin, SupplierFormMixin, UpdateView):
     #     supplier.save()                 # Salva o objeto Supplier com todos os dados atualizados
     #     form.save_m2m()                 # Salva as relações ManyToMany
     #     return super().form_valid(form)
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['selected_days'] = self.object.delivery_days.split(',') if self.object.delivery_days else []
+        return context
     
     def form_invalid(self, form):
         # Exibir mensagem de erro
@@ -275,7 +292,11 @@ class SupplierUpdateView(LoginRequiredMixin, SupplierFormMixin, UpdateView):
 class SupplierDeleteView(DeleteView):
     model = Supplier
     template_name = 'suppliers/supplier_confirm_delete.html'
-    success_url = reverse_lazy('suppliers:supplier_list') 
+    success_url = reverse_lazy('suppliers:supplier_list')
+
+    def delete(self, request, *args, **kwargs):
+        logging.debug("Tentando deletar o fornecedor com ID: %s", self.kwargs.get('pk'))
+        return super().delete(request, *args, **kwargs) 
 
 def create_supplier(request):
     if request.method == 'POST':

@@ -21,6 +21,7 @@ from .models import Brand
 from django.core.paginator import Paginator
 from django.http import HttpResponse
 from django.db.models import Q
+import re
 
 
 
@@ -102,6 +103,12 @@ class BrandAutocomplete(autocomplete.Select2QuerySetView):
         return qs[:10]
 
 
+def validate_query(query):
+        # Remova caracteres indesejados ou limite a caracteres alfanuméricos e espaço
+        query = re.sub(r'[^a-zA-Z0-9 ]', '', query)
+        return query
+    
+
 class ProductListView(ListView):
     model = Product
     template_name = 'products.html'
@@ -112,6 +119,7 @@ class ProductListView(ListView):
 
     def get_queryset(self):
         queryset = super().get_queryset().order_by('name')
+        search_query = self.request.GET.get('search_query', '').strip()
         query = self.request.GET.get('query', '')
         product_name = self.request.GET.get('product_name', '')
         department_id = self.request.GET.get('department', '')
@@ -120,6 +128,16 @@ class ProductListView(ListView):
         brand_id = self.request.GET.get('brand', '')  # Adicione esta linha
         product_line_id = self.request.GET.get('product_line', '')  # E esta linha
         status = self.request.GET.get('status', '')
+        search_query = validate_query(search_query)
+        search_query = ' '.join(search_query.split())
+
+        
+        if search_query:
+            queryset = queryset.filter(
+                Q(name__icontains=search_query) | 
+                Q(sku__icontains=search_query) | 
+                Q(ean__icontains=search_query)
+            )
 
         if query:
             queryset = queryset.filter(

@@ -182,18 +182,7 @@
                         {{ form.order_response_deadline|add_class:'form-control' }}
                     </div>
                     <!-- Repita para TER, QUA, QUI, SEX, SAB, DOM com seus respectivos IDs e valores -->
-                    <div id="delivery-days-container" class="mb-3">
-                        <label class="form-label d-block mb-2">Dias de Entrega:</label>
-                        <div class="checkbox-group d-flex flex-wrap gap-2">
-                            {% for day in delivery_days_list %}
-                                <div class="form-check form-check-inline">
-                                    <input class="form-check-input" type="checkbox" id="day-{{ day|lower }}" value="{{ day }}" name="delivery_days[]" {% if day in selected_days %}checked{% endif %}>
-                                    <label class="form-check-label" for="day-{{ day|lower }}">{{ day }}</label>
-                                </div>
-                            {% endfor %}
-                        </div>
-                    </div>                   
-                    
+                        {% include 'isolated/_delivery_days.html' %}
                     
                     <br> 
                     <h4>Cobrir Férias</h4>

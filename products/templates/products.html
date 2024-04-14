@@ -21,7 +21,7 @@
   <div class="row g-3">
     <div class="col-md-15">
       <form method="GET" action="{% url 'products:products_list' %}" class="input-group">
-        <input type="text" name="product_name" id="product-search" class="form-control" placeholder="Nome, SKU ou EAN " value="{{ request.GET.product_name }}">
+        <input type="text" name="search_query" id="product-search" class="form-control" placeholder="Nome, SKU ou EAN" value="{{ request.GET.search_query }}">
           <input type="hidden" name="department" value="{{ request.GET.department }}">
           <input type="hidden" name="category" value="{{ request.GET.category }}">
           <input type="hidden" name="subcategory" value="{{ request.GET.subcategory }}">
