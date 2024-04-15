@@ -17,6 +17,7 @@ from reportlab.pdfgen import canvas
 from django.http import JsonResponse
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from products.models import Product
+from django.db import IntegrityError, DatabaseError
 
 
 def buscar_produtos(request):
@@ -81,6 +82,18 @@ class CotacaoCreateView(CreateView):
     form_class = CotacaoForm
     template_name = 'cotacao/cotacao_form_list.html'
     success_url = reverse_lazy('cotacao:cotacao_list_create')
+    
+    def form_valid(self, form):
+        try:
+            # Salva a nova cotação
+            return super().form_valid(form)
+        except IntegrityError:
+            form.add_error(None, 'Houve um problema ao salvar a cotação, talvez devido a dados duplicados.')
+            return self.form_invalid(form)
+        except DatabaseError:
+            form.add_error(None, 'Erro de conexão com o banco de dados. Tente novamente mais tarde.')
+            return self.form_invalid(form)
+    
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)

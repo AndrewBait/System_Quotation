@@ -234,7 +234,6 @@
                 .then(response => response.json())
                 .then(data => {
                     updateSelect(categorySelect, data);
-                    updateSelect(subcategorySelect, []);
                     {% if request.GET.category %}
                         fetch(`/products/get-subcategories/?category_id=${categorySelect.value}`)
                             .then(response => response.json())

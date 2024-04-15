@@ -102,6 +102,39 @@
     </div>
     {% endif %}
 
+</div>
+<!-- Modal para Seleção de Produtos -->
+<div class="modal fade" id="productModal" tabindex="-1" aria-labelledby="productModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="productModalLabel">Selecionar Produtos para Cotação</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Produto</th>
+                            <th>Quantidade</th>
+                            <th>Unidade</th>
+                            <th>Ação</th>
+                        </tr>
+                    </thead>
+                    <tbody id="productList">
+                        <!-- Produtos serão carregados aqui via JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary">Adicionar à Cotação</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
 <!-- Modal de Confirmação de Deleção -->
 <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
     <div class="modal-dialog">
@@ -185,53 +218,67 @@
 {% block scripts %}
 <script>
     $(document).ready(function() {
-        $('.delete-cotacao').click(function(e) {
+
+        $('.cotacao-card').click(function(e) {
             e.preventDefault();
-            const deleteUrl = $(this).data('delete-url');
-            $('#deleteConfirmButton').off('click').on('click', function() {
+            // Abrir modal com produtos
+            $('#productModal').modal('show');
+            loadProducts();  // Função para carregar os produtos no modal
+        });
+        $('.cotacao-card').click(function(e) {
+            e.preventDefault();
+            // Abrir modal com produtos
+            $('#productModal').modal('show');
+            loadProducts();  // Função para carregar os produtos no modal
+        });
+        $('.delete-cotacao, .toggle-status').click(function(e) {
+            e.stopPropagation(); // Impede que o evento de clique se propague para o card
+            e.preventDefault();
+            if ($(this).hasClass('delete-cotacao')) {
+                const deleteUrl = $(this).data('delete-url');
+                $('#deleteConfirmButton').off('click').on('click', function() {
+                    $.ajax({
+                        url: deleteUrl,
+                        type: 'POST',
+                        data: {'csrfmiddlewaretoken': '{{ csrf_token }}'},
+                        success: function(result) {
+                            $('#deleteModal').modal('hide');
+                            location.reload();
+                        }
+                    });
+                });
+                $('#deleteModal').modal('show');
+            } else {
+                const toggleUrl = $(this).data('toggle-url');
+                const btn = $(this);
+                const statusText = $(`#status-${btn.data('cotacao-id')}`); 
                 $.ajax({
-                    url: deleteUrl,
+                    url: toggleUrl,
                     type: 'POST',
                     data: {'csrfmiddlewaretoken': '{{ csrf_token }}'},
-                    success: function(result) {
-                        $('#deleteModal').modal('hide');
-                        location.reload();
+                    dataType: 'json',
+                    success: function(data) {
+                        $('.alert-primary').text(`Total de Cotações: ${data.total_cotacoes}`);
+                        $('.alert-success').text(`Cotações Abertas: ${data.total_abertas}`);
+                        $('.alert-danger').text(`Cotações Fechadas: ${data.total_fechadas}`);
+    
+                        if (btn.text().trim() === 'Fechar Cotação') {
+                            btn.text('Abrir Cotação');
+                            btn.removeClass('btn-outline-danger').addClass('btn-outline-success');
+                            statusText.text('Inativo'); 
+                        } else {
+                            btn.text('Fechar Cotação');
+                            btn.removeClass('btn-outline-success').addClass('btn-outline-danger');
+                            statusText.text('Ativo'); 
+                        }
                     }
                 });
-            });
-            $('#deleteModal').modal('show');
+            }
         });
+    
         $('.cotacao-card').click(function() {
             const formUrl = $(this).data('form-url');
-            window.location.href = formUrl; // Redireciona para o formulário de item de cotação
-        });
-
-        $('.toggle-status').click(function(e) {
-            e.preventDefault();
-            const toggleUrl = $(this).data('toggle-url');
-            const btn = $(this);
-            const statusText = $(`#status-${btn.data('cotacao-id')}`); // Adicionando um seletor para o texto do status
-            $.ajax({
-                url: toggleUrl,
-                type: 'POST',
-                data: {'csrfmiddlewaretoken': '{{ csrf_token }}'},
-                dataType: 'json',
-                success: function(data) {
-                    $('.alert-primary').text(`Total de Cotações: ${data.total_cotacoes}`);
-                    $('.alert-success').text(`Cotações Abertas: ${data.total_abertas}`);
-                    $('.alert-danger').text(`Cotações Fechadas: ${data.total_fechadas}`);
-
-                    if (btn.text().trim() === 'Fechar Cotação') {
-                        btn.text('Abrir Cotação');
-                        btn.removeClass('btn-outline-danger').addClass('btn-outline-success');
-                        statusText.text('Inativo'); // Atualizar o texto do status
-                    } else {
-                        btn.text('Fechar Cotação');
-                        btn.removeClass('btn-outline-success').addClass('btn-outline-danger');
-                        statusText.text('Ativo'); // Atualizar o texto do status
-                    }
-                }
-            });
+            window.location.href = formUrl; 
         });
     });
 </script>
