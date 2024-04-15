@@ -1,8 +1,88 @@
 {% extends 'base.html' %}
 
-{% block title %}Página Inicial{% endblock %}
+{% block title %}Dashboard de Cotações{% endblock %}
 
 {% block content %}
-    <h1>SISC - Bem-vindo ao meu Sistema de cotação</h1>
+<div class="container-fluid">
+    <h1 class="text-center mt-3 mb-4">Dashboard de Cotações</h1>
+
+    <div class="row text-center">
+        <div class="col-lg-4 mb-4">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Cotações Abertas</h5>
+                    <p class="card-text" id="cotacoesAbertas"></p>
+                    <canvas id="cotacoesAbertasChart"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4 mb-4">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Cotações Fechadas</h5>
+                    <p class="card-text" id="cotacoesFechadas"></p>
+                    <canvas id="cotacoesFechadasChart"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4 mb-4">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Fornecedores Respondentes</h5>
+                    <ul class="list-group bg-transparent border-0" id="listaFornecedores"></ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6 mb-4">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Cotações por Departamento</h5>
+                    <canvas id="cotacoesDepartamentosChart"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 mb-4">
+            <div class="card bg-danger text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Evolução de Cotações</h5>
+                    <canvas id="evolucaoCotacoesChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-6 mb-4">
+            <div class="card bg-dark text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Top Fornecedores</h5>
+                    <table class="table table-dark table-hover">
+                        <thead>
+                            <tr>
+                                <th>Fornecedor</th>
+                                <th>Cotações Respondidas</th>
+                                <th>Avaliação</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabelaTopFornecedores"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6 mb-4">
+            <div class="card bg-secondary text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Alertas de Prazos</h5>
+                    <ul class="list-group bg-transparent border-0" id="listaAlertas"></ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% include "dashboard_scripts.html" %}
 
 {% endblock %}

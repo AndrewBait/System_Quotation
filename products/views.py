@@ -254,7 +254,6 @@ def import_products(request):
                     handle_csv_upload(file)
                 elif str(file).endswith('.xml'):
                     handle_xml_upload(file)
-                messages.success(request, 'Produtos importados com sucesso.')
             except Exception as e:
                 messages.error(request, f'Erro ao importar produtos: {e}')
             return redirect('products:products_list')

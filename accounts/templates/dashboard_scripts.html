@@ -1,0 +1,86 @@
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Dados mockados - substitua por chamadas AJAX ou outra lógica para carregar dados do servidor
+        const cotacoesAbertasData = [10, 20, 30, 40];
+        const cotacoesFechadasData = [5, 15, 10, 20];
+        const fornecedoresData = ["Fornecedor A", "Fornecedor B", "Fornecedor C"];
+        const departamentosData = [12, 19, 3];
+        const evolucaoCotacoesData = [5, 10, 15, 20];
+        const topFornecedoresData = [
+            { nome: "Fornecedor X", cotacoes: 50, avaliacao: 4.9 },
+            { nome: "Fornecedor Y", cotacoes: 45, avaliacao: 4.5 },
+            { nome: "Fornecedor Z", cotacoes: 30, avaliacao: 4.3 }
+        ];
+        const alertasData = ["Alerta 1", "Alerta 2", "Alerta 3"];
+
+        // Configuração dos gráficos
+        const ctxCotacoesAbertas = document.getElementById('cotacoesAbertasChart').getContext('2d');
+        const cotacoesAbertasChart = new Chart(ctxCotacoesAbertas, {
+            type: 'bar',
+            data: {
+                labels: ['Q1', 'Q2', 'Q3', 'Q4'],
+                datasets: [{
+                    label: 'Cotações Abertas',
+                    data: cotacoesAbertasData,
+                    backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                    borderColor: 'rgba(255, 99, 132, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+
+        const ctxCotacoesFechadas = document.getElementById('cotacoesFechadasChart').getContext('2d');
+        const cotacoesFechadasChart = new Chart(ctxCotacoesFechadas, {
+            type: 'bar',
+            data: {
+                labels: ['Q1', 'Q2', 'Q3', 'Q4'],
+                datasets: [{
+                    label: 'Cotações Fechadas',
+                    data: cotacoesFechadasData,
+                    backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                    borderColor: 'rgba(54, 162, 235, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+
+        // Preenchendo a lista de fornecedores
+        fornecedoresData.forEach(function(fornecedor) {
+            const li = document.createElement('li');
+            li.textContent = fornecedor;
+            li.classList.add('list-group-item');
+            document.getElementById('listaFornecedores').appendChild(li);
+        });
+
+        // Preenchendo a tabela de top fornecedores
+        const tabelaTopFornecedores = document.getElementById('tabelaTopFornecedores');
+        topFornecedoresData.forEach(function(fornecedor) {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `<td>${fornecedor.nome}</td><td>${fornecedor.cotacoes}</td><td>${fornecedor.avaliacao}</td>`;
+            tabelaTopFornecedores.appendChild(tr);
+        });
+
+        // Preenchendo a lista de alertas
+        alertasData.forEach(function(alerta) {
+            const li = document.createElement('li');
+            li.textContent = alerta;
+            li.classList.add('list-group-item');
+            document.getElementById('listaAlertas').appendChild(li);
+        });
+    });
+</script>

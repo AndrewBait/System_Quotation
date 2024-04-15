@@ -3,6 +3,14 @@
 {% load cotacao_tags %}
 
 {% block content %}
+
+<style>
+    .card:hover {
+        box-shadow: 0 4px 8px rgba(0,0,0,0.2); /* Sombra mais proeminente para destaque */
+        transform: scale(1.02); /* Leve aumento para dar sensação de elevação */
+        transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+    }
+</style>
 <div class="container mt-5">
     <h2 class="mb-3">Filtros de Cotação</h2>
     <form method="get" class="mb-4">
@@ -33,9 +41,9 @@
                 </select>
             </div>
         </div>
-        <div class="mt-3 d-flex justify-content-end">
+        {% comment %} <div class="mt-3 d-flex justify-content-end">
             <button type="submit" class="btn btn-secondary">Filtrar</button>
-        </div>
+        </div> {% endcomment %}
     </form>
 
     <!-- <div class="d-flex justify-content-between mb-3">
@@ -51,49 +59,44 @@
         </div>
         <div class="col-md-4">
             <div class="alert alert-success" role="alert">
-                Cotações Abertas: {{ cotacoes|filter_status:'aberta'|length }}
+                Cotações Abertas: {{ total_abertas }}
             </div>
         </div>
         <div class="col-md-4">
             <div class="alert alert-danger" role="alert">
-                Cotações Fechadas: {{ cotacoes|filter_status:'fechada'|length }}
+                Cotações Fechadas: {{ total_fechadas }}
             </div>
         </div>
     </div>
 
     <h2 class="mb-3">Cotações</h2>
     {% if cotacoes %}
-    <div class="list-group">
+    <div class="row row-cols-1 row-cols-md-3 g-4">  <!-- Grid com 3 colunas -->
         {% for cotacao in cotacoes %}
-        <div class="list-group-item d-flex justify-content-between align-items-center py-3">
-            <div class="flex-grow-1 ms-3">
-                <a href="{% url 'cotacao:cotacao_detail' cotacao.pk %}" class="h5 text-decoration-none">
-                    {{ cotacao.nome }}
-                </a>
-                <div><small>Status: {{ cotacao.status }}</small></div>
-                <div><small>Prazo de Pagamento: {{ cotacao.prazo_pagamento }}</small></div>               
-                <div><small>Data de Abertura: {{ cotacao.data_abertura|date:"d M Y" }}</small></div>
-                <div><small>Data de Fechamento: {{ cotacao.data_fechamento|date:"d M Y" }}</small></div>
-                <span class="badge bg-primary ms-2">{{ cotacao.departamento.nome }}</span>
-            </div>
-            <div class="btn-group">
-                <!-- Botão de toggle status -->
-                {% if cotacao.status == 'aberta' %}
-                <a href="#" class="btn btn-outline-danger btn-sm">
-                    Fechar Cotação
-                </a>
-                {% else %}
-                <a href="#" class="btn btn-outline-success btn-sm">
-                    Abrir Cotação
-                </a>
-                {% endif %}
-                <!-- Outros botões -->
-                <a href="{% url 'cotacao:enviar_cotacao' cotacao.pk %}" class="btn btn-outline-primary btn-sm mx-1">
-                    <i class="bi bi-send"></i> Enviar
-                </a>
-                <a href="{% url 'cotacao:cotacao_delete' cotacao.pk %}" class="btn btn-outline-danger btn-sm mx-1">
-                    <i class="bi bi-trash"></i> Deletar
-                </a>
+        <div class="col">
+            <div class="card h-100">  <!-- Cartão de altura total -->
+                <div class="card-body">
+                    <h5 class="card-title"><a href="{% url 'cotacao:cotacao_detail' cotacao.pk %}" class="text-decoration-none">{{ cotacao.nome }}</a></h5>
+                    <p class="card-text">
+                        <small id="status-{{ cotacao.pk }}">{{ cotacao.get_status_display }}</small><br>
+                        <small>Criado por: {{ user.username }}</small><br>
+                        <small>Prazo: {{ cotacao.prazo_aviso }} dias</small><br>
+                        <small>Abertura: {{ cotacao.data_abertura|date:"d M Y" }}</small><br>
+                        <small>Fechamento: {{ cotacao.data_fechamento|date:"d M Y" }}</small>
+                    </p>
+                    <span class="badge bg-primary">{{ cotacao.departamento.nome }}</span>
+                </div>
+                <div class="card-footer">
+                    <div class="btn-group">
+                        {% if cotacao.status == 'ativo' %}
+                        <button type="button" class="btn btn-outline-danger btn-sm toggle-status" data-cotacao-id="{{ cotacao.pk }}" data-toggle-url="{% url 'cotacao:toggle_status' cotacao.pk %}">Fechar Cotação</button>
+                        {% else %}
+                        <button type="button" class="btn btn-outline-success btn-sm toggle-status" data-cotacao-id="{{ cotacao.pk }}" data-toggle-url="{% url 'cotacao:toggle_status' cotacao.pk %}">Abrir Cotação</button>
+                        {% endif %}
+                        <a href="{% url 'cotacao:enviar_cotacao' cotacao.pk %}" class="btn btn-outline-primary btn-sm mx-1"><i class="bi bi-send"></i> Enviar</a>
+                        <button type="button" class="btn btn-outline-danger btn-sm mx-1 delete-cotacao" data-cotacao-id="{{ cotacao.pk }}" data-delete-url="{% url 'cotacao:cotacao_delete' cotacao.pk %}"><i class="bi bi-trash"></i> Deletar</button>
+                    </div>
+                </div>
             </div>
         </div>
         {% endfor %}
@@ -103,5 +106,137 @@
         Nenhuma cotação encontrada.
     </div>
     {% endif %}
-</div>
+
+<!-- Modal de Confirmação de Deleção -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="deleteModalLabel">Confirmar Exclusão</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          Tem certeza de que deseja excluir esta cotação?
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <a href="#" class="btn btn-danger" id="deleteConfirmButton">Deletar</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <br>
+    
+  <nav aria-label="Navegação de página">
+    <ul class="pagination justify-content-center">
+        {% if cotacoes.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?page=1" aria-label="Primeiro">
+                    <span aria-hidden="true">&laquo; Primeiro</span>
+                </a>
+            </li>
+            <li class="page-item">
+                <a class="page-link" href="?page={{ cotacoes.previous_page_number }}" aria-label="Anterior">
+                    <span aria-hidden="true">&lsaquo; Anterior</span>
+                </a>
+            </li>
+        {% else %}
+            <li class="page-item disabled">
+                <span class="page-link">
+                    <span aria-hidden="true">&laquo; Primeiro</span>
+                </span>
+            </li>
+            <li class="page-item disabled">
+                <span class="page-link">
+                    <span aria-hidden="true">&lsaquo; Anterior</span>
+                </span>
+            </li>
+        {% endif %}
+
+        <li class="page-item active" aria-current="page">
+            <span class="page-link">
+                Página {{ cotacoes.number }} de {{ cotacoes.paginator.num_pages }}.
+            </span>
+        </li>
+
+        {% if cotacoes.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ cotacoes.next_page_number }}" aria-label="Próximo">
+                    <span aria-hidden="true">Próximo &rsaquo;</span>
+                </a>
+            </li>
+            <li class="page-item">
+                <a class="page-link" href="?page={{ cotacoes.paginator.num_pages }}" aria-label="Último">
+                    <span aria-hidden="true">Último &raquo;</span>
+                </a>
+            </li>
+        {% else %}
+            <li class="page-item disabled">
+                <span class="page-link">
+                    <span aria-hidden="true">Próximo &rsaquo;</span>
+                </span>
+            </li>
+            <li class="page-item disabled">
+                <span class="page-link">
+                    <span aria-hidden="true">Último &raquo;</span>
+                </span>
+            </li>
+        {% endif %}
+    </ul>
+</nav>
 {% endblock %}
+
+{% block scripts %}
+<script>
+    $(document).ready(function() {
+        $('.delete-cotacao').click(function(e) {
+            e.preventDefault();
+            const deleteUrl = $(this).data('delete-url');
+            $('#deleteConfirmButton').off('click').on('click', function() {
+                $.ajax({
+                    url: deleteUrl,
+                    type: 'POST',
+                    data: {'csrfmiddlewaretoken': '{{ csrf_token }}'},
+                    success: function(result) {
+                        $('#deleteModal').modal('hide');
+                        location.reload();
+                    }
+                });
+            });
+            $('#deleteModal').modal('show');
+        });
+
+        $('.toggle-status').click(function(e) {
+            e.preventDefault();
+            const toggleUrl = $(this).data('toggle-url');
+            const btn = $(this);
+            const statusText = $(`#status-${btn.data('cotacao-id')}`); // Adicionando um seletor para o texto do status
+            $.ajax({
+                url: toggleUrl,
+                type: 'POST',
+                data: {'csrfmiddlewaretoken': '{{ csrf_token }}'},
+                dataType: 'json',
+                success: function(data) {
+                    $('.alert-primary').text(`Total de Cotações: ${data.total_cotacoes}`);
+                    $('.alert-success').text(`Cotações Abertas: ${data.total_abertas}`);
+                    $('.alert-danger').text(`Cotações Fechadas: ${data.total_fechadas}`);
+
+                    if (btn.text().trim() === 'Fechar Cotação') {
+                        btn.text('Abrir Cotação');
+                        btn.removeClass('btn-outline-danger').addClass('btn-outline-success');
+                        statusText.text('Inativo'); // Atualizar o texto do status
+                    } else {
+                        btn.text('Fechar Cotação');
+                        btn.removeClass('btn-outline-success').addClass('btn-outline-danger');
+                        statusText.text('Ativo'); // Atualizar o texto do status
+                    }
+                }
+            });
+        });
+    });
+</script>
+{% endblock %}
+
+    
+    

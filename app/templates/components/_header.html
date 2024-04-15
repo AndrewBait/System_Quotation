@@ -1,27 +1,20 @@
-<style>
-    .nav-link:hover {
-        background-color: #007bff; /* Azul claro para o hover */
-        color: #ffffff; /* Texto branco para o hover */
-        border-radius: .25rem; /* Arredondamento dos cantos */
-    }
-    .nav-link.active {
-    background-color: #007bff; /* Cor de fundo para o item ativo */
-    color: white; /* Cor do texto para o item ativo */
-}
-</style>
-
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-  const navLinks = document.querySelectorAll('.nav-link');
-  const currentUrl = window.location.href; 
-
-  navLinks.forEach(link => {
-    if (link.href === currentUrl) {
-      link.classList.add('active');
-    }
-  });
-});
-</script>
+<header class="header">
+  <div class="container">
+    <div class="header__content">
+      <a href="#" class="header__logo"></a>
+      <nav class="header__nav">
+        <ul class="header__nav-list">
+          <li class="header__nav-item">
+          </li>
+        </ul>
+      </nav>
+    </div>
+  </div>
+</header>
 
 
-</div>
+
+
+
+
+

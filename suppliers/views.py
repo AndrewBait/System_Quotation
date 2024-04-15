@@ -18,6 +18,7 @@ from django.urls import reverse
 from django.http import HttpResponseRedirect
 from django.db.models import Avg
 
+
 import logging
 logger = logging.getLogger(__name__)
 
@@ -56,6 +57,18 @@ def supplier_list(request):
     form = SupplierFilterForm(request.GET or None)    
     status_form = SupplierStatusFilterForm(request.GET or None)
     suppliers = Supplier.objects.all().order_by('id')
+    
+    paginator = Paginator(suppliers, 3)  # Mostra 10 fornecedores por página
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    
+    
+    if form.is_valid():
+        suppliers = form.filter(suppliers)
+    
+    if status_form.is_valid():
+        suppliers = status_form.filter(suppliers)
+
 
     
     if form.is_valid():
@@ -76,9 +89,9 @@ def supplier_list(request):
         queryset = queryset.filter(active=False)
     
 
-    paginator = Paginator(queryset, 6)
+    paginator = Paginator(suppliers_query, 6)  # 6 suppliers per page
     page_number = request.GET.get('page')
-    suppliers = paginator.get_page(page_number)
+    suppliers_page = paginator.get_page(page_number)
 
     context = {
         'form': form,
@@ -115,7 +128,6 @@ class SupplierCreateView(LoginRequiredMixin, SupplierFormMixin, CreateView):
         supplier.user = self.request.user  # Associa o fornecedor ao usuário atual
         supplier.save()
         form.save_m2m()
-        messages.success(self.request, 'Fornecedor salvo com sucesso!')
         return super().form_valid(form)
     
     def get_context_data(self, **kwargs):
@@ -126,8 +138,6 @@ class SupplierCreateView(LoginRequiredMixin, SupplierFormMixin, CreateView):
         context['departamentos'] = Departamento.objects.all()
         context['selected_days'] = self.object.delivery_days.split(',') if self.object and self.object.delivery_days else []
         return context
-
-
     
     def get_initial(self):
         initial = super().get_initial()
@@ -142,33 +152,23 @@ class SupplierListView(ListView):
     model = Supplier
     template_name = 'suppliers/supplier_list.html'
     context_object_name = 'suppliers'
-    paginate_by = 10
+    paginate_by = 6
 
     def get_queryset(self):
         queryset = super().get_queryset()
-        form = SupplierFilterForm(self.request.GET or None)
-     
-
-        if form.is_valid():
-            department_id = self.request.GET.get('department')
-            category_id = self.request.GET.get('category')
-            subcategory_id = self.request.GET.get('subcategory')
-            brand_id = form.cleaned_data.get('brand')
-
-            if department_id:
-                queryset = queryset.filter(departments__id=department_id)
-            if category_id:
-                queryset = queryset.filter(categories__id=category_id)
-            if subcategory_id:
-                queryset = queryset.filter(subcategories__id=subcategory_id)
-            if brand_id:
-                queryset = queryset.filter(brand__id=brand_id)        
-
+        department_id = self.request.GET.get('department')
+        category_id = self.request.GET.get('category')
+        subcategory_id = self.request.GET.get('subcategory')
         status = self.request.GET.get('status')
-        if status == 'True':
-            queryset = queryset.filter(active=True)
-        elif status == 'False':
-            queryset = queryset.filter(active=False)
+
+        if department_id:
+            queryset = queryset.filter(departments__id=department_id)
+        if category_id:
+            queryset = queryset.filter(categories__id=category_id)
+        if subcategory_id:
+            queryset = queryset.filter(subcategories__id=subcategory_id)
+        if status:
+            queryset = queryset.filter(active=status == 'True')
 
         return queryset
 
@@ -217,10 +217,8 @@ class SupplierUpdateView(LoginRequiredMixin, SupplierFormMixin, UpdateView):
             ratings_form = SupplierRatingsForm(request.POST, instance=self.object)
             if ratings_form.is_valid():
                 ratings_form.save()
-                messages.success(request, "Avaliações atualizadas com sucesso.")
                 return HttpResponseRedirect(self.get_success_url() + '?success=true')
             else:
-                messages.error(request, "Erro ao salvar avaliações. Por favor, verifique os dados fornecidos.")
                 return self.form_invalid(ratings_form)
         else:
             return super().post(request, *args, **kwargs)
@@ -281,7 +279,6 @@ class SupplierUpdateView(LoginRequiredMixin, SupplierFormMixin, UpdateView):
     
     def form_invalid(self, form):
         # Exibir mensagem de erro
-        messages.error(self.request, 'Erro ao salvar o fornecedor. Por favor, verifique os dados fornecidos.')
         return super().form_invalid(form)
 
     def get_success_url(self):

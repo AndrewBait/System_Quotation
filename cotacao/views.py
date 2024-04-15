@@ -14,17 +14,34 @@ from django.template.loader import render_to_string
 from django.utils.html import strip_tags
 from django.http import HttpResponse
 from reportlab.pdfgen import canvas
+from django.http import JsonResponse
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 
 
 class CotacaoListView(ListView):
     model = Cotacao
     template_name = 'cotacao/cotacao_list.html'
     context_object_name = 'cotacoes'
+    paginate_by = 3
 
     def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
+        context = super().get_context_data(**kwargs)        
         context['show_cotacao_tabs'] = True 
         context['departamentos'] = Departamento.objects.all()
+        context['total_abertas'] = Cotacao.objects.filter(status='ativo').count()
+        context['total_fechadas'] = Cotacao.objects.filter(status='inativo').count()
+        cotacoes_list = Cotacao.objects.all()
+        paginator = Paginator(cotacoes_list, self.paginate_by)
+        
+        page = self.request.GET.get('page')
+        try:
+            cotacoes = paginator.page(page)
+        except PageNotAnInteger:
+            cotacoes = paginator.page(1)
+        except EmptyPage:
+            cotacoes = paginator.page(paginator.num_pages)
+
+        context['cotacoes'] = cotacoes
         return context
 
 
@@ -230,7 +247,21 @@ def export_cotacoes_pdf(request):
 
 def toggle_status_cotacao(request, pk):
     cotacao = get_object_or_404(Cotacao, pk=pk)
-    cotacao.toggle_status()
-    return redirect('cotacao:cotacao_list')
-
+    if cotacao.status == 'ativo':
+        cotacao.status = 'inativo'
+    else:
+        cotacao.status = 'ativo'
+    cotacao.save()
+    
+    # Calcule o total de cotações abertas e fechadas
+    total_abertas = Cotacao.objects.filter(status='ativo').count()
+    total_fechadas = Cotacao.objects.filter(status='inativo').count()
+    total_cotacoes = Cotacao.objects.count()
+    
+    # Retorna os dados como JSON
+    return JsonResponse({
+        'total_abertas': total_abertas,
+        'total_fechadas': total_fechadas,
+        'total_cotacoes': total_cotacoes,
+    })
 

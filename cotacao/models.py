@@ -21,17 +21,20 @@ class Cotacao(models.Model):
 
     def __str__(self):
         return f"{self.nome} ({self.departamento.nome})"
+    
+    def clean(self):
+
+        if self.data_fechamento < self.data_abertura:            
+            raise ValidationError(_('A data de fechamento não pode ser anterior à data de abertura.'))
+        
+
 
     class Meta:
         verbose_name = _('Cotação')
         verbose_name_plural = _('Cotações')
         ordering = ['-data_abertura'] 
 
-    def clean(self):
-
-        if self.data_fechamento < self.data_abertura:
-            raise ValidationError(_('A data de fechamento não pode ser anterior à data de abertura.'))
-
+    
         # Posso adicionr aqui mais validaçoes caso for necessário
 
     def save(self, *args, **kwargs):

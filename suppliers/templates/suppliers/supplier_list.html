@@ -5,61 +5,59 @@
 {% load tz %}
 
 {% block content %}
-
-
 <style>
     .card-hover:hover {
         cursor: pointer;
-        box-shadow: 0 8px 16px 0 rgba(0,0,0,0.2); /* Efeito de sombra ao passar o mouse */
+        box-shadow: 0 8px 16px 0 rgba(0,0,0,0.2);
     }
-    
     .bi-star-fill, .bi-star-half {
-    color: gold; /* Define a cor das estrelas para dourado */
+        color: gold;
     }
     .star {
         position: relative;
         display: inline-block;
-        font-size: 24px; /* Tamanho das estrelas */
-        color: grey; /* Cor padrão das estrelas */
+        font-size: 24px;
+        color: grey;
     }
     .star-full {
         position: absolute;
         top: 0;
         left: 0;
-        width: 0%; /* Largura inicial */
         overflow: hidden;
-        color: gold; /* Cor das estrelas preenchidas */
-        pointer-events: none; /* Ignora eventos de mouse */
+        color: gold;
+        pointer-events: none;
     }
     .star-empty {
-        pointer-events: none; /* Ignora eventos de mouse */
+        pointer-events: none;
     }
-  .rating span {
-      cursor: pointer; /* Muda o cursor para o estilo de 'mãozinha' ao passar o mouse */
-      font-size: 1.5em; /* Aumenta o tamanho da fonte das estrelas */
-      color: grey; /* Cor padrão das estrelas */
-  }
-
-  .rating span.active {
-      color: gold; /* Cor das estrelas ativas */
-  }
-
-    
-
-    
+    .rating span {
+        cursor: pointer;
+        font-size: 1.5em;
+        color: grey;
+    }
+    .rating span.active {
+        color: gold;
+    }
+    .pagination {
+        display: flex;
+        justify-content: center;
+        padding: 20px 0;
+    }
+    .pagination a {
+        margin: 0 5px;
+    }
 </style>
 
 <div class="container py-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2>Fornecedores</h2>
         <a href="{% url 'suppliers:supplier_new' %}" class="btn btn-success">Adicionar Novo Fornecedor</a>
-    </div>   
+    </div>
 
-    <form method="GET" action="{% url 'suppliers:supplier_list' %}"> 
+    <form method="GET" action="{% url 'suppliers:supplier_list' %}" id="filterForm">
         <div class="row g-2">
-            <!-- Filtro por Departamento -->
             <div class="col-md-4">
-                <select class="form-select" name="department">
+                <select id="departmentSelect" class="form-select" name="department">
                     <option value="">Departamentos</option>
                     {% for department in departments %}
                     <option value="{{ department.id }}" {% if request.GET.department == department.id|stringformat:"s" %}selected{% endif %}>
@@ -68,29 +66,34 @@
                     {% endfor %}
                 </select>
             </div>
-
-            <!-- Filtro por Categoria -->
             <div class="col-md-4">
-                <select class="form-select" name="category">
+                <select id="categorySelect" class="form-select" name="category">
                     <option value="">Categorias</option>
-                </select>
-            </div>  
-
-            <!-- Filtro por Sub-categoria -->
-            <div class="col-md-4">
-                <select class="form-select" name="subcategory">
-                    <option value="">Subcategorias</option>
+                    {% for category in categories %}
+                        <option value="{{ category.id }}" {% if request.GET.category == category.id|stringformat:"s" %}selected{% endif %}>
+                            {{ category.name }}
+                        </option>
+                    {% endfor %}
                 </select>
             </div>
-
             <div class="col-md-4">
-                <select class="form-select" name="status" onchange="this.form.submit()">
+                <select id="subcategorySelect" class="form-select" name="subcategory">
+                    <option value="">Subcategorias</option>
+                    {% for subcategory in subcategories %}
+                        <option value="{{ subcategory.id }}" {% if request.GET.subcategory == subcategory.id|stringformat:"s" %}selected{% endif %}>
+                            {{ subcategory.name }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-4">
+                <select class="form-select" name="status" onchange="document.getElementById('filterForm').submit()">
                     <option value="">Qualquer Status</option>
                     <option value="True" {% if request.GET.status == 'True' %}selected{% endif %}>Ativo</option>
                     <option value="False" {% if request.GET.status == 'False' %}selected{% endif %}>Inativo</option>
                 </select>
             </div>
-        </div>  
+        </div>
     </form>
     <br>
 
@@ -99,26 +102,22 @@
         <div class="col">
             <div class="card h-100 card-hover" onclick="location.href='{% url 'suppliers:supplier_detail' supplier.id %}'">
                 <div class="card-header d-flex align-items-center justify-content-between">
-                    <h3 class="card-title">
-                        {{ supplier.name }}
-                    </h3>
+                    <h3 class="card-title">{{ supplier.name }}</h3>
                     <div>
                         <span class="text-warning">Nota: {{ supplier.average_rating|floatformat:"1" }}</span>
                         <div class="rating ms-2 d-inline-block">
                             {% for i in "12345" %}
                                 {% if forloop.counter <= supplier.average_rating|floatformat:"0"|add:"0" %}
-                                    <i class="bi bi-star-fill"></i>  {# Estrela cheia #}
+                                    <i class="bi bi-star-fill"></i>
                                 {% elif forloop.counter == supplier.average_rating|floatformat:"0"|add:"0"|add:"1" and supplier.average_rating|floatformat:"1"|slice:":1" == "5" %}
-                                    <i class="bi bi-star-half"></i>  {# Meia estrela se o decimal é .5 #}
+                                    <i class="bi bi-star-half"></i>
                                 {% else %}
-                                    <i class="bi bi-star"></i>  {# Estrela vazia #}
+                                    <i class="bi bi-star"></i>
                                 {% endif %}
-                            {% endfor %}                        
-                            </div>
+                            {% endfor %}
+                        </div>
                     </div>
-                    </h5>
                 </div>
-                
                 <div class="card-body">
                     <p class="card-text"><strong>E-mail:</strong> {{ supplier.email }}</p>
                     <p class="card-text"><strong>Telefone:</strong> {{ supplier.phone }}</p>
@@ -133,8 +132,7 @@
                     </a>
                     <a href="{% url 'suppliers:supplier_update' supplier.id %}" class="btn btn-warning btn-sm">
                         <i class="bi bi-pencil-square"></i> Editar
-                    </a> 
-                    
+                    </a>
                 </div>
             </div>
         </div>
@@ -142,73 +140,131 @@
             <p>Nenhum fornecedor encontrado.</p>
         {% endfor %}
     </div>
-    <div class="pagination justify-content-center">
-        {% if suppliers.has_previous %}
-            <a class="btn btn-outline-secondary" href="?{{ request.GET.urlencode|add:"&" }}page=1">&laquo; Primeira</a>
-            <a class="btn btn-outline-secondary" href="?{{ request.GET.urlencode|add:"&" }}page={{ suppliers.previous_page_number }}">Anterior</a>
+<!-- Paginação -->
+<!-- Paginação -->
+<nav aria-label="Paginação de fornecedores">
+    <ul class="pagination justify-content-center">
+        {% if page_obj.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?page=1" aria-label="Primeira">&laquo; Primeira</a>
+            </li>
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.previous_page_number }}" aria-label="Anterior">Anterior</a>
+            </li>
+        {% else %}
+            <li class="page-item disabled">
+                <span class="page-link">&laquo; Primeira</span>
+            </li>
+            <li class="page-item disabled">
+                <span class="page-link">Anterior</span>
+            </li>
         {% endif %}
-        
-        <span class="current-page">Página {{ suppliers.number }} de {{ suppliers.paginator.num_pages }}</span>
-        
-        {% if suppliers.has_next %}
-            <a class="btn btn-outline-secondary" href="?{{ request.GET.urlencode|add:"&" }}page={{ suppliers.next_page_number }}">Próxima</a>
-            <a class="btn btn-outline-secondary" href="?{{ request.GET.urlencode|add:"&" }}page={{ suppliers.paginator.num_pages }}">Última &raquo;</a>
+
+        <li class="page-item active">
+            <span class="page-link">
+                Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}
+            </span>
+        </li>
+
+        {% if page_obj.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.next_page_number }}" aria-label="Próxima">Próxima</a>
+            </li>
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}" aria-label="Última">Última &raquo;</a>
+            </li>
+        {% else %}
+            <li class="page-item disabled">
+                <span class="page-link">Próxima</span>
+            </li>
+            <li class="page-item disabled">
+                <span class="page-link">Última &raquo;</span>
+            </li>
         {% endif %}
-    </div>
+    </ul>
+</nav>
+
 </div>
 
 
 <!-- Modal para confirmação de exclusão -->
 <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="deleteModalLabel">Confirmar Exclusão</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body">
-        Tem certeza que deseja excluir este fornecedor?
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-        <button class="btn btn-danger btn-sm delete-btn" data-bs-toggle="modal" data-bs-target="#deleteModal" data-supplier-id="{{ supplier.id }}">
-            {% csrf_token %}
-            <i class="bi bi-trash-fill"></i> Excluir
-        </button>
-      </div>
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteModalLabel">Confirmar Exclusão</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                Tem certeza que deseja excluir este fornecedor?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button class="btn btn-danger btn-sm delete-btn" data-bs-toggle="modal" data-bs-target="#deleteModal" data-supplier-id="{{ supplier.id }}">
+                    <i class="bi bi-trash-fill"></i> Excluir
+                </button>
+            </div>
+        </div>
     </div>
-  </div>
 </div>
+    
 
 <script>
+
     document.addEventListener('DOMContentLoaded', function() {
-        const departmentSelect = document.querySelector('select[name="department"]');
-        const categorySelect = document.querySelector('select[name="category"]');
-        const subcategorySelect = document.querySelector('select[name="subcategory"]');
-    
+        const filterForm = document.getElementById('filterForm');
+        const departmentSelect = document.getElementById('departmentSelect');
+        const categorySelect = document.getElementById('categorySelect');
+        const subcategorySelect = document.getElementById('subcategorySelect');
+        const statusSelect = document.querySelector('select[name="status"]');
+
+        function updateSelect(select, options) {
+            select.innerHTML = '<option value="">Selecione...</option>';
+            options.forEach(option => {
+                const optionElement = document.createElement('option');
+                optionElement.value = option.id;
+                optionElement.textContent = option.name;
+                select.appendChild(optionElement);
+            });
+        }
+
+        // Carregar categorias e subcategorias iniciais (se aplicável)
+        {% if request.GET.department %}
+            fetch(`/products/get-categories/?department_id=${departmentSelect.value}`)
+                .then(response => response.json())
+                .then(data => {
+                    updateSelect(categorySelect, data);
+                    {% if request.GET.category %}
+                        fetch(`/products/get-subcategories/?category_id=${categorySelect.value}`)
+                            .then(response => response.json())
+                            .then(data => updateSelect(subcategorySelect, data));
+                    {% endif %}
+                });
+        {% endif %}
+
         departmentSelect.addEventListener('change', function() {
-            const departmentId = this.value;
-            fetch(`/products/get-categories/?department_id=${departmentId}`)
+            fetch(`/products/get-categories/?department_id=${this.value}`)
                 .then(response => response.json())
                 .then(data => {
-                    categorySelect.innerHTML = '<option value="">Selecione uma Categoria</option>';
-                    data.forEach(category => {
-                        categorySelect.options.add(new Option(category.name, category.id));
-                    });
+                    updateSelect(categorySelect, data);
+                    updateSelect(subcategorySelect, []); // Limpar subcategorias ao mudar departamento
+                    filterForm.submit();
                 });
         });
-    
+
         categorySelect.addEventListener('change', function() {
-            const categoryId = this.value;
-            fetch(`/products/get-subcategories/?category_id=${categoryId}`)
+            fetch(`/products/get-subcategories/?category_id=${this.value}`)
                 .then(response => response.json())
                 .then(data => {
-                    subcategorySelect.innerHTML = '<option value="">Selecione uma Subcategoria</option>';
-                    data.forEach(subcategory => {
-                        subcategorySelect.options.add(new Option(subcategory.name, subcategory.id));
-                    });
+                    updateSelect(subcategorySelect, data);
+                    filterForm.submit();
                 });
         });
+
+        // Filtrar ao mudar subcategoria ou status
+        subcategorySelect.addEventListener('change', () => filterForm.submit());
+        statusSelect.addEventListener('change', () => filterForm.submit());
+
         
         const deleteButtons = document.querySelectorAll('.delete-btn');    
         deleteButtons.forEach(button => {
