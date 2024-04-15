@@ -38,6 +38,61 @@
             </tbody>
         </table>
     </div>
-    <a href="{% url 'cotacao:add_item_to_cotacao' cotacao_id=cotacao.pk %}" class="btn btn-success">Adicionar item à cotação</a>
+    
 </div>
+
+<!-- Botão para abrir o modal -->
+<button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalProdutos">
+    Listar Produtos
+  </button>
+  
+  <!-- Modal -->
+  <div class="modal fade" id="modalProdutos" tabindex="-1" aria-labelledby="modalProdutosLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="modalProdutosLabel">Selecionar Produto</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <input type="text" id="searchProductInput" onkeyup="buscarProdutos()" placeholder="Buscar produto..." class="form-control mb-3">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Nome</th>
+                <th>SKU</th>
+                <th>EAN</th>
+                <th>Departamento</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+            <tbody id="productList"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+<script>
+    function buscarProdutos() {
+        var input = document.getElementById("searchProductInput").value;
+        fetch(`/products/search/?query=${input}`) // URL da view search_products na app products
+            .then(response => response.json())
+            .then(data => {
+                var productList = document.getElementById("productList");
+                productList.innerHTML = ''; // Limpa a lista anterior
+                data.forEach(prod => {
+                    var row = `<tr>
+                        <td>${prod.nome}</td>
+                        <td>${prod.sku}</td>
+                        <td>${prod.ean}</td>
+                        <td>${prod.departamento}</td>
+                        <td><button onclick="adicionarProdutoAoItemCotacao(${prod.id})">Adicionar</button></td>
+                    </tr>`;
+                    productList.innerHTML += row;
+                });
+            })
+            .catch(error => console.error('Erro ao buscar produtos:', error));
+    }
+    </script>
 {% endblock %}

@@ -26,6 +26,24 @@ import re
 
 
 
+def products_list(request):
+    products = Product.objects.all()  # Inicialmente, obtém todos os produtos
+    
+    search_query = request.GET.get('search_query', '')
+    if search_query:
+        products = products.filter(
+            Q(name__icontains=search_query) |
+            Q(sku__icontains=search_query) |
+            Q(ean__icontains=search_query)
+        )
+        return render(request, 'products.html', {
+            'products': products,
+            'search_query': search_query
+            
+
+    })
+
+
 # Para download do modelo CSV
 def download_csv_template(request):
     response = HttpResponse(content_type='text/csv')

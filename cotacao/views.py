@@ -16,7 +16,23 @@ from django.http import HttpResponse
 from reportlab.pdfgen import canvas
 from django.http import JsonResponse
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from products.models import Product
 
+
+def buscar_produtos(request):
+    termo_busca = request.GET.get('query', '')
+    produtos = Product.objects.filter(name__icontains=termo_busca)
+    produtos_data = [
+        {
+            'id': produto.id,
+            'nome': produto.name,
+            'sku': produto.sku,
+            'ean': produto.ean,
+            'departamento': produto.department.name if produto.department else ""
+        }
+        for produto in produtos
+    ]
+    return JsonResponse(produtos_data, safe=False)
 
 class CotacaoListView(ListView):
     model = Cotacao
@@ -28,10 +44,15 @@ class CotacaoListView(ListView):
         context = super().get_context_data(**kwargs)        
         context['show_cotacao_tabs'] = True 
         context['departamentos'] = Departamento.objects.all()
-        context['total_abertas'] = Cotacao.objects.filter(status='ativo').count()
-        context['total_fechadas'] = Cotacao.objects.filter(status='inativo').count()
+        total_abertas = Cotacao.objects.filter(status='ativo').count()
+        total_fechadas = Cotacao.objects.filter(status='inativo').count()
+        context['total_abertas'] = total_abertas
+        context['total_fechadas'] = total_fechadas
+        context['total_cotacoes'] = total_abertas + total_fechadas
         cotacoes_list = Cotacao.objects.all()
         paginator = Paginator(cotacoes_list, self.paginate_by)
+        
+        
         
         page = self.request.GET.get('page')
         try:
@@ -131,6 +152,21 @@ class AddItemToCotacaoView(CreateView):
         context = super().get_context_data(**kwargs)
         context['cotacao'] = get_object_or_404(Cotacao, pk=self.kwargs['cotacao_id'])
         return context
+    
+    def post(self, request, *args, **kwargs):
+        if request.is_ajax():
+            form = self.form_class(request.POST)
+            if form.is_valid():
+                # Cria o item de cotação
+                item_cotacao = form.save(commit=False)
+                item_cotacao.cotacao_id = self.kwargs['cotacao_id']
+                item_cotacao.save()
+                return JsonResponse({'status': 'success', 'msg': 'Item adicionado com sucesso!'})
+            else:
+                return JsonResponse({'status': 'error', 'msg': 'Erro ao adicionar item.'})
+        else:
+            # Continue com a lógica normal para requisições não AJAX
+            return super().post(request, *args, **kwargs)
 
 
 class EditItemCotacaoView(UpdateView):

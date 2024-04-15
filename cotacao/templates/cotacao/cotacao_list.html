@@ -13,7 +13,7 @@
 </style>
 <div class="container mt-5">
     <h2 class="mb-3">Filtros de Cotação</h2>
-    <form method="get" class="mb-4">
+    <form id="filter-form" method="GET" class="mb-4">
         <div class="row g-3">
             <div class="col-md-3">
                 <label for="status_filter" class="form-label">Status</label>
@@ -41,20 +41,15 @@
                 </select>
             </div>
         </div>
-        {% comment %} <div class="mt-3 d-flex justify-content-end">
-            <button type="submit" class="btn btn-secondary">Filtrar</button>
-        </div> {% endcomment %}
     </form>
 
-    <!-- <div class="d-flex justify-content-between mb-3">
-        <a href="{% url 'cotacao:export_cotacoes_excel' %}" class="btn btn-info">Exportar Excel</a>
-        <a href="{% url 'cotacao:export_cotacoes_pdf' %}" class="btn btn-info">Exportar PDF</a>
-    </div> -->
 
+    <h2 class="mb-3">Cotações</h2>
+    
     <div class="row text-center mb-3">
         <div class="col-md-4">
             <div class="alert alert-primary" role="alert">
-                Total de Cotações: {{ cotacoes.count }}
+                Total de Cotações: {{ total_cotacoes }}
             </div>
         </div>
         <div class="col-md-4">
@@ -69,12 +64,12 @@
         </div>
     </div>
 
-    <h2 class="mb-3">Cotações</h2>
+    
     {% if cotacoes %}
     <div class="row row-cols-1 row-cols-md-3 g-4">  <!-- Grid com 3 colunas -->
         {% for cotacao in cotacoes %}
         <div class="col">
-            <div class="card h-100">  <!-- Cartão de altura total -->
+            <div class="card h-100 cotacao-card" data-form-url="{% url 'cotacao:cotacao_detail' cotacao.pk %}"> <!-- Adicionando atributo data-form-url -->
                 <div class="card-body">
                     <h5 class="card-title"><a href="{% url 'cotacao:cotacao_detail' cotacao.pk %}" class="text-decoration-none">{{ cotacao.nome }}</a></h5>
                     <p class="card-text">
@@ -205,6 +200,10 @@
                 });
             });
             $('#deleteModal').modal('show');
+        });
+        $('.cotacao-card').click(function() {
+            const formUrl = $(this).data('form-url');
+            window.location.href = formUrl; // Redireciona para o formulário de item de cotação
         });
 
         $('.toggle-status').click(function(e) {
