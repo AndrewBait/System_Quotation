@@ -69,9 +69,9 @@
     <div class="row row-cols-1 row-cols-md-3 g-4">  <!-- Grid com 3 colunas -->
         {% for cotacao in cotacoes %}
         <div class="col">
-            <div class="card h-100 cotacao-card" data-form-url="{% url 'cotacao:cotacao_detail' cotacao.pk %}"> <!-- Adicionando atributo data-form-url -->
+            <div class="card h-100 cotacao-card" data-form-url="#"> <!-- Adicionando atributo data-form-url -->
                 <div class="card-body">
-                    <h5 class="card-title"><a href="{% url 'cotacao:cotacao_detail' cotacao.pk %}" class="text-decoration-none">{{ cotacao.nome }}</a></h5>
+                    <h5 class="card-title"><a href="#" class="text-decoration-none">{{ cotacao.nome }}</a></h5>
                     <p class="card-text">
                         <small id="status-{{ cotacao.pk }}">{{ cotacao.get_status_display }}</small><br>
                         <small>Criado por: {{ user.username }}</small><br>
@@ -88,7 +88,7 @@
                         {% else %}
                         <button type="button" class="btn btn-outline-success btn-sm toggle-status" data-cotacao-id="{{ cotacao.pk }}" data-toggle-url="{% url 'cotacao:toggle_status' cotacao.pk %}">Abrir Cotação</button>
                         {% endif %}
-                        <a href="{% url 'cotacao:enviar_cotacao' cotacao.pk %}" class="btn btn-outline-primary btn-sm mx-1"><i class="bi bi-send"></i> Enviar</a>
+                        <a href="{% url 'cotacao:enviar_cotacao' cotacao.pk %}" class="btn btn-outline-primary btn-sm mx-1"><i class="bi bi-send"></i> Enviar Cotação</a>
                         <button type="button" class="btn btn-outline-danger btn-sm mx-1 delete-cotacao" data-cotacao-id="{{ cotacao.pk }}" data-delete-url="{% url 'cotacao:cotacao_delete' cotacao.pk %}"><i class="bi bi-trash"></i> Deletar</button>
                     </div>
                 </div>
@@ -217,6 +217,8 @@
 
 {% block scripts %}
 <script>
+
+    
     $(document).ready(function() {
 
         $('.cotacao-card').click(function(e) {
@@ -225,12 +227,28 @@
             $('#productModal').modal('show');
             loadProducts();  // Função para carregar os produtos no modal
         });
-        $('.cotacao-card').click(function(e) {
-            e.preventDefault();
-            // Abrir modal com produtos
-            $('#productModal').modal('show');
-            loadProducts();  // Função para carregar os produtos no modal
-        });
+        function loadProducts() {
+            $.ajax({
+                url: '{% url "cotacao:api_produtos" %}',
+                type: 'GET',
+                success: function(data) {
+                    var productList = $('#productList');
+                    productList.empty();
+                    data.forEach(function(product) {
+                        var row = $('<tr></tr>');
+                        row.append($('<td></td>').text(product.name));  // Garanta que 'name' está correto
+                        row.append($('<td></td>').html('<input type="number" class="form-control" name="quantidade">'));
+                        row.append($('<td></td>').html('<select class="form-control" name="tipo_volume"><option value="un">Unidade</option><option value="kg">Kg</option></select>'));
+                        row.append($('<td></td>').html('<button type="button" class="btn btn-primary">Adicionar</button>'));
+                        productList.append(row);
+                    });
+                },
+                error: function() {
+                    alert('Erro ao carregar produtos');
+                }
+            });
+        }
+
         $('.delete-cotacao, .toggle-status').click(function(e) {
             e.stopPropagation(); // Impede que o evento de clique se propague para o card
             e.preventDefault();

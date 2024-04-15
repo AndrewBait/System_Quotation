@@ -18,27 +18,22 @@ from django.http import JsonResponse
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from products.models import Product
 from django.db import IntegrityError, DatabaseError
+from django.http import JsonResponse
+from products.models import Product
 
 
-def buscar_produtos(request):
-    termo_busca = request.GET.get('query', '')
-    produtos = Product.objects.filter(name__icontains=termo_busca)
-    produtos_data = [
-        {
-            'id': produto.id,
-            'nome': produto.name,
-            'sku': produto.sku,
-            'ean': produto.ean,
-            'departamento': produto.department.name if produto.department else ""
-        }
-        for produto in produtos
-    ]
-    return JsonResponse(produtos_data, safe=False)
+
+def produtos_api(request):
+    produtos = Product.objects.all().values('id', 'name', 'sku', 'ean')
+    produtos_list = list(produtos)
+    return JsonResponse(produtos_list, safe=False)
+
+
 
 class CotacaoListView(ListView):
     model = Cotacao
     template_name = 'cotacao/cotacao_list.html'
-    context_object_name = 'cotacoes'
+    context_object_name = 'cotacoes'    
     paginate_by = 3
 
     def get_context_data(self, **kwargs):
