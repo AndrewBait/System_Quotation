@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% load static %}
+{% load cotacao_tags %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2 class="mb-4">Criar Nova Cotação</h2>
+    <form method="post" class="needs-validation" novalidate>
+        {% csrf_token %}
+        <div class="row">
+            {% for field in form %}
+            <div class="col-md-6 mb-3">
+                <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                {% if field.field.choices %}
+                <select name="{{ field.name }}" class="form-control custom-select {% if field.errors %}is-invalid{% endif %}" id="{{ field.id_for_label }}">
+                    {% for choice in field.field.choices %}
+                    <option value="{{ choice.0 }}" {% if field.value|default:"" == choice.0|stringformat:"s" %}selected{% endif %}>
+                        {{ choice.1 }}
+                    </option>
+                    {% endfor %}
+                </select>
+                {% else %}
+                <input type="{{ field.field.widget.input_type }}" name="{{ field.name }}" id="{{ field.id_for_label }}"
+                       class="form-control {% if field.errors %}is-invalid{% endif %}"
+                       value="{{ field.value|default_if_none:'' }}">
+                {% endif %}
+                {% if field.help_text %}
+                <small id="{{ field.id_for_label }}Help" class="form-text text-muted">{{ field.help_text }}</small>
+                {% endif %}
+                {% for error in field.errors %}
+                <div class="invalid-feedback">{{ error }}</div>
+                {% endfor %}
+            </div>
+            {% endfor %}
+        </div>
+        <button type="submit" class="btn btn-primary">Criar nova cotação</button>
+    </form>    
+</div>
+
+
+
+{% endblock %}

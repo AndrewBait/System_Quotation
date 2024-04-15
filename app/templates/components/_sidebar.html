@@ -79,19 +79,28 @@
                         Fornecedores
                     </a>
                 </li>
-            <li>
-                    <a href="{% url 'cotacao:cotacao_new' %}" class="nav-link text-white" style="font-size: 25px;">
+                <li>            
+                    <a href="{% url 'cotacao:cotacao_list_create' %}?from_sidebar=1" class="nav-link text-white" style="font-size: 25px;">
                         <i class="bi bi-clipboard-check fs-4"></i>
                         Cotação
                     </a>
                 </li>
-            <br>
-                <li>
-                    <!-- <a href="{% url 'accounts:logout' %}" class="nav-link text-white" style="font-size: 20px;">
-                        <i class="bi bi-box-arrow-right"></i>
-                        Sair
-                    </a> -->
+                <li>            
+                    <a href="#" class="nav-link text-white" style="font-size: 25px;">
+                        <i class="bi bi-clipboard-check fs-4"></i>
+                        Relatórios
+                    </a>
                 </li>
+                <li>            
+                    <a href="#" class="nav-link text-white" style="font-size: 25px;">
+                        <i class="bi bi-clipboard-check fs-4"></i>
+                        Config
+                    </a>
+                </li>
+                
+            <br>
+
+
                 <!-- Outros links de navegação -->
             </ul>
             <a href="{% url 'accounts:logout' %}" class="nav-link text-white" style="font-size: 25px;">

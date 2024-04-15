@@ -6,7 +6,7 @@ from django.core.exceptions import ValidationError
 class CotacaoForm(forms.ModelForm):
     class Meta:
         model = Cotacao
-        fields = '__all__'
+        fields = ['nome', 'departamento', 'data_abertura', 'data_fechamento', 'prazo_aviso']
         widgets = {
             'data_abertura': forms.DateInput(format=('%Y-%m-%d'), attrs={'type': 'date'}),
             'data_fechamento': forms.DateInput(format=('%Y-%m-%d'), attrs={'type': 'date'}),

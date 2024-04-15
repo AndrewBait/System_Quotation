@@ -12,6 +12,12 @@ class Cotacao(models.Model):
     departamento = models.ForeignKey(Departamento, on_delete=models.SET_NULL, null=True, related_name='cotacoes')
     data_abertura = models.DateField()
     data_fechamento = models.DateField()    
+    status = models.CharField(max_length=10, default='ativo', choices=[('ativo', 'Ativo'), ('inativo', 'Inativo')])
+    prazo_aviso = models.IntegerField(
+                                        choices=[(7, '7 dias'), (14, '14 dias'), (21, '21 dias'), (28, '28 dias')],
+                                        default=7,
+                                        help_text='Prazo para os produtos'
+                                    )
 
     def __str__(self):
         return f"{self.nome} ({self.departamento.nome})"
@@ -69,6 +75,20 @@ class ItemCotacao(models.Model):
     def save(self, *args, **kwargs):
         self.full_clean()  
         super().save(*args, **kwargs)
+
+    
+    def get_status_class(self):
+        return 'btn-success' if self.status == 'aberta' else 'btn-secondary'
+
+    def get_status_action(self):
+        return 'Fechar' if self.status == 'aberta' else 'Abrir'
+
+    # método para alternar o status
+    def toggle_status(self):
+        self.status = 'fechada' if self.status == 'aberta' else 'aberta'
+        self.save()
+
+    
 
 
 

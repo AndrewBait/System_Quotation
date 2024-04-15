@@ -5,6 +5,7 @@
     <form method="post">
         {% csrf_token %}
         <button type="submit" class="btn btn-danger">Excluir</button>
-        <a href="{% url 'cotacao:cotacao_detail' pk=object.pk %}" class="btn btn-secondary">Cancelar</a>
+        <a href="{% url 'cotacao:cotacao_list' %}" class="btn btn-secondary">Cancelar</a>
+
     </form>
 {% endblock %}

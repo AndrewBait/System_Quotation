@@ -1,15 +1,19 @@
+from turtle import pd
+from urllib import request
 from django.contrib import messages
 from django.core.exceptions import ValidationError
 from django.shortcuts import get_object_or_404, redirect, render
-from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView, TemplateView
+from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
 from django.urls import reverse_lazy, reverse
-from django.views.generic.edit import CreateView
+from django.views.generic.edit import CreateView, FormView
 from .models import Departamento, Cotacao, ItemCotacao
 from .forms import CotacaoForm, ItemCotacaoForm, DepartamentoForm
 from suppliers.models import Supplier
 from django.core.mail import send_mail
 from django.template.loader import render_to_string
 from django.utils.html import strip_tags
+from django.http import HttpResponse
+from reportlab.pdfgen import canvas
 
 
 class CotacaoListView(ListView):
@@ -19,7 +23,8 @@ class CotacaoListView(ListView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['show_cotacao_tabs'] = True  # Adiciona a variável ao contexto
+        context['show_cotacao_tabs'] = True 
+        context['departamentos'] = Departamento.objects.all()
         return context
 
 
@@ -36,18 +41,57 @@ class CotacaoDetailView(DetailView):
 class CotacaoCreateView(CreateView):
     model = Cotacao
     form_class = CotacaoForm
-    template_name = 'cotacao/cotacao_form.html'
-    success_url = reverse_lazy('cotacao:cotacao_list')
+    template_name = 'cotacao/cotacao_form_list.html'
+    success_url = reverse_lazy('cotacao:cotacao_list_create')
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['show_cotacao_tabs'] = True
         return context
 
+class CotacaoListCreateView(FormView):
+    template_name = 'cotacao/cotacao_form_list.html'
+    form_class = CotacaoForm
+    success_url = reverse_lazy('cotacao:cotacao_list_create')
+
+    def get(self, request, *args, **kwargs):
+        context = self.get_context_data()
+        return render(request, self.template_name, context)
+
+    def post(self, request, *args, **kwargs):
+        # Este método será chamado quando a requisição for POST, ou seja, ao salvar uma nova cotação
+        form = self.get_form()
+        if form.is_valid():
+            return self.form_valid(form)
+        else:
+            return self.form_invalid(form)
+
+    def get_context_data(self, **kwargs):
+        context = super(CotacaoListCreateView, self).get_context_data(**kwargs)
+        context['cotacoes'] = Cotacao.objects.all()
+        context['departamentos'] = Departamento.objects.all()
+        context['show_cotacao_tabs'] = True  # Se você precisa controlar a visibilidade das abas
+        return context
+
+    def form_valid(self, form):
+        # Salva a nova cotação
+        form.save()
+        return super(CotacaoListCreateView, self).form_valid(form)
+    
+    def get_success_url(self):
+        if self.request.GET.get('from_sidebar'):
+            return reverse_lazy('cotacao:cotacao_list') + '?from_sidebar=1'
+        else:
+            return reverse_lazy('cotacao:cotacao_list')
 
 class CotacaoDeleteView(DeleteView):
     model = Cotacao
-    success_url = reverse_lazy('cotacao:cotacao_list')
+    
+    def get_success_url(self):
+        if self.request.GET.get('from_sidebar'):
+            return reverse_lazy('cotacao:cotacao_list') + '?from_sidebar=1'
+        else:
+            return reverse_lazy('cotacao:cotacao_list')
 
 
 class AddItemToCotacaoView(CreateView):
@@ -153,3 +197,40 @@ def enviar_cotacao_view(request, pk):
         return redirect('cotacao:cotacao_list')
     # Renderiza a página para enviar as cotações caso o método não seja POST
     return render(request, 'cotacao/enviar_cotacao.html', {'cotacao': cotacao, 'fornecedores': fornecedores})
+
+
+def export_cotacoes_excel(request):
+    # Pegar cotações do banco de dados
+    data = Cotacao.objects.all().values()
+    df = pd.DataFrame(data)
+    
+    # Criar um arquivo Excel
+    response = HttpResponse(content_type='application/ms-excel')
+    response['Content-Disposition'] = 'attachment; filename="cotacoes.xlsx"'
+    with pd.ExcelWriter(response) as writer:
+        df.to_excel(writer, index=False)
+
+    return HttpResponse("Exportação para Excel não implementada.")
+
+
+def export_cotacoes_pdf(request):
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = 'attachment; filename="cotacoes.pdf"'
+
+    p = canvas.Canvas(response)
+    y = 800  # Inicializar coordenada y
+    cotacoes = Cotacao.objects.all()
+    for cotacao in cotacoes:
+        p.drawString(100, y, f"Cotação: {cotacao.nome}")
+        y -= 40
+
+    p.showPage()
+    p.save()
+    return HttpResponse("Exportação para PDF não implementada.")
+
+def toggle_status_cotacao(request, pk):
+    cotacao = get_object_or_404(Cotacao, pk=pk)
+    cotacao.toggle_status()
+    return redirect('cotacao:cotacao_list')
+
+
