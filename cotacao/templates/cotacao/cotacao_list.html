@@ -103,36 +103,106 @@
     {% endif %}
 
 </div>
+<br>
+<nav aria-label="Navegação de página">
+    <ul class="pagination justify-content-center">
+        {% if cotacoes.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?page=1" aria-label="Primeiro">
+                    <span aria-hidden="true">« Primeiro</span>
+                </a>
+            </li>
+            <li class="page-item">
+                <a class="page-link" href="?page={{ cotacoes.previous_page_number }}" aria-label="Anterior">
+                    <span aria-hidden="true">‹ Anterior</span>
+                </a>
+            </li>
+        {% else %}
+            <li class="page-item disabled">
+                <span class="page-link">
+                    <span aria-hidden="true">« Primeiro</span>
+                </span>
+            </li>
+            <li class="page-item disabled">
+                <span class="page-link">
+                    <span aria-hidden="true">‹ Anterior</span>
+                </span>
+            </li>
+        {% endif %}
+
+        <li class="page-item active" aria-current="page">
+            <span class="page-link">
+                Página {{ cotacoes.number }} de {{ cotacoes.paginator.num_pages }}.
+            </span>
+        </li>
+
+        {% if cotacoes.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ cotacoes.next_page_number }}" aria-label="Próximo">
+                    <span aria-hidden="true">Próximo ›</span>
+                </a>
+            </li>
+            <li class="page-item">
+                <a class="page-link" href="?page={{ cotacoes.paginator.num_pages }}" aria-label="Último">
+                    <span aria-hidden="true">Último »</span>
+                </a>
+            </li>
+        {% else %}
+            <li class="page-item disabled">
+                <span class="page-link">
+                    <span aria-hidden="true">Próximo ›</span>
+                </span>
+            </li>
+            <li class="page-item disabled">
+                <span class="page-link">
+                    <span aria-hidden="true">Último »</span>
+                </span>
+            </li>
+        {% endif %}
+    </ul>
+</nav>
 <!-- Modal para Seleção de Produtos -->
 <div class="modal fade" id="productModal" tabindex="-1" aria-labelledby="productModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="productModalLabel">Selecionar Produtos para Cotação</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>                
             </div>
             <div class="modal-body">
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th>Produto</th>
-                            <th>Quantidade</th>
-                            <th>Unidade</th>
-                            <th>Ação</th>
-                        </tr>
-                    </thead>
-                    <tbody id="productList">
-                        <!-- Produtos serão carregados aqui via JavaScript -->
-                    </tbody>
-                </table>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                <button type="button" class="btn btn-primary">Adicionar à Cotação</button>
+                <div class="input-group mb-3">
+                    <input type="text" class="form-control" id="productSearch" placeholder="Pesquisar produtos">
+                    <button class="btn btn-outline-secondary" type="button" id="button-addon2">Pesquisar</button>
+                </div>
+                <div class="modal-body">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Produto</th>
+                                <th>Quantidade</th>
+                                <th>Unidade</th>
+                                <th>Ação</th>
+                            </tr>
+                        </thead>
+                        <tbody id="productList">
+                            <!-- Produtos serão carregados aqui via JavaScript -->
+                        </tbody>
+                    </table>
+
+                    <!-- Tabela para exibir os produtos adicionados -->
+                    <form id="itemCotacaoForm" method="post">
+                        {% csrf_token %}  <!-- Token CSRF para segurança -->
+                        {{ form.as_p }}   <!-- Exibe os campos do formulário -->
+                        <button type="submit" class="btn btn-primary">Adicionar à Cotação</button>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary">Adicionar à Cotação</button>
+                </div>
             </div>
         </div>
     </div>
-</div>
 
 
 <!-- Modal de Confirmação de Deleção -->
@@ -156,67 +226,19 @@
 
   <br>
     
-  <nav aria-label="Navegação de página">
-    <ul class="pagination justify-content-center">
-        {% if cotacoes.has_previous %}
-            <li class="page-item">
-                <a class="page-link" href="?page=1" aria-label="Primeiro">
-                    <span aria-hidden="true">&laquo; Primeiro</span>
-                </a>
-            </li>
-            <li class="page-item">
-                <a class="page-link" href="?page={{ cotacoes.previous_page_number }}" aria-label="Anterior">
-                    <span aria-hidden="true">&lsaquo; Anterior</span>
-                </a>
-            </li>
-        {% else %}
-            <li class="page-item disabled">
-                <span class="page-link">
-                    <span aria-hidden="true">&laquo; Primeiro</span>
-                </span>
-            </li>
-            <li class="page-item disabled">
-                <span class="page-link">
-                    <span aria-hidden="true">&lsaquo; Anterior</span>
-                </span>
-            </li>
-        {% endif %}
 
-        <li class="page-item active" aria-current="page">
-            <span class="page-link">
-                Página {{ cotacoes.number }} de {{ cotacoes.paginator.num_pages }}.
-            </span>
-        </li>
-
-        {% if cotacoes.has_next %}
-            <li class="page-item">
-                <a class="page-link" href="?page={{ cotacoes.next_page_number }}" aria-label="Próximo">
-                    <span aria-hidden="true">Próximo &rsaquo;</span>
-                </a>
-            </li>
-            <li class="page-item">
-                <a class="page-link" href="?page={{ cotacoes.paginator.num_pages }}" aria-label="Último">
-                    <span aria-hidden="true">Último &raquo;</span>
-                </a>
-            </li>
-        {% else %}
-            <li class="page-item disabled">
-                <span class="page-link">
-                    <span aria-hidden="true">Próximo &rsaquo;</span>
-                </span>
-            </li>
-            <li class="page-item disabled">
-                <span class="page-link">
-                    <span aria-hidden="true">Último &raquo;</span>
-                </span>
-            </li>
-        {% endif %}
-    </ul>
-</nav>
 {% endblock %}
 
 {% block scripts %}
+
+// Template JavaScript para linha da tabela
+<script type="text/template" id="productRowTemplate">
+    <td>{{productName}}</td>
+    <td>{{quantity}}</td>
+    <td>{{volumeType}}</td>
+</script>
 <script>
+
 
     
     $(document).ready(function() {
@@ -228,18 +250,20 @@
             loadProducts();  // Função para carregar os produtos no modal
         });
         function loadProducts() {
+            var searchQuery = $('#productSearch').val();  // Obtém o valor do campo de pesquisa
+
             $.ajax({
-                url: '{% url "cotacao:api_produtos" %}',
+                url: '{% url "cotacao:api_produtos" %}?q=' + encodeURIComponent(searchQuery),
                 type: 'GET',
                 success: function(data) {
                     var productList = $('#productList');
                     productList.empty();
                     data.forEach(function(product) {
                         var row = $('<tr></tr>');
-                        row.append($('<td></td>').text(product.name));  // Garanta que 'name' está correto
+                        row.append($('<td></td>').text(product.name));
                         row.append($('<td></td>').html('<input type="number" class="form-control" name="quantidade">'));
                         row.append($('<td></td>').html('<select class="form-control" name="tipo_volume"><option value="un">Unidade</option><option value="kg">Kg</option></select>'));
-                        row.append($('<td></td>').html('<button type="button" class="btn btn-primary">Adicionar</button>'));
+                        row.append($('<td></td>').html('<button type="button" class="btn btn-primary add-product" data-product-id="{{ product.id }}" data-cotacao-id="{{ cotacao.id }}">Adicionar</button>'));
                         productList.append(row);
                     });
                 },
@@ -248,6 +272,89 @@
                 }
             });
         }
+
+        $(document).on('click', '.add-product', function() {
+            var productId = $(this).data('product-id');
+            var cotacaoId = $(this).data('cotacao-id');
+            var quantity = $(this).closest('tr').find('input[name="quantidade"]').val();
+            var volumeType = $(this).closest('tr').find('select[name="tipo_volume"]').val();
+            var cotacaoId = $('#cotacaoId').val();  // Suponha que você tenha um campo oculto ou uma maneira de obter o ID da cotação
+
+            $.ajax({
+                url: '{% url "cotacao:add_product_to_cotacao" %}',
+                type: 'POST',
+                data: {
+                    'product_id': productId,
+                    'quantity': quantity,
+                    'volume_type': volumeType,
+                    'cotacao_id': cotacaoId,
+                    'csrfmiddlewaretoken': '{{ csrf_token }}'
+                },
+                success: function(response) {
+                    if(response.status === 'success') {
+                        alert('Produto adicionado com sucesso!');
+                        // Obtenha os dados do produto da resposta
+                        var productName = response.product_name; 
+                        var quantity = response.quantity;
+                        var volumeType = response.volume_type;
+
+                        // Utilize o template para criar uma nova linha
+                        var template = $('#productRowTemplate').html();
+                        var productRowHtml = template.replace('{{productName}}', productName)
+                                                    .replace('{{quantity}}', quantity)
+                                                    .replace('{{volumeType}}', volumeType);
+                        $('#addedProductsTable tbody').append(productRowHtml); 
+                    } else {
+                        alert('Erro ao adicionar produto: ' + response.message);
+                    }
+                },
+                error: function() {
+                    alert('Erro ao fazer a requisição.');
+                }
+            });
+        });
+
+        $('#productSearch').on('keyup', function() {
+            loadProducts();  // Chama loadProducts sempre que o texto no campo de pesquisa mudar
+        });
+
+        $(document).on('submit', '#itemCotacaoForm', function(e) {
+    e.preventDefault(); // Impede o envio padrão do formulário
+
+    var formData = $(this).serialize(); // Serializa os dados do formulário
+
+    $.ajax({
+        url: '{% url "cotacao:add_product_to_cotacao" %}', // URL da view
+        type: 'POST',
+        data: formData, // Dados do formulário
+        success: function(response) {
+            if(response.status === 'success') {
+                alert('Produto adicionado com sucesso!');
+
+                // Obtenha os dados do produto da resposta
+                var productName = response.product_name;
+                var quantity = response.quantity;
+                var volumeType = response.volume_type;
+
+                // Utilize o template para criar uma nova linha
+                var template = $('#productRowTemplate').html();
+                var productRowHtml = template.replace('{{productName}}', productName)
+                                            .replace('{{quantity}}', quantity)
+                                            .replace('{{volumeType}}', volumeType);
+                $('#addedProductsTable tbody').append(productRowHtml); 
+
+                // Limpe o formulário
+                $('#itemCotacaoForm')[0].reset();
+            } else {
+                alert('Erro ao adicionar produto: ' + response.message);
+            }
+        },
+        error: function() {
+            alert('Erro ao fazer a requisição.');
+        }
+    });
+});
+
 
         $('.delete-cotacao, .toggle-status').click(function(e) {
             e.stopPropagation(); // Impede que o evento de clique se propague para o card
@@ -301,6 +408,3 @@
     });
 </script>
 {% endblock %}
-
-    
-    

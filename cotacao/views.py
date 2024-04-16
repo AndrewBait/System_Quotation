@@ -20,14 +20,61 @@ from products.models import Product
 from django.db import IntegrityError, DatabaseError
 from django.http import JsonResponse
 from products.models import Product
+from django.db.models import Q
+from django.views.decorators.http import require_POST
+from django.urls import get_resolver
 
+
+def debug_urls(request):
+    for url in get_resolver().reverse_dict.keys():
+        print(url)
+    return HttpResponse("Check your console")
 
 
 def produtos_api(request):
-    produtos = Product.objects.all().values('id', 'name', 'sku', 'ean')
+    query = request.GET.get('q', '')  # Recebe o parâmetro de pesquisa da query string
+    produtos = Product.objects.filter(
+        Q(name__icontains=query) | Q(sku__icontains=query) | Q(ean__icontains=query)
+    ).values('id', 'name', 'sku', 'ean')[:5]  # Limita a 5 resultados
     produtos_list = list(produtos)
     return JsonResponse(produtos_list, safe=False)
 
+
+@require_POST
+def add_product_to_cotacao(request):
+    product_id = request.POST.get('product_id')
+    quantity = request.POST.get('quantity')
+    volume_type = request.POST.get('volume_type')
+    cotacao_id = request.POST.get('cotacao_id')  # Certifique-se que este ID está sendo passado corretamente
+
+    # Log para verificar se estamos recebendo todos os dados
+    print(f"Received data: product_id={product_id}, quantity={quantity}, volume_type={volume_type}, cotacao_id={cotacao_id}")
+
+    if not all([product_id, quantity, volume_type, cotacao_id]):
+        print("Missing data")
+        return JsonResponse({'status': 'error', 'message': 'Missing data'}, status=400)
+
+    try:
+        product = get_object_or_404(Product, id=product_id)
+        cotacao = get_object_or_404(Cotacao, id=cotacao_id)
+        
+        item_cotacao = ItemCotacao(product=product, quantity=quantity, volume_type=volume_type, cotacao=cotacao)
+        item_cotacao.save()
+        
+        print("Product added successfully")
+        return JsonResponse({'status': 'success', 'message': 'Produto adicionado à cotação'})
+    except Exception as e:
+        # Log do erro
+        print(f"Error: {str(e)}")
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+
+
+    print("Unexpected path in function")
+    return JsonResponse({'status': 'error', 'message': 'Unexpected error occurred'}, status=500)
+
+@require_POST
+def add_product_to_cotacao(request):
+    print("Recebido: ", request.POST)  
 
 
 class CotacaoListView(ListView):

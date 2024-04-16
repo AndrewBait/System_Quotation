@@ -2,7 +2,7 @@ from django.urls import path
 from .views import (CotacaoListView, CotacaoDetailView, CotacaoCreateView, 
                     AddItemToCotacaoView, EditItemCotacaoView, DeleteItemCotacaoView, DepartamentoCreateView, 
                     DepartamentoDeleteView, enviar_cotacao_view,CotacaoListCreateView, export_cotacoes_excel, 
-                    export_cotacoes_pdf, toggle_status_cotacao, produtos_api )
+                    export_cotacoes_pdf, toggle_status_cotacao, produtos_api, add_product_to_cotacao )
 from . import views
 
 
@@ -24,6 +24,5 @@ urlpatterns = [
     path('export/pdf/', export_cotacoes_pdf, name='export_cotacoes_pdf'),
     path('cotacao/<int:pk>/toggle_status/', toggle_status_cotacao, name='toggle_status'),
     path('api/produtos/', produtos_api, name='api_produtos'),
-
-
+    path('cotacao/add_product/', add_product_to_cotacao, name='add_product_to_cotacao'),
 ]
