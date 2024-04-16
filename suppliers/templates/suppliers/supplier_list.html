@@ -211,14 +211,14 @@
 
 <script>
 
-    document.addEventListener('DOMContentLoaded', function() {
-        const filterForm = document.getElementById('filterForm');
-        const departmentSelect = document.getElementById('departmentSelect');
+    document.addEventListener('DOMContentLoaded', function() {  
+        const filterForm = document.getElementById('filterForm');  
+        const departmentSelect = document.getElementById('departmentSelect'); 
         const categorySelect = document.getElementById('categorySelect');
         const subcategorySelect = document.getElementById('subcategorySelect');
         const statusSelect = document.querySelector('select[name="status"]');
 
-        function updateSelect(select, options) {
+        function updateSelect(select, options) { 
             select.innerHTML = '<option value="">Selecione...</option>';
             options.forEach(option => {
                 const optionElement = document.createElement('option');
@@ -229,7 +229,7 @@
         }
 
         // Carregar categorias e subcategorias iniciais (se aplicável)
-        {% if request.GET.department %}
+        {% if request.GET.department %} 
             fetch(`/products/get-categories/?department_id=${departmentSelect.value}`)
                 .then(response => response.json())
                 .then(data => {

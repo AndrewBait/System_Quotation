@@ -45,7 +45,7 @@ def clean(self):
     class Meta:
         verbose_name = _('Cotação')
         verbose_name_plural = _('Cotações')
-        ordering = ['-data_abertura'] 
+        ordering = ['data_abertura']
 
     
         # Posso adicionr aqui mais validaçoes caso for necessário

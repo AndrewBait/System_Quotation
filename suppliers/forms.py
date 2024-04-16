@@ -39,14 +39,14 @@ class SupplierForm(forms.ModelForm):
         }
         exclude = ['deleted']  # Exclui o campo 'deleted' do formulário
 
-    def clean_minimum_order_value(self):
+    def clean_minimum_order_value(self): # Método de validação do campo minimum_order_value
         minimum_order_value = self.cleaned_data.get('minimum_order_value')
         if minimum_order_value is not None:
             if minimum_order_value < 0:  # Ou qualquer outra comparação
-                raise forms.ValidationError("O valor mínimo do pedido deve ser maior ou igual a zero.")
-        return minimum_order_value
+                raise forms.ValidationError("O valor mínimo do pedido deve ser maior ou igual a zero.") # Ou qualquer outra mensagem de erro
+        return minimum_order_value # Sempre retorne o valor limpo
     
-    def clean_quality_rating(self):
+    def clean_quality_rating(self): # Método de validação do campo quality_rating
         quality_rating = self.cleaned_data.get('quality_rating')
         if quality_rating is not None:
             if not 0 <= quality_rating <= 5:
@@ -54,7 +54,7 @@ class SupplierForm(forms.ModelForm):
         return quality_rating
 
     
-class SupplierStatusFilterForm(forms.Form):
+class SupplierStatusFilterForm(forms.Form): # Formulário para filtrar fornecedores por status
     STATUS_CHOICES = [
         ('', 'Todos'),
         (True, 'Ativo'),
@@ -63,28 +63,28 @@ class SupplierStatusFilterForm(forms.Form):
     status = forms.ChoiceField(choices=STATUS_CHOICES, required=False, label='Status', widget=forms.Select(attrs={'onchange': 'this.form.submit();'}))
 
 
-class SupplierFilterForm(forms.Form):
+class SupplierFilterForm(forms.Form): # Formulário para filtrar fornecedores
     STATUS_CHOICES = [('', 'Todos'), ('True', 'Ativo'), ('False', 'Inativo')]
-    active = forms.ChoiceField(choices=STATUS_CHOICES, required=False, label='Status', widget=forms.Select(attrs={'onchange': 'this.form.submit();', 'class': 'form-select'}))
-    department = forms.ModelChoiceField(queryset=Departamento.objects.all(), required=False, label='Departamento', widget=forms.Select(attrs={'onchange': 'this.form.submit();', 'class': 'form-select'}))
-    category = forms.ModelChoiceField(queryset=Category.objects.none(), required=False, label='Categoria', widget=forms.Select(attrs={'class': 'form-select'}))
-    subcategory = forms.ModelChoiceField(queryset=Subcategory.objects.none(), required=False, label='Subcategoria', widget=forms.Select(attrs={'class': 'form-select'}))
-    brand = forms.ModelChoiceField(queryset=Brand.objects.all(), required=False, label='Marca', widget=forms.Select(attrs={'onchange': 'this.form.submit();', 'class': 'form-select'}))
+    active = forms.ChoiceField(choices=STATUS_CHOICES, required=False, label='Status', widget=forms.Select(attrs={'onchange': 'this.form.submit();', 'class': 'form-select'})) # Campo para filtrar por status
+    department = forms.ModelChoiceField(queryset=Departamento.objects.all(), required=False, label='Departamento', widget=forms.Select(attrs={'onchange': 'this.form.submit();', 'class': 'form-select'})) # Campo para filtrar por departamento
+    category = forms.ModelChoiceField(queryset=Category.objects.none(), required=False, label='Categoria', widget=forms.Select(attrs={'class': 'form-select'})) # Campo para filtrar por categoria
+    subcategory = forms.ModelChoiceField(queryset=Subcategory.objects.none(), required=False, label='Subcategoria', widget=forms.Select(attrs={'class': 'form-select'})) # Campo para filtrar por subcategoria
+    brand = forms.ModelChoiceField(queryset=Brand.objects.all(), required=False, label='Marca', widget=forms.Select(attrs={'onchange': 'this.form.submit();', 'class': 'form-select'})) # Campo para filtrar por marca
     
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        if 'department' in self.data:
+    def __init__(self, *args, **kwargs): # Método para inicializar o formulário
+        super().__init__(*args, **kwargs) # Chama o método __init__ da classe pai
+        if 'department' in self.data: # Se o campo department estiver presente nos dados do formulário
             try:
-                department_id = int(self.data.get('department'))
-                self.fields['category'].queryset = Category.objects.filter(department_id=department_id).order_by('name')
-                if 'category' in self.data:
-                    category_id = int(self.data.get('category'))
-                    self.fields['subcategory'].queryset = Subcategory.objects.filter(category_id=category_id).order_by('name')
-            except (ValueError, TypeError):
+                department_id = int(self.data.get('department')) # Obtém o ID do departamento
+                self.fields['category'].queryset = Category.objects.filter(department_id=department_id).order_by('name') # Filtra as categorias pelo departamento
+                if 'category' in self.data: # Se o campo category estiver presente nos dados do formulário
+                    category_id = int(self.data.get('category')) # Obtém o ID da categoria
+                    self.fields['subcategory'].queryset = Subcategory.objects.filter(category_id=category_id).order_by('name') # Filtra as subcategorias pela categoria
+            except (ValueError, TypeError): # Se houver erro ao converter o ID para inteiro
                 pass  # invalid input; ignore and fallback to empty City queryset
 
-class SupplierRatingsForm(forms.ModelForm):
-    class Meta:
+class SupplierRatingsForm(forms.ModelForm): # Formulário para avaliar fornecedores
+    class Meta: 
         model = Supplier
         fields = [
             'quality_rating', 'delivery_time_rating', 'price_rating',

@@ -12,10 +12,12 @@
     }
 </style>
 <div class="container mt-5">
-    <h2 class="mb-3">Filtros de Cotação</h2>
+    <h2 class="mb-3">Cotações</h2>
+    
     <form id="filter-form" method="GET" class="mb-4">
-        <div class="row g-3">
-            <div class="col-md-3">
+        
+        <div class="row g-3">           
+            <div class="col-md-3">                
                 <label for="status_filter" class="form-label">Status</label>
                 <select id="status_filter" name="status" class="form-control">
                     <option value="">Todos</option>
@@ -31,7 +33,7 @@
                 <label for="to_date" class="form-label">Até</label>
                 <input type="date" id="to_date" name="to_date" class="form-control">
             </div>
-            <div class="col-md-3">
+            {% comment %} <div class="col-md-3">
                 <label for="department_filter" class="form-label">Departamento</label>
                 <select id="department_filter" name="department" class="form-control">
                     <option value="">Todos</option>
@@ -39,12 +41,12 @@
                     <option value="{{ departamento.id }}">{{ departamento.nome }}</option>
                     {% endfor %}
                 </select>
-            </div>
+            </div> {% endcomment %}
         </div>
     </form>
 
 
-    <h2 class="mb-3">Cotações</h2>
+    
     
     <div class="row text-center mb-3">
         <div class="col-md-4">
@@ -69,7 +71,7 @@
     <div class="row row-cols-1 row-cols-md-3 g-4">  <!-- Grid com 3 colunas -->
         {% for cotacao in cotacoes %}
         <div class="col">
-            <div class="card h-100 cotacao-card" data-form-url="#"> <!-- Adicionando atributo data-form-url -->
+            <div class="card h-100 cotacao-card" data-form-url="#">
                 <div class="card-body">
                     <h5 class="card-title"><a href="#" class="text-decoration-none">{{ cotacao.nome }}</a></h5>
                     <p class="card-text">
@@ -88,8 +90,14 @@
                         {% else %}
                         <button type="button" class="btn btn-outline-success btn-sm toggle-status" data-cotacao-id="{{ cotacao.pk }}" data-toggle-url="{% url 'cotacao:toggle_status' cotacao.pk %}">Abrir Cotação</button>
                         {% endif %}
+                        <a href="{% url 'cotacao:add_products_to_cotacao' cotacao.pk %}" class="btn btn-outline-secondary btn-sm mx-1">
+                            <i class="bi bi-plus-circle"></i> Adicionar Produtos
+                        </a>
                         <a href="{% url 'cotacao:enviar_cotacao' cotacao.pk %}" class="btn btn-outline-primary btn-sm mx-1"><i class="bi bi-send"></i> Enviar Cotação</a>
                         <button type="button" class="btn btn-outline-danger btn-sm mx-1 delete-cotacao" data-cotacao-id="{{ cotacao.pk }}" data-delete-url="{% url 'cotacao:cotacao_delete' cotacao.pk %}"><i class="bi bi-trash"></i> Deletar</button>
+
+                        
+                        
                     </div>
                 </div>
             </div>
@@ -162,47 +170,7 @@
     </ul>
 </nav>
 <!-- Modal para Seleção de Produtos -->
-<div class="modal fade" id="productModal" tabindex="-1" aria-labelledby="productModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="productModalLabel">Selecionar Produtos para Cotação</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>                
-            </div>
-            <div class="modal-body">
-                <div class="input-group mb-3">
-                    <input type="text" class="form-control" id="productSearch" placeholder="Pesquisar produtos">
-                    <button class="btn btn-outline-secondary" type="button" id="button-addon2">Pesquisar</button>
-                </div>
-                <div class="modal-body">
-                    <table class="table">
-                        <thead>
-                            <tr>
-                                <th>Produto</th>
-                                <th>Quantidade</th>
-                                <th>Unidade</th>
-                                <th>Ação</th>
-                            </tr>
-                        </thead>
-                        <tbody id="productList">
-                            <!-- Produtos serão carregados aqui via JavaScript -->
-                        </tbody>
-                    </table>
 
-                    <!-- Tabela para exibir os produtos adicionados -->
-                    <form id="itemCotacaoForm" method="post">
-                        {% csrf_token %}  <!-- Token CSRF para segurança -->
-                        {{ form.as_p }}   <!-- Exibe os campos do formulário -->
-                        <button type="submit" class="btn btn-primary">Adicionar à Cotação</button>
-                    </form>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="button" class="btn btn-primary">Adicionar à Cotação</button>
-                </div>
-            </div>
-        </div>
-    </div>
 
 
 <!-- Modal de Confirmação de Deleção -->
@@ -231,8 +199,8 @@
 
 {% block scripts %}
 
-// Template JavaScript para linha da tabela
-<script type="text/template" id="productRowTemplate">
+
+<script type="text/template" id="productRowTemplate"> <!-- Template para adicionar produtos -->
     <td>{{productName}}</td>
     <td>{{quantity}}</td>
     <td>{{volumeType}}</td>
@@ -242,68 +210,75 @@
 
     
     $(document).ready(function() {
-
+        // Adiciona um evento de clique em todos os cards de cotação
         $('.cotacao-card').click(function(e) {
-            e.preventDefault();
-            // Abrir modal com produtos
+            // Verifica se o clique foi em um link ou em um botão dentro do card
+            if ($(e.target).closest('a, button').length) {
+                return; // Permite a ação padrão de links e botões
+            }
+    
+            e.preventDefault(); // Impede a ação padrão para outros elementos dentro do card
+    
+            // Lógica para abrir a modal, caso necessário
             $('#productModal').modal('show');
-            loadProducts();  // Função para carregar os produtos no modal
+            loadProducts();
         });
-        function loadProducts() {
-            var searchQuery = $('#productSearch').val();  // Obtém o valor do campo de pesquisa
+    // Função para carregar os produtos no modal
+    function loadProducts() {
+        var searchQuery = $('#productSearch').val(); // Obtém o valor do campo de pesquisa
 
-            $.ajax({
-                url: '{% url "cotacao:api_produtos" %}?q=' + encodeURIComponent(searchQuery),
-                type: 'GET',
-                success: function(data) {
-                    var productList = $('#productList');
-                    productList.empty();
-                    data.forEach(function(product) {
-                        var row = $('<tr></tr>');
-                        row.append($('<td></td>').text(product.name));
-                        row.append($('<td></td>').html('<input type="number" class="form-control" name="quantidade">'));
-                        row.append($('<td></td>').html('<select class="form-control" name="tipo_volume"><option value="un">Unidade</option><option value="kg">Kg</option></select>'));
-                        row.append($('<td></td>').html('<button type="button" class="btn btn-primary add-product" data-product-id="{{ product.id }}" data-cotacao-id="{{ cotacao.id }}">Adicionar</button>'));
-                        productList.append(row);
-                    });
-                },
-                error: function() {
-                    alert('Erro ao carregar produtos');
-                }
-            });
-        }
+        $.ajax({
+            url: '{% url "cotacao:api_produtos" %}?q=' + encodeURIComponent(searchQuery),
+            type: 'GET',
+            success: function(data) {
+                var productList = $('#productList');
+                productList.empty();
+                data.forEach(function(product) {
+                    var row = $('<tr></tr>');
+                    row.append($('<td></td>').text(product.name));
+                    row.append($('<td></td>').html('<input type="number" class="form-control" name="quantidade">'));
+                    row.append($('<td></td>').html('<select class="form-control" name="tipo_volume"><option value="un">Unidade</option><option value="kg">Kg</option></select>'));
+                    row.append($('<td></td>').html('<button type="button" class="btn btn-primary add-product" data-product-id="{{ product.id }}" data-cotacao-id="{{ cotacao.id }}">Adicionar</button>'));
+                    productList.append(row);
+                });
+            },
+            error: function() {
+                alert('Erro ao carregar produtos');
+            }
+        });
+    }
 
-        $(document).on('click', '.add-product', function() {
-            var productId = $(this).data('product-id');
-            var cotacaoId = $(this).data('cotacao-id');
-            var quantity = $(this).closest('tr').find('input[name="quantidade"]').val();
-            var volumeType = $(this).closest('tr').find('select[name="tipo_volume"]').val();
-            var cotacaoId = $('#cotacaoId').val();  // Suponha que você tenha um campo oculto ou uma maneira de obter o ID da cotação
+        $(document).on('click', '.add-product', function() { // Adiciona um evento de clique em todos os botões de adicionar produto
+            var productId = $(this).data('product-id');   // Obtém o ID do produto
+            var cotacaoId = $(this).data('cotacao-id');  // Obtém o ID da cotação
+            var quantity = $(this).closest('tr').find('input[name="quantidade"]').val();  // Obtém a quantidade do produto
+            var volumeType = $(this).closest('tr').find('select[name="tipo_volume"]').val(); // Obtém o tipo de volume do produto
+            var cotacaoId = $('#cotacaoId').val(); // Obtém o ID da cotação
 
-            $.ajax({
-                url: '{% url "cotacao:add_product_to_cotacao" %}',
+            $.ajax({ // Faz uma requisição AJAX para adicionar o produto à cotação
+                url: '{% url "cotacao:add_product_to_cotacao" %}', // URL da view
                 type: 'POST',
-                data: {
-                    'product_id': productId,
-                    'quantity': quantity,
-                    'volume_type': volumeType,
-                    'cotacao_id': cotacaoId,
-                    'csrfmiddlewaretoken': '{{ csrf_token }}'
+                data: { // Dados a serem enviados
+                    'product_id': productId,  // ID do produto
+                    'quantity': quantity, // Quantidade do produto
+                    'volume_type': volumeType, // Tipo de volume do produto
+                    'cotacao_id': cotacaoId, // ID da cotação
+                    'csrfmiddlewaretoken': '{{ csrf_token }}' // Token CSRF para segurança
                 },
-                success: function(response) {
-                    if(response.status === 'success') {
-                        alert('Produto adicionado com sucesso!');
+                success: function(response) { // Função de callback para sucesso
+                    if(response.status === 'success') { // Se a resposta for bem-sucedida
+                        alert('Produto adicionado com sucesso!'); 
                         // Obtenha os dados do produto da resposta
-                        var productName = response.product_name; 
-                        var quantity = response.quantity;
+                        var productName = response.product_name;   
+                        var quantity = response.quantity; 
                         var volumeType = response.volume_type;
 
                         // Utilize o template para criar uma nova linha
-                        var template = $('#productRowTemplate').html();
-                        var productRowHtml = template.replace('{{productName}}', productName)
-                                                    .replace('{{quantity}}', quantity)
-                                                    .replace('{{volumeType}}', volumeType);
-                        $('#addedProductsTable tbody').append(productRowHtml); 
+                        var template = $('#productRowTemplate').html();    
+                        var productRowHtml = template.replace('{{productName}}', productName)   
+                                                    .replace('{{quantity}}', quantity)  
+                                                    .replace('{{volumeType}}', volumeType);  
+                        $('#addedProductsTable tbody').append(productRowHtml);  // Adiciona a linha à tabela de produtos adicionados 
                     } else {
                         alert('Erro ao adicionar produto: ' + response.message);
                     }
@@ -358,27 +333,27 @@
 
         $('.delete-cotacao, .toggle-status').click(function(e) {
             e.stopPropagation(); // Impede que o evento de clique se propague para o card
-            e.preventDefault();
-            if ($(this).hasClass('delete-cotacao')) {
-                const deleteUrl = $(this).data('delete-url');
-                $('#deleteConfirmButton').off('click').on('click', function() {
-                    $.ajax({
+            e.preventDefault(); // Impede o comportamento padrão do link
+            if ($(this).hasClass('delete-cotacao')) { // Se o botão clicado for de deleção
+                const deleteUrl = $(this).data('delete-url'); // Obtém a URL de deleção
+                $('#deleteConfirmButton').off('click').on('click', function() { // Adiciona um evento de clique ao botão de confirmação
+                    $.ajax({  // Faz uma requisição AJAX para deletar a cotação
                         url: deleteUrl,
-                        type: 'POST',
-                        data: {'csrfmiddlewaretoken': '{{ csrf_token }}'},
-                        success: function(result) {
-                            $('#deleteModal').modal('hide');
+                        type: 'POST', 
+                        data: {'csrfmiddlewaretoken': '{{ csrf_token }}'}, // Token CSRF para segurança
+                        success: function(result) { // Função de callback para sucesso
+                            $('#deleteModal').modal('hide'); // Fecha o modal
                             location.reload();
                         }
                     });
                 });
-                $('#deleteModal').modal('show');
+                $('#deleteModal').modal('show'); // Abre o modal de confirmação
             } else {
-                const toggleUrl = $(this).data('toggle-url');
-                const btn = $(this);
-                const statusText = $(`#status-${btn.data('cotacao-id')}`); 
+                const toggleUrl = $(this).data('toggle-url'); // Obtém a URL de troca de status
+                const btn = $(this);  // Obtém o botão clicado
+                const statusText = $(`#status-${btn.data('cotacao-id')}`);   // Obtém o texto de status
                 $.ajax({
-                    url: toggleUrl,
+                    url: toggleUrl, 
                     type: 'POST',
                     data: {'csrfmiddlewaretoken': '{{ csrf_token }}'},
                     dataType: 'json',
@@ -401,9 +376,17 @@
             }
         });
     
-        $('.cotacao-card').click(function() {
-            const formUrl = $(this).data('form-url');
-            window.location.href = formUrl; 
+        $('.cotacao-card').click(function(e) {
+            // Se o elemento clicado ou um de seus pais for um link, não faça nada (permita a ação padrão)
+            if ($(e.target).closest('a').length) {
+                return;
+            }
+        
+            e.preventDefault(); // Impede outras ações, como a abertura da modal, se não for um clique em um link
+        
+            // Abre a modal e carrega produtos se o clique não foi em um link
+            $('#productModal').modal('show');
+            loadProducts();
         });
     });
 </script>

@@ -3,7 +3,7 @@ from urllib import request
 from django.contrib import messages
 from django.core.exceptions import ValidationError
 from django.shortcuts import get_object_or_404, redirect, render
-from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
+from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView, TemplateView
 from django.urls import reverse_lazy, reverse
 from django.views.generic.edit import CreateView, FormView
 from .models import Departamento, Cotacao, ItemCotacao
@@ -23,7 +23,29 @@ from products.models import Product
 from django.db.models import Q
 from django.views.decorators.http import require_POST
 from django.urls import get_resolver
+from products.models import Category, Subcategory
 
+
+class AddProductsToCotacaoView(TemplateView):  
+    template_name = 'cotacao/add_products.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        cotacao_id = self.kwargs['cotacao_id']
+        context['cotacao'] = get_object_or_404(Cotacao, pk=cotacao_id)
+        context['produtos'] = Product.objects.all()
+        context['item_cotacao_form'] = ItemCotacaoForm()
+        return context
+
+    def post(self, request, *args, **kwargs):
+        form = ItemCotacaoForm(request.POST)
+        if form.is_valid():
+            new_item = form.save(commit=False)
+            new_item.cotacao_id = self.kwargs['cotacao_id']
+            new_item.save()
+            return redirect('cotacao:add_products_to_cotacao', cotacao_id=self.kwargs['cotacao_id'])
+        else:
+            return self.render_to_response(self.get_context_data(form=form))
 
 def debug_urls(request):
     for url in get_resolver().reverse_dict.keys():
@@ -31,13 +53,48 @@ def debug_urls(request):
     return HttpResponse("Check your console")
 
 
-def produtos_api(request):
-    query = request.GET.get('q', '')  # Recebe o parâmetro de pesquisa da query string
-    produtos = Product.objects.filter(
-        Q(name__icontains=query) | Q(sku__icontains=query) | Q(ean__icontains=query)
-    ).values('id', 'name', 'sku', 'ean')[:5]  # Limita a 5 resultados
-    produtos_list = list(produtos)
-    return JsonResponse(produtos_list, safe=False)
+def produtos_api(request): 
+    q = request.GET.get('q', '')
+    departamento_id = request.GET.get('departamento_id')
+    categoria_id = request.GET.get('categoria_id')
+    subcategoria_id = request.GET.get('subcategoria_id')
+
+    produtos = Product.objects.all()
+    if q:
+        produtos = produtos.filter(
+            Q(name__icontains=q) | Q(sku__icontains=q) | Q(ean__icontains=q)
+        )
+    if departamento_id:
+        produtos = produtos.filter(departamento_id=departamento_id)
+    if categoria_id:
+        produtos = produtos.filter(categoria_id=categoria_id)
+    if subcategoria_id:
+        produtos = produtos.filter(subcategoria_id=subcategoria_id)
+
+    data = [
+        {
+            'id': p.id,
+            'nome': p.name,
+            'sku': p.sku,
+            'ean': p.ean,
+        }
+        for p in produtos
+    ]
+    return JsonResponse(data, safe=False)
+
+
+def departamentos_api(request):
+    departamentos = Departamento.objects.all().values('id', 'name')
+    return JsonResponse(list(departamentos), safe=False)
+
+def categorias_api(request):
+    categorias = Category.objects.all().values('id', 'name')
+    return JsonResponse(list(categorias), safe=False)
+
+def subcategorias_api(request, category_id):
+    subcategorias = Subcategory.objects.filter(category_id=category_id).values('id', 'name')
+    return JsonResponse(list(subcategorias), safe=False)
+
 
 
 @require_POST
@@ -82,9 +139,17 @@ class CotacaoListView(ListView):
     template_name = 'cotacao/cotacao_list.html'
     context_object_name = 'cotacoes'    
     paginate_by = 3
+    
+    def get_queryset(self):
+        # Retorna o QuerySet ordenado conforme necessário
+        return Cotacao.objects.all().order_by('data_abertura')
+    
 
     def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)        
+        context = super().get_context_data(**kwargs)   
+        cotacoes_list = self.get_queryset()
+        print("Before pagination:", cotacoes_list.query)  # Debug para ver a consulta SQL gerada
+        paginator = Paginator(cotacoes_list, self.paginate_by)     
         context['show_cotacao_tabs'] = True 
         context['departamentos'] = Departamento.objects.all()
         total_abertas = Cotacao.objects.filter(status='ativo').count()
@@ -93,7 +158,18 @@ class CotacaoListView(ListView):
         context['total_fechadas'] = total_fechadas
         context['total_cotacoes'] = total_abertas + total_fechadas
         cotacoes_list = Cotacao.objects.all()
-        paginator = Paginator(cotacoes_list, self.paginate_by)
+        paginator = Paginator(cotacoes_list, self.paginate_by, orphans=0)
+        
+        page = self.request.GET.get('page')
+        try:
+            cotacoes = paginator.page(page)
+        except PageNotAnInteger:
+            cotacoes = paginator.page(1)
+        except EmptyPage:
+            cotacoes = paginator.page(paginator.num_pages)
+
+        context['cotacoes'] = cotacoes
+        return context
         
         
         
@@ -107,6 +183,8 @@ class CotacaoListView(ListView):
 
         context['cotacoes'] = cotacoes
         return context
+    
+
 
 
 class CotacaoDetailView(DetailView):

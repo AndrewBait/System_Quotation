@@ -1,0 +1,144 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1>Adicionar Produtos à Cotação: {{ cotacao.nome }}</h1>
+    
+    <!-- Área de Pesquisa e Filtros -->
+    <div class="input-group mb-3">
+        <input type="text" id="searchField" class="form-control" placeholder="Pesquisar produtos por nome, SKU ou EAN">
+        <button class="btn btn-outline-secondary" type="button" id="button-search">Buscar</button>
+    </div>
+
+    <div class="row mb-3">
+        <div class="col-md-4">
+            <select id="departmentFilter" class="form-select">
+                <option value="">Todos os Departamentos</option>
+                {% for departamento in departamentos %}
+                <option value="{{ departamento.id }}">{{ departamento.nome }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-4">
+            <select id="categoryFilter" class="form-select">
+                <option value="">Selecione a Categoria</option>
+            </select>
+        </div>
+        <div class="col-md-4">
+            <select id="subcategoryFilter" class="form-select">
+                <option value="">Selecione a Subcategoria</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- Resultados da Pesquisa -->
+    <div id="searchResults" class="list-group mb-3"></div>
+
+    <!-- Lista de Produtos Selecionados -->
+    <h2>Produtos Selecionados</h2>
+    <form id="selectedProductsForm">
+        <ul id="selectedProducts" class="list-group mb-3"></ul>
+        <textarea class="form-control mb-3" placeholder="Adicione observações aqui..."></textarea>
+        <button type="submit" class="btn btn-success">Salvar Cotação</button>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    $(document).ready(function() {
+        $('#button-search').click(loadProducts);  // Botão dispara a busca explicitamente
+        $('#searchField').keypress(function(e) {
+            if (e.which == 13) {  // Enter key pressed
+                loadProducts();
+            }
+        });
+
+        function fetchCategories(departmentId) {
+            $.ajax({
+                url: '{% url "products:api_categorias" %}',
+                type: 'GET',
+                success: function(data) {
+                    var categorySelect = $('#categoryFilter');
+                    categorySelect.empty();
+                    categorySelect.append('<option value="">Selecione a Categoria</option>');
+                    data.forEach(function(category) {
+                        categorySelect.append(`<option value="${category.id}">${category.name}</option>`);
+                    });
+                }
+            });
+        }
+
+        function fetchSubcategories(categoryId) {
+            $.ajax({
+                url: `{% url "products:api_subcategorias" %}` + categoryId + '/',
+                type: 'GET',
+                success: function(data) {
+                    var subcategorySelect = $('#subcategoryFilter');
+                    subcategorySelect.empty();
+                    subcategorySelect.append('<option value="">Selecione a Subcategoria</option>');
+                    data.forEach(function(subcategory) {
+                        subcategorySelect.append(`<option value="${subcategory.id}">${subcategory.name}</option>`);
+                    });
+                }
+            });
+        }
+
+        $('#departmentFilter').change(function() {
+            var departmentId = $(this).val();
+            fetchCategories(departmentId);
+        });
+
+        $('#categoryFilter').change(function() {
+            var categoryId = $(this).val();
+            fetchSubcategories(categoryId);
+        });
+
+        function loadProducts() {
+            var query = $('#searchField').val();
+            var departmentId = $('#departmentFilter').val();
+            var categoryId = $('#categoryFilter').val();
+            var subcategoryId = $('#subcategoryFilter').val();
+
+            $.ajax({
+                url: '{% url "cotacao:api_produtos" %}',
+                data: {
+                    q: query,
+                    department_id: departmentId,
+                    category_id: categoryId,
+                    subcategory_id: subcategoryId
+                },
+                type: 'GET',
+                success: function(data) {
+                    var productList = $('#searchResults');
+                    productList.empty();
+                    data.forEach(function(product) {
+                        productList.append(`<div class="list-group-item">${product.name} - <button class="btn btn-primary add-product" data-product-id="${product.id}">Adicionar</button></div>`);
+                    });
+                }
+            });
+        }
+
+        $(document).on('click', '.add-product', function() {
+            var productId = $(this).data('product-id');
+            var productName = $(this).closest('.list-group-item').text().split(' - ')[0]; 
+            // ... buscar informações adicionais do produto se necessário ...
+        
+            // Adicionar item à lista de produtos selecionados
+            $('#selectedProducts').append(`
+                
+                    ${productName}
+                    
+                    
+                        Kg
+                        Un
+                        Cx
+                        
+                    
+                
+            `);
+        });
+    });
+</script>
+{% endblock %}

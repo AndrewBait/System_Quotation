@@ -16,7 +16,7 @@ def validate_cnpj(value):
         raise ValidationError("CNPJ inválido.")
     
 
-class Supplier(models.Model):
+class Supplier(models.Model): # Modelo de fornecedor
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, blank=True, null=True)
     name = models.CharField(max_length=255)
     email = models.EmailField(unique=True)
@@ -53,21 +53,19 @@ class Supplier(models.Model):
     partnership_rating = models.IntegerField(default=0, blank=True, null=True)
     comments = models.TextField("Comentários", max_length=100, blank=True, null=True)
 
-    class Meta:
-        ordering = ['name']
+    class Meta: # Meta informações do modelo
+        ordering = ['name'] # Ordem padrão de exibição dos registros
 
-    def get_departments(self):
+    def get_departments(self): # Retorna os departamentos do fornecedor
         return ", ".join([d.name for d in self.departments.all()])
     
-    def average_rating(self):
+    def average_rating(self): # Retorna a média das avaliações
         ratings = [self.quality_rating, self.delivery_time_rating, self.flexibility_rating, self.partnership_rating]
         ratings = [rating for rating in ratings if rating is not None]  # Remova valores None
         if ratings:
             return sum(ratings) / len(ratings)
         return None
 
-
-
-    def __str__(self):
+    def __str__(self): # Retorna o nome do fornecedor
         return self.name
 
