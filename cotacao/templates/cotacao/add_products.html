@@ -4,141 +4,120 @@
 {% block content %}
 <div class="container mt-4">
     <h1>Adicionar Produtos à Cotação: {{ cotacao.nome }}</h1>
-    
-    <!-- Área de Pesquisa e Filtros -->
-    <div class="input-group mb-3">
-        <input type="text" id="searchField" class="form-control" placeholder="Pesquisar produtos por nome, SKU ou EAN">
-        <button class="btn btn-outline-secondary" type="button" id="button-search">Buscar</button>
-    </div>
 
-    <div class="row mb-3">
-        <div class="col-md-4">
-            <select id="departmentFilter" class="form-select">
-                <option value="">Todos os Departamentos</option>
-                {% for departamento in departamentos %}
-                <option value="{{ departamento.id }}">{{ departamento.nome }}</option>
-                {% endfor %}
-            </select>
+    <!-- Formulário de Pesquisa e Filtros -->
+    <form method="get" class="mb-3">
+        <div class="input-group mb-3">
+            <input type="text" name="q" class="form-control" placeholder="Pesquisar produtos por nome, SKU ou EAN" value="{{ request.GET.q }}">
+            <button class="btn btn-outline-secondary" type="submit">Buscar</button>
         </div>
-        <div class="col-md-4">
-            <select id="categoryFilter" class="form-select">
-                <option value="">Selecione a Categoria</option>
-            </select>
-        </div>
-        <div class="col-md-4">
-            <select id="subcategoryFilter" class="form-select">
-                <option value="">Selecione a Subcategoria</option>
-            </select>
-        </div>
-    </div>
 
-    <!-- Resultados da Pesquisa -->
-    <div id="searchResults" class="list-group mb-3"></div>
+        <div class="row mb-3">
+            <div class="col-md-4">
+                <select name="departamento_id" class="form-select" onchange="this.form.submit()">
+                    <option value="">Todos os Departamentos</option>
+                    {% for dept in departamentos %}
+                    <option value="{{ dept.id }}" {% if dept.id == request.GET.departamento_id %}selected{% endif %}>{{ dept.nome }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-4">
+                <select name="categoria_id" class="form-select" onchange="this.form.submit()">
+                    <option value="">Selecione a Categoria</option>
+                    {% for cat in categorias %}
+                    <option value="{{ cat.id }}" {% if cat.id == request.GET.categoria_id %}selected{% endif %}>{{ cat.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-4">
+                <select name="subcategoria_id" class="form-select" onchange="this.form.submit()">
+                    <option value="">Selecione a Subcategoria</option>
+                    {% for sub in subcategorias %}
+                    <option value="{{ sub.id }}" {% if sub.id == request.GET.subcategoria_id %}selected{% endif %}>{{ sub.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+    </form>
+
+
+    <div class="list-group mb-4">
+        {% for produto in produtos %}
+        <div class="list-group-item d-flex justify-content-between align-items-center">
+            {{ produto.name }}
+            <button class="btn btn-primary add-product" data-product-id="{{ produto.id }}">Adicionar</button>
+        </div>
+        {% endfor %}
+    </div>
 
     <!-- Lista de Produtos Selecionados -->
-    <h2>Produtos Selecionados</h2>
-    <form id="selectedProductsForm">
-        <ul id="selectedProducts" class="list-group mb-3"></ul>
-        <textarea class="form-control mb-3" placeholder="Adicione observações aqui..."></textarea>
+<!-- Lista de Produtos Selecionados -->
+<div class="container mt-4">
+    <h2 class="mb-3">Produtos Selecionados</h2>
+    <form id="selectedProductsForm" method="post" action="{% url 'cotacao:add_products_to_cotacao' cotacao_id=cotacao.id %}">
+        {% csrf_token %}
+        <ul id="selectedProducts" class="list-group mb-4">
+            {% for item in itens_cotacao %}
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+                <div class="flex-grow-1 me-3">
+                    <strong>{{ item.produto.name }}</strong>
+                </div>
+                <input type="number" name="quantidade-{{ item.produto.id }}" value="{{ item.quantidade }}" class="form-control me-2" style="width: 80px;">
+                <select name="tipo_volume-{{ item.produto.id }}" class="form-select me-2" style="width: 150px;">
+                    {% for choice, name in item.get_tipo_volume_choices %}
+                    <option value="{{ choice }}" {% if choice == item.tipo_volume %}selected{% endif %}>{{ name }}</option>
+                    {% endfor %}
+                </select>
+                <button type="button" class="btn btn-danger btn-sm" onclick="removeProduct('{{ item.produto.id }}')">Remover</button>
+            </li>
+            {% endfor %}
+        </ul>
+        <div class="mb-3">
+            <textarea name="observacoes" class="form-control" placeholder="Adicione observações aqui..." rows="3"></textarea>
+        </div>
         <button type="submit" class="btn btn-success">Salvar Cotação</button>
     </form>
 </div>
-{% endblock %}
+
 
 {% block extra_js %}
 <script>
-    $(document).ready(function() {
-        $('#button-search').click(loadProducts);  // Botão dispara a busca explicitamente
-        $('#searchField').keypress(function(e) {
-            if (e.which == 13) {  // Enter key pressed
-                loadProducts();
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.add-product').forEach(button => {
+        button.addEventListener('click', function() {
+            const productId = this.getAttribute('data-product-id');
+            const productName = this.parentNode.childNodes[0].textContent.trim();
+
+            // Verifica se o produto já foi adicionado
+            if (!document.querySelector(`#product-${productId}`)) {
+                const listItem = document.createElement('li');
+                listItem.id = `product-${productId}`;
+                listItem.className = 'list-group-item';
+                listItem.innerHTML = `
+                    <strong>${productName}</strong>
+                    <input type="number" name="quantidade-${productId}" value="1" min="1" class="form-control" style="width: auto; display: inline-block; margin-left: 10px;">
+                    <select name="tipo_volume-${productId}" class="form-select" style="width: auto; display: inline-block; margin-left: 10px;">
+                        <option value="Kg">Kg</option>
+                        <option value="L">Litro</option>
+                        <option value="Un">Unidade</option>
+                        <option value="Cx">Caixa</option>
+                        <option value="Dp">Display</option>
+                    </select>
+                    <button class="btn btn-danger btn-sm" onclick="removeProduct('${productId}')">Remover</button>
+                `;
+                document.getElementById('selectedProducts').appendChild(listItem);
             }
         });
-
-        function fetchCategories(departmentId) {
-            $.ajax({
-                url: '{% url "products:api_categorias" %}',
-                type: 'GET',
-                success: function(data) {
-                    var categorySelect = $('#categoryFilter');
-                    categorySelect.empty();
-                    categorySelect.append('<option value="">Selecione a Categoria</option>');
-                    data.forEach(function(category) {
-                        categorySelect.append(`<option value="${category.id}">${category.name}</option>`);
-                    });
-                }
-            });
-        }
-
-        function fetchSubcategories(categoryId) {
-            $.ajax({
-                url: `{% url "products:api_subcategorias" %}` + categoryId + '/',
-                type: 'GET',
-                success: function(data) {
-                    var subcategorySelect = $('#subcategoryFilter');
-                    subcategorySelect.empty();
-                    subcategorySelect.append('<option value="">Selecione a Subcategoria</option>');
-                    data.forEach(function(subcategory) {
-                        subcategorySelect.append(`<option value="${subcategory.id}">${subcategory.name}</option>`);
-                    });
-                }
-            });
-        }
-
-        $('#departmentFilter').change(function() {
-            var departmentId = $(this).val();
-            fetchCategories(departmentId);
-        });
-
-        $('#categoryFilter').change(function() {
-            var categoryId = $(this).val();
-            fetchSubcategories(categoryId);
-        });
-
-        function loadProducts() {
-            var query = $('#searchField').val();
-            var departmentId = $('#departmentFilter').val();
-            var categoryId = $('#categoryFilter').val();
-            var subcategoryId = $('#subcategoryFilter').val();
-
-            $.ajax({
-                url: '{% url "cotacao:api_produtos" %}',
-                data: {
-                    q: query,
-                    department_id: departmentId,
-                    category_id: categoryId,
-                    subcategory_id: subcategoryId
-                },
-                type: 'GET',
-                success: function(data) {
-                    var productList = $('#searchResults');
-                    productList.empty();
-                    data.forEach(function(product) {
-                        productList.append(`<div class="list-group-item">${product.name} - <button class="btn btn-primary add-product" data-product-id="${product.id}">Adicionar</button></div>`);
-                    });
-                }
-            });
-        }
-
-        $(document).on('click', '.add-product', function() {
-            var productId = $(this).data('product-id');
-            var productName = $(this).closest('.list-group-item').text().split(' - ')[0]; 
-            // ... buscar informações adicionais do produto se necessário ...
-        
-            // Adicionar item à lista de produtos selecionados
-            $('#selectedProducts').append(`
-                
-                    ${productName}
-                    
-                    
-                        Kg
-                        Un
-                        Cx
-                        
-                    
-                
-            `);
-        });
     });
+
+    window.removeProduct = function(productId) {
+        const item = document.getElementById(`product-${productId}`);
+        if (item) {
+            item.parentNode.removeChild(item);
+        }
+    };
+});
 </script>
+{% endblock %}
+
 {% endblock %}

@@ -31,14 +31,14 @@ class Cotacao(models.Model):
     def __str__(self):
         return f"{self.nome} ({self.departamento.nome})"
     
-def clean(self):
-    data_inicio = self.data_abertura
-    data_fim = self.data_fechamento
+    def clean(self):
+        data_inicio = self.data_abertura
+        data_fim = self.data_fechamento
 
-    # Verifique se alguma das datas é None antes de comparar
-    if data_inicio is not None and data_fim is not None:
-        if data_inicio > data_fim:
-            raise ValidationError("A data de abertura não pode ser posterior à data de fechamento.")
+        # Verifique se alguma das datas é None antes de comparar
+        if data_inicio is not None and data_fim is not None:
+            if data_inicio > data_fim:
+                raise ValidationError("A data de abertura não pode ser posterior à data de fechamento.")
         
 
 
@@ -51,8 +51,8 @@ def clean(self):
         # Posso adicionr aqui mais validaçoes caso for necessário
 
     def save(self, *args, **kwargs):
-        self.full_clean() 
-        super().save(*args, **kwargs)
+        self.full_clean()
+        super().save(*args, **kwargs) 
 
 class ItemCotacao(models.Model):
 

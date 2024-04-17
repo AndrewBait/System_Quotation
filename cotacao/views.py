@@ -16,26 +16,82 @@ from django.http import HttpResponse
 from reportlab.pdfgen import canvas
 from django.http import JsonResponse
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
-from products.models import Product
 from django.db import IntegrityError, DatabaseError
-from django.http import JsonResponse
-from products.models import Product
 from django.db.models import Q
 from django.views.decorators.http import require_POST
 from django.urls import get_resolver
-from products.models import Category, Subcategory
+from products.models import Product, Category, Subcategory
 
 
-class AddProductsToCotacaoView(TemplateView):  
+
+
+
+class AddProductsToCotacaoView(TemplateView):
     template_name = 'cotacao/add_products.html'
+    initial_limit = 3
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         cotacao_id = self.kwargs['cotacao_id']
-        context['cotacao'] = get_object_or_404(Cotacao, pk=cotacao_id)
-        context['produtos'] = Product.objects.all()
+        cotacao = get_object_or_404(Cotacao, pk=cotacao_id)
+        context['cotacao'] = cotacao
         context['item_cotacao_form'] = ItemCotacaoForm()
+        context['itens_cotacao'] = cotacao.itens_cotacao.all()
+
+        # Filtros
+        query = self.request.GET.get('q', '')
+        departamento_id = self.request.GET.get('departamento_id')
+        categoria_id = self.request.GET.get('categoria_id')
+        subcategoria_id = self.request.GET.get('subcategoria_id')
+
+        produtos = Product.objects.all()
+        if query or departamento_id or categoria_id or subcategoria_id:
+            if query:
+                produtos = produtos.filter(name__icontains=query)
+            if departamento_id:
+                produtos = produtos.filter(department_id=departamento_id)
+            if categoria_id:
+                produtos = produtos.filter(category_id=categoria_id)
+            if subcategoria_id:
+                produtos = produtos.filter(subcategory_id=subcategoria_id)
+        else:
+            produtos = produtos[:self.initial_limit]  # Aplique o limite inicial
+
+
+        context['produtos'] = produtos
+        context['departamentos'] = Departamento.objects.all()
+        context['categorias'] = Category.objects.filter(department_id=departamento_id) if departamento_id else Category.objects.none()
+        context['subcategorias'] = Subcategory.objects.filter(category_id=categoria_id) if categoria_id else Subcategory.objects.none()
         return context
+
+
+    def post(self, request, *args, **kwargs):
+        cotacao_id = self.kwargs['cotacao_id']
+        cotacao = get_object_or_404(Cotacao, pk=cotacao_id)
+        observacoes = request.POST.get('observacoes', '')
+
+        # Atualiza a cotação com as observações
+        cotacao.observacoes = observacoes
+        cotacao.save()
+
+        # Processar cada produto adicionado
+        produtos_ids = [key.split('-')[1] for key in request.POST if key.startswith('quantidade-')]
+        for product_id in produtos_ids:
+            quantity = request.POST.get(f'quantidade-{product_id}')
+            volume_type = request.POST.get(f'tipo_volume-{product_id}')
+            
+            if quantity and volume_type:
+                quantity = int(quantity)  # Certificar de converter para int
+                product = get_object_or_404(Product, pk=product_id)
+                ItemCotacao.objects.update_or_create(
+                    cotacao=cotacao,
+                    produto=product,
+                    defaults={'quantidade': quantity, 'tipo_volume': volume_type}
+                )
+
+        # Redirecionar para a visualização detalhada da cotação com os novos itens adicionados
+        return redirect('cotacao:cotacao_detail', pk=cotacao_id)
+
 
     def post(self, request, *args, **kwargs):
         form = ItemCotacaoForm(request.POST)
@@ -55,7 +111,7 @@ def debug_urls(request):
 
 def produtos_api(request): 
     q = request.GET.get('q', '')
-    departamento_id = request.GET.get('departamento_id')
+    departamento_id = request.GET.get('departamento_id') 
     categoria_id = request.GET.get('categoria_id')
     subcategoria_id = request.GET.get('subcategoria_id')
 
@@ -138,7 +194,7 @@ class CotacaoListView(ListView):
     model = Cotacao
     template_name = 'cotacao/cotacao_list.html'
     context_object_name = 'cotacoes'    
-    paginate_by = 3
+    paginate_by = 6
     
     def get_queryset(self):
         # Retorna o QuerySet ordenado conforme necessário
