@@ -41,15 +41,23 @@
     </form>
 
 
-    <div class="list-group mb-4">
-        {% for produto in produtos %}
-        <div class="list-group-item d-flex justify-content-between align-items-center">
-            {{ produto.name }}
-            <button class="btn btn-primary add-product" data-product-id="{{ produto.id }}">Adicionar</button>
-        </div>
-        {% endfor %}
-    </div>
-
+    <form id="addProductsForm" method="post" action="{% url 'cotacao:add_products_to_cotacao' cotacao_id=cotacao.id %}">
+        {% csrf_token %}
+        <ul id="productList" class="list-group mb-4">
+            {% for produto in produtos %}
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+                <span>{{ produto.name }}</span>
+                <input type="number" name="quantidade-{{ produto.id }}" value="1" min="1" class="form-control me-2" style="width: 80px;">
+                <select name="tipo_volume-{{ produto.id }}" class="form-select me-2" style="width: 150px;">
+                    {% for code, name in tipo_volume_choices %}
+                        <option value="{{ code }}">{{ name }}</option>
+                    {% endfor %}
+                </select>
+                <button type="button" class="btn btn-primary add-product" data-product-id="{{ produto.id }}">Adicionar</button>
+            </li>
+            {% endfor %}
+        </ul>
+    </form>
     <!-- Lista de Produtos Selecionados -->
 <!-- Lista de Produtos Selecionados -->
 <div class="container mt-4">
@@ -86,7 +94,26 @@ document.addEventListener('DOMContentLoaded', function() {
     document.querySelectorAll('.add-product').forEach(button => {
         button.addEventListener('click', function() {
             const productId = this.getAttribute('data-product-id');
-            const productName = this.parentNode.childNodes[0].textContent.trim();
+            const li = this.parentNode;
+            const quantity = li.querySelector(`input[name="quantidade-${productId}"]`).value;
+            const volumeType = li.querySelector(`select[name="tipo_volume-${productId}"]`).value;
+
+            const selectedList = document.getElementById('selectedProducts');
+            const newLi = document.createElement('li');
+            newLi.className = 'list-group-item d-flex justify-content-between align-items-center';
+            newLi.innerHTML = `
+                <div class="flex-grow-1 me-3">
+                    <strong>${li.querySelector('span').textContent}</strong>
+                </div>
+                <input type="number" name="quantidade-${productId}" value="${quantity}" class="form-control me-2" style="width: 80px;">
+                <select name="tipo_volume-${productId}" class="form-select me-2" style="width: 150px;">` +
+                    Array.from(li.querySelector(`select[name="tipo_volume-${productId}"]`).options).map(option => `<option value="${option.value}" ${option.value === volumeType ? 'selected' : ''}>${option.text}</option>`).join('') +
+                `</select>
+                <button type="button" class="btn btn-danger btn-sm" onclick="this.parentNode.remove()">Remover</button>`;
+            selectedList.appendChild(newLi);
+            this.disabled = true; // Opcional: desabilita o botão após adicionar
+        });
+    });
 
             if (!document.querySelector(`#product-${productId}`)) {
                 const listItem = document.createElement('li');

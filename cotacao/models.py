@@ -9,84 +9,74 @@ from products.models import Departamento
 class Cotacao(models.Model):
     uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
     nome = models.CharField(max_length=200)
-    departamento = models.ForeignKey(Departamento, on_delete=models.SET_NULL, null=True, related_name='cotacoes')
+    departamento = models.ForeignKey(Departamento, on_delete=models.SET_NULL, null=True )
     data_abertura = models.DateField()
     data_fechamento = models.DateField()    
     status = models.CharField(max_length=10, default='ativo', choices=[('ativo', 'Ativo'), ('inativo', 'Inativo')])
-    prazo_aviso = models.IntegerField(
+    prazo = models.IntegerField(
                                         choices=[(0, 'à vista'), (7, '7 dias'), (14, '14 dias'), (21, '21 dias'), (28, '28 dias')],
                                         default=21,
                                         help_text='Prazo para os produtos'
                                     )
     
     def clean(self):
-        # Garanta que data_abertura e data_fechamento não sejam None
-        if self.data_abertura is None or self.data_fechamento is None:
-            raise ValidationError("As datas de abertura e fechamento não podem ser nulas.") 
-
-        # Verifica se a data de fechamento é anterior à data de abertura
+        super().clean()
+        if self.status == 'inativo' and not self._state.adding:
+            raise ValidationError("Não é possível editar uma cotação inativa.")
         if self.data_abertura > self.data_fechamento:
-            raise ValidationError("A data de fechamento não pode ser anterior à data de abertura.")
+            raise ValidationError(_("A data de fechamento não pode ser anterior à data de abertura."))
+        if self.status not in ['ativo', 'inativo']:
+            raise ValidationError(_("Status inválido. Escolha entre 'ativo' e 'inativo'."))
 
     def __str__(self):
-        return f"{self.nome} ({self.departamento.nome})"
-    
-    def clean(self):
-        data_inicio = self.data_abertura
-        data_fim = self.data_fechamento
-
-        # Verifique se alguma das datas é None antes de comparar
-        if data_inicio is not None and data_fim is not None:
-            if data_inicio > data_fim:
-                raise ValidationError("A data de abertura não pode ser posterior à data de fechamento.")
-        
+        return f"{self.nome} ({self.departamento.nome})"       
 
 
     class Meta:
         verbose_name = _('Cotação')
         verbose_name_plural = _('Cotações')
         ordering = ['data_abertura']
-
-    
-        # Posso adicionr aqui mais validaçoes caso for necessário
-
-    def save(self, *args, **kwargs):
-        self.full_clean()
-        super().save(*args, **kwargs) 
+        indexes = [
+            models.Index(fields=['departamento']),
+            models.Index(fields=['status']),
+            models.Index(fields=['data_abertura']),
+        ]
+        
 
 class ItemCotacao(models.Model):
+    
+    cotacao = models.ForeignKey(Cotacao, on_delete=models.CASCADE, related_name='itens_cotacao', verbose_name='Cotação', help_text='Cotação à qual o item pertence')
+    produto = models.ForeignKey('products.Product', on_delete=models.CASCADE, verbose_name='Produto', help_text='Produto da cotação', related_name='itens_cotacao', blank=False, null=False)
+    quantidade = models.PositiveIntegerField(default=1, verbose_name='Quantidade', help_text='Quantidade do produto', blank=False, null=False)
+    tipo_volume = models.CharField(max_length=2, choices=[('Kg', 'Quilo'), ('L', 'Litro'), ('Dp', 'Display'), ('Un', 'Unidade'), ('Cx', 'Caixa'), ('Fd', 'Fardo'), ('Bd', 'Bandeija'), ('Pc', 'Pacote'), ('Sc', 'Sache'), ('Tp', 'Take Profit'),], default='un', verbose_name='Tipo de Volume', help_text='Tipo de volume do produto', blank=False, null=False)
+    observacao = models.TextField(blank=True, null=True, default='', verbose_name='Observação', help_text='Observações sobre o item', max_length=100)
 
-    TIPO_VOLUME_CHOICES = (
-        ('Kg', 'Quilo'),
-        ('L', 'Litro'),
-        ('Dp', 'Display'),
-        ('Un', 'Unidade'),
-        ('Cx', 'Caixa'),
-        ('Fd', 'Fardo'),
-        ('Bd', 'Bandeija'),
-        ('Pc', 'Pacote'),
-        ('Sc', 'Sache'),
-        ('Tp', 'Take Profit'),
-    )
-
-    cotacao = models.ForeignKey(Cotacao, on_delete=models.CASCADE, related_name='itens_cotacao')
-    produto = models.ForeignKey('products.Product', on_delete=models.CASCADE)
-    quantidade = models.PositiveIntegerField(default=1)
-    tipo_volume = models.CharField(max_length=2, choices=TIPO_VOLUME_CHOICES, default='un')
 
     def __str__(self):
-        return f"{self.quantidade}x {self.produto.name} [{self.get_tipo_volume_display()}]"
+        return f"{self.quantidade}x {self.produto.name} [{self.get_tipo_volume_display()}] na cotação {self.cotacao.nome} ({self.cotacao.departamento.nome}) "
 
     class Meta:
         verbose_name = _('Item de Cotação')
         verbose_name_plural = _('Itens de Cotação')
         ordering = ['produto__name']
-        unique_together = ('cotacao', 'produto', 'tipo_volume') 
+        unique_together = ('cotacao', 'produto', 'tipo_volume', 'observacao', 'quantidade')
+        indexes = [
+            models.Index(fields=['produto']),
+            models.Index(fields=['cotacao']),
+        ]
 
     def clean(self):
-  
+        super().clean()
         if self.quantidade <= 0:
             raise ValidationError(_('A quantidade deve ser maior que zero.'))
+        
+        # Verifica se o produto já foi adicionado à mesma cotação
+        exists = ItemCotacao.objects.filter(
+            cotacao=self.cotacao,
+            produto=self.produto
+        ).exclude(pk=self.pk).exists()
+        if exists:
+            raise ValidationError(_('Este produto já foi adicionado à cotação.'))
 
     def save(self, *args, **kwargs):
         self.full_clean()  
