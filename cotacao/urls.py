@@ -29,4 +29,5 @@ urlpatterns = [
     path('<int:cotacao_id>/add_products/', views.AddProductsToCotacaoView.as_view(), name='add_products_to_cotacao'),
     path('api/categorias/', categorias_api, name='api_categorias'),
     path('api/subcategorias/<int:category_id>/', subcategorias_api, name='api_subcategorias'),
+    
 ]

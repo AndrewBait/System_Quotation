@@ -1,18 +1,47 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="container">
+<div class="container mt-4">
     <h2>Enviar Cotação: {{ cotacao.nome }}</h2>
+    <form method="get" class="mb-4">
+        <div class="row g-3">
+            <div class="col-md-3">
+                <label for="departamentoFilter" class="form-label">Departamento:</label>
+                <select id="departamentoFilter" name="departamento_id" class="form-select" onchange="this.form.submit()">
+                    <option value="">Todos</option>
+                    {% for departamento in departamentos %}
+                        <option value="{{ departamento.id }}" {% if request.GET.departamento_id == departamento.id|stringformat:"s" %}selected{% endif %}>
+                            {{ departamento.name }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label for="categoriaFilter" class="form-label">Categoria:</label>
+                <select id="categoriaFilter" name="categoria_id" class="form-select" onchange="this.form.submit()">
+                    <option value="">Todas</option>
+                    {% for categoria in categorias %}
+                        <option value="{{ categoria.id }}" {% if request.GET.categoria_id == categoria.id|stringformat:"s" %}selected{% endif %}>
+                            {{ categoria.name }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <!-- Repita para subcategorias, marcas e linhas de indústria conforme necessário -->
+        </div>
+    </form>
     <form method="post">
         {% csrf_token %}
-        {% for fornecedor in fornecedores %}
-            <div class="form-check">
-                <input class="form-check-input" type="checkbox" name="fornecedores" value="{{ fornecedor.id }}" id="fornecedor{{ forloop.counter }}">
-                <label class="form-check-label" for="fornecedor{{ forloop.counter }}">
-                    {{ fornecedor.name }}
-                </label>
-            </div>
-        {% endfor %}
+        <div class="mb-3">
+            {% for fornecedor in fornecedores %}
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" name="fornecedores" value="{{ fornecedor.id }}" id="fornecedor{{ forloop.counter }}">
+                    <label class="form-check-label" for="fornecedor{{ forloop.counter }}">
+                        {{ fornecedor.name }}
+                    </label>
+                </div>
+            {% endfor %}
+        </div>
         <button type="submit" class="btn btn-primary">Enviar para Selecionados</button>
     </form>
 </div>

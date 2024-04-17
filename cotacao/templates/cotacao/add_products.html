@@ -64,8 +64,8 @@
                 </div>
                 <input type="number" name="quantidade-{{ item.produto.id }}" value="{{ item.quantidade }}" class="form-control me-2" style="width: 80px;">
                 <select name="tipo_volume-{{ item.produto.id }}" class="form-select me-2" style="width: 150px;">
-                    {% for choice, name in item.get_tipo_volume_choices %}
-                    <option value="{{ choice }}" {% if choice == item.tipo_volume %}selected{% endif %}>{{ name }}</option>
+                    {% for code, name in item_cotacao_form.fields.tipo_volume.choices %}
+                        <option value="{{ code }}" {% if code == item.tipo_volume %}selected{% endif %}>{{ name }}</option>
                     {% endfor %}
                 </select>
                 <button type="button" class="btn btn-danger btn-sm" onclick="removeProduct('{{ item.produto.id }}')">Remover</button>
@@ -88,35 +88,48 @@ document.addEventListener('DOMContentLoaded', function() {
             const productId = this.getAttribute('data-product-id');
             const productName = this.parentNode.childNodes[0].textContent.trim();
 
-            // Verifica se o produto já foi adicionado
             if (!document.querySelector(`#product-${productId}`)) {
                 const listItem = document.createElement('li');
                 listItem.id = `product-${productId}`;
-                listItem.className = 'list-group-item';
-                listItem.innerHTML = `
-                    <strong>${productName}</strong>
-                    <input type="number" name="quantidade-${productId}" value="1" min="1" class="form-control" style="width: auto; display: inline-block; margin-left: 10px;">
-                    <select name="tipo_volume-${productId}" class="form-select" style="width: auto; display: inline-block; margin-left: 10px;">
-                        <option value="Kg">Kg</option>
-                        <option value="L">Litro</option>
-                        <option value="Un">Unidade</option>
-                        <option value="Cx">Caixa</option>
-                        <option value="Dp">Display</option>
-                    </select>
-                    <button class="btn btn-danger btn-sm" onclick="removeProduct('${productId}')">Remover</button>
-                `;
+                listItem.className = 'list-group-item d-flex justify-content-between align-items-center';
+
+                const productNameDiv = document.createElement('div');
+                productNameDiv.className = 'flex-grow-1 me-3';
+                productNameDiv.textContent = productName;
+                listItem.appendChild(productNameDiv);
+
+                const inputQuantity = document.createElement('input');
+                inputQuantity.type = 'number';
+                inputQuantity.name = `quantidade-${productId}`;
+                inputQuantity.value = '1';
+                inputQuantity.min = '1';
+                inputQuantity.className = 'form-control me-2';
+                inputQuantity.style.width = '80px';
+                listItem.appendChild(inputQuantity);
+
+                const selectTipoVolume = document.createElement('select');
+                selectTipoVolume.name = `tipo_volume-${productId}`;
+                selectTipoVolume.className = 'form-select me-2';
+                selectTipoVolume.style.width = '150px';
+                tipoVolumeChoices.forEach(function(choice) {
+                    let option = new Option(choice.name, choice.code);
+                    selectTipoVolume.options.add(option);
+                });
+                listItem.appendChild(selectTipoVolume);
+
+                const buttonRemove = document.createElement('button');
+                buttonRemove.type = 'button';
+                buttonRemove.className = 'btn btn-danger btn-sm';
+                buttonRemove.textContent = 'Remover';
+                buttonRemove.onclick = function() { listItem.remove(); };
+                listItem.appendChild(buttonRemove);
+
                 document.getElementById('selectedProducts').appendChild(listItem);
             }
         });
     });
-
-    window.removeProduct = function(productId) {
-        const item = document.getElementById(`product-${productId}`);
-        if (item) {
-            item.parentNode.removeChild(item);
-        }
-    };
 });
+
 </script>
 {% endblock %}
 

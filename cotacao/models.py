@@ -14,7 +14,7 @@ class Cotacao(models.Model):
     data_fechamento = models.DateField()    
     status = models.CharField(max_length=10, default='ativo', choices=[('ativo', 'Ativo'), ('inativo', 'Inativo')])
     prazo_aviso = models.IntegerField(
-                                        choices=[(7, '7 dias'), (14, '14 dias'), (21, '21 dias'), (28, '28 dias')],
+                                        choices=[(0, 'à vista'), (7, '7 dias'), (14, '14 dias'), (21, '21 dias'), (28, '28 dias')],
                                         default=21,
                                         help_text='Prazo para os produtos'
                                     )
@@ -22,7 +22,7 @@ class Cotacao(models.Model):
     def clean(self):
         # Garanta que data_abertura e data_fechamento não sejam None
         if self.data_abertura is None or self.data_fechamento is None:
-            raise ValidationError("As datas de abertura e fechamento não podem ser nulas.")
+            raise ValidationError("As datas de abertura e fechamento não podem ser nulas.") 
 
         # Verifica se a data de fechamento é anterior à data de abertura
         if self.data_abertura > self.data_fechamento:

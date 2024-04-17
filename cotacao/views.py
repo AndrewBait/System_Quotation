@@ -26,28 +26,37 @@ from products.models import Product, Category, Subcategory
 
 
 
+
+
 class AddProductsToCotacaoView(TemplateView):
     template_name = 'cotacao/add_products.html'
-    initial_limit = 3
+    initial_limit = 0
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        cotacao_id = self.kwargs['cotacao_id']
+    def get_context_data(self, **kwargs):  
+        context = super().get_context_data(**kwargs) 
+        cotacao_id = self.kwargs['cotacao_id'] 
         cotacao = get_object_or_404(Cotacao, pk=cotacao_id)
         context['cotacao'] = cotacao
-        context['item_cotacao_form'] = ItemCotacaoForm()
-        context['itens_cotacao'] = cotacao.itens_cotacao.all()
+        context['item_cotacao_form'] = ItemCotacaoForm() 
+        context['itens_cotacao'] = cotacao.itens_cotacao.all() 
+        
 
         # Filtros
-        query = self.request.GET.get('q', '')
-        departamento_id = self.request.GET.get('departamento_id')
-        categoria_id = self.request.GET.get('categoria_id')
+        # Busca por nome, SKU ou EAN
+        query = self.request.GET.get('q', '').strip().lower()
+        departamento_id = self.request.GET.get('departamento_id')   
+        categoria_id = self.request.GET.get('categoria_id')  
         subcategoria_id = self.request.GET.get('subcategoria_id')
 
         produtos = Product.objects.all()
         if query or departamento_id or categoria_id or subcategoria_id:
             if query:
-                produtos = produtos.filter(name__icontains=query)
+                # Usando __icontains para buscar insensível a maiúsculas/minúsculas após a limpeza
+                produtos = produtos.filter(
+                    Q(name__icontains=query) | 
+                    Q(sku__icontains=query) | 
+                    Q(ean__icontains=query)
+                )
             if departamento_id:
                 produtos = produtos.filter(department_id=departamento_id)
             if categoria_id:
@@ -63,45 +72,45 @@ class AddProductsToCotacaoView(TemplateView):
         context['categorias'] = Category.objects.filter(department_id=departamento_id) if departamento_id else Category.objects.none()
         context['subcategorias'] = Subcategory.objects.filter(category_id=categoria_id) if categoria_id else Subcategory.objects.none()
         return context
+    
+    
 
 
     def post(self, request, *args, **kwargs):
-        cotacao_id = self.kwargs['cotacao_id']
-        cotacao = get_object_or_404(Cotacao, pk=cotacao_id)
-        observacoes = request.POST.get('observacoes', '')
+        if "algum_identificador" in request.POST:
+            # Lógica para lidar com a primeira situação
+            cotacao_id = self.kwargs['cotacao_id']
+            cotacao = get_object_or_404(Cotacao, pk=cotacao_id)
+            observacoes = request.POST.get('observacoes', '')
+            cotacao.observacoes = observacoes
+            cotacao.save()
 
-        # Atualiza a cotação com as observações
-        cotacao.observacoes = observacoes
-        cotacao.save()
+            for key, value in request.POST.items():
+                if key.startswith('quantidade-'):
+                    product_id = key.split('-')[1]
+                    quantity = int(value)
+                    volume_type = request.POST.get(f'tipo_volume-{product_id}', '')
 
-        # Processar cada produto adicionado
-        produtos_ids = [key.split('-')[1] for key in request.POST if key.startswith('quantidade-')]
-        for product_id in produtos_ids:
-            quantity = request.POST.get(f'quantidade-{product_id}')
-            volume_type = request.POST.get(f'tipo_volume-{product_id}')
-            
-            if quantity and volume_type:
-                quantity = int(quantity)  # Certificar de converter para int
-                product = get_object_or_404(Product, pk=product_id)
-                ItemCotacao.objects.update_or_create(
-                    cotacao=cotacao,
-                    produto=product,
-                    defaults={'quantidade': quantity, 'tipo_volume': volume_type}
-                )
+                    if quantity and volume_type:
+                        product = get_object_or_404(Product, pk=product_id)
+                        ItemCotacao.objects.update_or_create(
+                            cotacao=cotacao,
+                            produto=product,
+                            defaults={'quantidade': quantity, 'tipo_volume': volume_type}
+                        )
 
-        # Redirecionar para a visualização detalhada da cotação com os novos itens adicionados
-        return redirect('cotacao:cotacao_detail', pk=cotacao_id)
+            return redirect('cotacao:cotacao_detail', pk=cotacao_id)
 
-
-    def post(self, request, *args, **kwargs):
-        form = ItemCotacaoForm(request.POST)
-        if form.is_valid():
-            new_item = form.save(commit=False)
-            new_item.cotacao_id = self.kwargs['cotacao_id']
-            new_item.save()
-            return redirect('cotacao:add_products_to_cotacao', cotacao_id=self.kwargs['cotacao_id'])
         else:
-            return self.render_to_response(self.get_context_data(form=form))
+            # Lógica para lidar com a segunda situação
+            form = ItemCotacaoForm(request.POST)
+            if form.is_valid():
+                new_item = form.save(commit=False)
+                new_item.cotacao_id = self.kwargs['cotacao_id']
+                new_item.save()
+                return redirect('cotacao:add_products_to_cotacao', cotacao_id=self.kwargs['cotacao_id'])
+            else:
+                return self.render_to_response(self.get_context_data(form=form))
 
 def debug_urls(request):
     for url in get_resolver().reverse_dict.keys():
@@ -182,8 +191,8 @@ def add_product_to_cotacao(request):
         return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
 
 
-    print("Unexpected path in function")
-    return JsonResponse({'status': 'error', 'message': 'Unexpected error occurred'}, status=500)
+        print("Unexpected path in function")
+        return JsonResponse({'status': 'error', 'message': 'Unexpected error occurred'}, status=500)
 
 @require_POST
 def add_product_to_cotacao(request):
