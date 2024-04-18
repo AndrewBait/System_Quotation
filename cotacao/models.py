@@ -4,8 +4,6 @@ from django.utils.translation import gettext_lazy as _
 import uuid
 from products.models import Departamento
 
-
-
 class Cotacao(models.Model):
     uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
     nome = models.CharField(max_length=200)
@@ -14,9 +12,9 @@ class Cotacao(models.Model):
     data_fechamento = models.DateField()    
     status = models.CharField(max_length=10, default='ativo', choices=[('ativo', 'Ativo'), ('inativo', 'Inativo')])
     prazo = models.IntegerField(
-                                        choices=[(0, 'à vista'), (7, '7 dias'), (14, '14 dias'), (21, '21 dias'), (28, '28 dias')],
-                                        default=21,
-                                        help_text='Prazo para os produtos'
+                                    choices=[(0, 'à vista'), (7, '7 dias'), (14, '14 dias'), (21, '21 dias'), (28, '28 dias')],
+                                    default=21,
+                                    help_text='Prazo para os produtos'
                                     )
     
     def clean(self):

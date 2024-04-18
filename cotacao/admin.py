@@ -1,7 +1,7 @@
 from django.contrib import admin
 from .models import Departamento, Cotacao, ItemCotacao
 from django.http import HttpResponse
-from products.models import Product 
+from products.models import Product, Departamento
 from .forms import ItemCotacaoForm
 import csv
 
@@ -14,8 +14,7 @@ class ItemCotacaoInline(admin.TabularInline):
 
 class ProductAdmin(admin.ModelAdmin):
     list_display = ['name', 'sku', 'ean']
-    search_fields = ['name', 'sku', 'ean']
-    
+    search_fields = ['name', 'sku', 'ean']    
 
 
 
@@ -24,6 +23,7 @@ class DepartamentoAdmin(admin.ModelAdmin):
     list_display = ['nome']
     search_fields = ['nome']
     
+
 def mudar_status_para_inativo(modeladmin, request, queryset):
     queryset.update(status='inativo')
 mudar_status_para_inativo.short_description = "Marcar selecionados como inativo"

@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container">
+    <ul class="nav nav-tabs" id="myTab" role="tablist">
+        <li class="nav-item">
+            <button class="nav-link active" id="home-tab" data-bs-toggle="tab" data-bs-target="#home" type="button" role="tab" aria-controls="home" aria-selected="true">Criação e Lista</button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link" id="profile-tab" data-bs-toggle="tab" data-bs-target="#profile" type="button" role="tab" aria-controls="profile" aria-selected="false">Respostas</button>
+        </li>
+    </ul>
+
+    
+    <div class="tab-content" id="myTabContent">
+        <div class="tab-pane fade show active" id="home" role="tabpanel" aria-labelledby="home-tab">
+            <h1>Criação de Cotações</h1>
+            <form method="post">
+                {% csrf_token %}
+                {{ form.as_p }}
+                <button type="submit" class="btn btn-primary">Criar Cotação</button>
+            </form>
+
+            {% for cotacao in cotacoes %}
+            <div class="row mt-2">
+                <div class="col-md-8">
+                    {{ cotacao.nome }} - {{ cotacao.departamento.nome }}
+                </div>
+                <div class="col-md-4">
+                    <!-- Botão que aciona a modal com AJAX load -->
+                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addProductModal-{{ cotacao.id }}" onclick="loadItensCotacao({{ cotacao.id }})">
+                        Adicionar Produtos
+                    </button>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        <div class="tab-pane fade" id="profile" role="tabpanel" aria-labelledby="profile-tab">
+            <!-- Conteúdo da segunda aba aqui -->
+        </div>
+    </div>
+
+    <!-- Modais para cada cotação -->
+    {% for cotacao in cotacoes %}
+    <div class="modal fade" id="addProductModal-{{ cotacao.id }}" tabindex="-1" aria-labelledby="addProductModalLabel-{{ cotacao.id }}" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addProductModalLabel-{{ cotacao.id }}">Adicionar Produto à Cotação</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id="modal-body-{{ cotacao.id }}">
+                    <div class="mb-3">
+                        <label for="produto-{{ cotacao.id }}" class="form-label">Produto</label>
+                        <select class="form-select" id="produto-{{ cotacao.id }}" name="produto">
+                            {% for produto in produtos %}
+                            <option value="{{ produto.id }}">{{ produto.nome }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="quantidade-{{ cotacao.id }}" class="form-label">Quantidade</label>
+                        <input type="number" class="form-control" id="quantidade-{{ cotacao.id }}" name="quantidade" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="observacao-{{ cotacao.id }}" class="form-label">Observação</label>
+                        <textarea class="form-control" id="observacao-{{ cotacao.id }}" name="observacao"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Adicionar</button>
+                </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+
+
+
+    <div class="tab-pane fade" id="profile" role="tabpanel" aria-labelledby="profile-tab">
+        <!-- Conteúdo da segunda aba aqui -->
+    </div>
+</div>
+
+<script>
+    function loadItensCotacao(cotacaoId) {
+        const url = `{% url 'cotacao:itens_cotacao_api' 999 %}`.replace('999', cotacaoId);
+        fetch(url)
+            .then(response => response.json())
+            .then(data => {
+                const modalBody = document.getElementById(`modal-body-${cotacaoId}`);
+                modalBody.innerHTML = '';  // Limpa conteúdo anterior
+                if (data.length === 0) {
+                    modalBody.innerHTML = '<p>Nenhum item encontrado.</p>';
+                } else {
+                    data.forEach(item => {
+                        modalBody.innerHTML += `<p>${item.produto__name} - Quantidade: ${item.quantidade} - Tipo de Volume: ${item.tipo_volume} - Observação: ${item.observacao}</p>`;
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('Erro ao carregar itens da cotação:', error);
+                const modalBody = document.getElementById(`modal-body-${cotacaoId}`);
+                modalBody.innerHTML = '<p>Erro ao carregar dados.</p>';
+            });
+    }
+    
+    </script>
+
+    
+
+</div>
+{% endblock %}

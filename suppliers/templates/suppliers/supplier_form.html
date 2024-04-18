@@ -67,9 +67,9 @@
           <li class="nav-item" role="presentation">
             <button class="nav-link active" id="info-tab" data-bs-toggle="tab" data-bs-target="#info" type="button" role="tab" aria-controls="info" aria-selected="true">Cadastro</button>
           </li>
-          <li class="nav-item" role="presentation">
+          {% comment %} <li class="nav-item" role="presentation">
             <button class="nav-link" id="vinculos-tab" data-bs-toggle="tab" data-bs-target="#vinculos" type="button" role="tab" aria-controls="vinculos" aria-selected="false">Vínculos</button>
-          </li>
+          </li> {% endcomment %}
         </ul>
         
         <!-- Tab panes -->
@@ -185,7 +185,7 @@
                         {% include 'isolated/_delivery_days.html' %}
                     
                     <br> 
-                    <h4>Cobrir Férias</h4>
+                    {% comment %} <h4>Cobrir Férias</h4>
                     <div class="mb-3">
                         <label for="id_holiday_cover_name" class="form-label">Nome do Fornecedor:</label>
                         {{ form.holiday_cover_name|add_class:'form-control' }}
@@ -200,13 +200,18 @@
                     <div class="mb-3">
                         <label for="id_holiday_cover_phone" class="form-label">Telefone do Fornecedor</label>
                         {{ form.holiday_cover_phone|add_class:'form-control' }}
-                    </div>
+                    </div> {% endcomment %}
 
                     <div class="mb-3">
                         <label for="id_observation" class="form-label">Observação:</label>
                         {{ form.observation|add_class:'form-control' }}
-                    </div>                
+                    </div>   
+                    <div class="text-end mt-4">
+                        <button type="submit" class="btn btn-primary">Salvar</button>
+                        <a href="{% url 'suppliers:supplier_list' %}" class="btn btn-secondary">Voltar</a>
+                    </div>             
                 </div>
+
             </div>
           </div>
 
@@ -221,10 +226,7 @@
           </div>
         </div>
 
-        <div class="text-end mt-4">
-            <button type="submit" class="btn btn-primary">Salvar</button>
-            <a href="{% url 'suppliers:supplier_list' %}" class="btn btn-secondary">Voltar</a>
-        </div>
+
 
         <div class="modal fade" id="confirmationModal" tabindex="-1" aria-labelledby="confirmationModalLabel" aria-hidden="true">
             <div class="modal-dialog">
