@@ -2,8 +2,7 @@ from django.shortcuts import redirect
 from django.views import View
 from django.http import JsonResponse
 from django.db.models import Q
-from products.models import Product
-from products.models import Departamento, Category, Subcategory
+from products.models import Product, Departamento, Category, Subcategory
 from django.views.generic import View
 from django.urls import reverse_lazy
 from django.views.generic.edit import CreateView
@@ -12,6 +11,7 @@ from .models import Cotacao
 from .forms import CotacaoForm
 from django.contrib import messages
 from .models import ItemCotacao
+
 
 
 class CotacaoCreateView(CreateView):

@@ -11,5 +11,7 @@ urlpatterns = [
     path('create/', CotacaoCreateView.as_view(), name='cotacao_create'),
     path('add-product/<int:cotacao_id>/', AddProductToCotacaoView.as_view(), name='add_product_to_cotacao'),
     path('api/itens-cotacao/<int:cotacao_id>/', ItensCotacaoAPI.as_view(), name='itens_cotacao_api'),
+    
+
 
 ]

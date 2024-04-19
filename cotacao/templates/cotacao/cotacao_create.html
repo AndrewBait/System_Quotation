@@ -9,7 +9,6 @@
             <button class="nav-link" id="profile-tab" data-bs-toggle="tab" data-bs-target="#profile" type="button" role="tab" aria-controls="profile" aria-selected="false">Respostas</button>
         </li>
     </ul>
-
     
     <div class="tab-content" id="myTabContent">
         <div class="tab-pane fade show active" id="home" role="tabpanel" aria-labelledby="home-tab">
@@ -26,8 +25,7 @@
                     {{ cotacao.nome }} - {{ cotacao.departamento.nome }}
                 </div>
                 <div class="col-md-4">
-                    <!-- Botão que aciona a modal com AJAX load -->
-                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addProductModal-{{ cotacao.id }}" onclick="loadItensCotacao({{ cotacao.id }})">
+                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addProductModal-{{ cotacao.id }}" onclick="loadItensCotacao({{ cotacao.id }}); loadProdutos({{ cotacao.id }});">
                         Adicionar Produtos
                     </button>
                 </div>
@@ -42,26 +40,71 @@
     <!-- Modais para cada cotação -->
     {% for cotacao in cotacoes %}
     <div class="modal fade" id="addProductModal-{{ cotacao.id }}" tabindex="-1" aria-labelledby="addProductModalLabel-{{ cotacao.id }}" aria-hidden="true">
-        <div class="modal-dialog">
+        <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="addProductModalLabel-{{ cotacao.id }}">Adicionar Produto à Cotação</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body" id="modal-body-{{ cotacao.id }}">
-                    <div class="mb-3">
-                        <label for="produto-{{ cotacao.id }}" class="form-label">Produto</label>
-                        <select class="form-select" id="produto-{{ cotacao.id }}" name="produto">
-                            {% for produto in produtos %}
-                            <option value="{{ produto.id }}">{{ produto.nome }}</option>
-                            {% endfor %}
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label for="departamento-{{ cotacao.id }}" class="form-label">Departamento</label>
+                            <select class="form-select" id="departamento" onchange="updateCategorias();">
+                                <option value="">Selecione um Departamento</option>
+                                {% for depto in departamentos %}
+                                <option value="{{ depto.id }}">{{ depto.nome }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="categoria" class="form-label">Categoria</label>
+                            <select class="form-select" id="categoria" onchange="updateSubcategorias();">
+                                <option value="">Selecione uma Categoria</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="subcategoria" class="form-label">Subcategoria</label>
+                            <select class="form-select" id="subcategoria">
+                                <option value="">Selecione uma Subcategoria</option>
+                            </select
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                        <label for="produto-search" class="form-label">Buscar Produto</label>
+                        <input type="text" class="form-control" id="produto-search" oninput="loadProdutosFiltrados();" placeholder="Nome, SKU ou EAN">
+                    </div>
+                    <div class="col-md-8 mb-3">
+                        <label for="produto" class="form-label">Produto</label>
+                        <select class="form-select" id="produto">
+                            <option value="">Selecione um Produto</option>
                         </select>
                     </div>
-                    <div class="mb-3">
-                        <label for="quantidade-{{ cotacao.id }}" class="form-label">Quantidade</label>
-                        <input type="number" class="form-control" id="quantidade-{{ cotacao.id }}" name="quantidade" required>
-                    </div>
-                    <div class="mb-3">
+                </div>
+                    <div class="row">                              
+                        <div class="col-md-6 mb-2">
+                            <label for="quantidade-{{ cotacao.id }}" class="form-label">Quantidade</label>
+                            <input type="number" class="form-control" id="quantidade-{{ cotacao.id }}" name="quantidade" required>
+                        </div>
+                        <div class="col-md-6 mb-2">
+                            <label for="tipo-volume-{{ cotacao.id }}" class="form-label">Tipo de Volume</label>
+                            <select class="form-select" id="tipo-volume-{{ cotacao.id }}" name="tipo_volume">
+                                <option value="Kg">Quilo</option>
+                                <option value="L">Litro</option>
+                                <option value="Dp">Display</option>
+                                <option value="Un">Unidade</option>
+                                <option value="Cx">Caixa</option>
+                                <option value="Fd">Fardo</option>
+                                <option value="Bd">Bandeija</option>
+                                <option value="Pc">Pacote</option>
+                                <option value="Sc">Sache</option>
+                                <option value="Tp">Take Profit</option>
+                            </select>
+                        </div>        
+                </div>  
+
+                    <div class=" mb-3">
                         <label for="observacao-{{ cotacao.id }}" class="form-label">Observação</label>
                         <textarea class="form-control" id="observacao-{{ cotacao.id }}" name="observacao"></textarea>
                     </div>
@@ -70,11 +113,11 @@
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
                     <button type="submit" class="btn btn-primary">Adicionar</button>
                 </div>
-                </div>
             </div>
         </div>
     </div>
     {% endfor %}
+</div>
 
 
 
@@ -84,26 +127,76 @@
 </div>
 
 <script>
-    function loadItensCotacao(cotacaoId) {
-        const url = `{% url 'cotacao:itens_cotacao_api' 999 %}`.replace('999', cotacaoId);
+    function updateCategorias() {
+        var departamentoId = document.getElementById('departamento').value;
+        var url = `http://127.0.0.1:8000/cotacoes/api/categorias/?departamento_id=${departamentoId}`;
+    
         fetch(url)
             .then(response => response.json())
             .then(data => {
-                const modalBody = document.getElementById(`modal-body-${cotacaoId}`);
-                modalBody.innerHTML = '';  // Limpa conteúdo anterior
-                if (data.length === 0) {
-                    modalBody.innerHTML = '<p>Nenhum item encontrado.</p>';
-                } else {
-                    data.forEach(item => {
-                        modalBody.innerHTML += `<p>${item.produto__name} - Quantidade: ${item.quantidade} - Tipo de Volume: ${item.tipo_volume} - Observação: ${item.observacao}</p>`;
-                    });
-                }
+                var select = document.getElementById('categoria');
+                select.innerHTML = '<option value="">Selecione uma Categoria</option>';
+                data.forEach(c => {
+                    select.innerHTML += `<option value="${c.id}">${c.nome}</option>`;
+                });
             })
             .catch(error => {
-                console.error('Erro ao carregar itens da cotação:', error);
-                const modalBody = document.getElementById(`modal-body-${cotacaoId}`);
-                modalBody.innerHTML = '<p>Erro ao carregar dados.</p>';
+                console.error('Erro ao carregar categorias:', error);
             });
+    }
+    
+    function updateSubcategorias() {
+        var categoriaId = document.getElementById('categoria').value;
+        fetch(`/api/subcategorias/?categoria_id=${categoriaId}`)
+            .then(response => response.json())
+            .then(data => {
+                var select = document.getElementById('subcategoria');
+                select.innerHTML = '<option value="">Selecione uma Subcategoria</option>';
+                data.forEach(sc => {
+                    select.innerHTML += `<option value="${sc.id}">${sc.nome}</option>`;
+                });
+            });
+    }
+    
+    function loadProdutosFiltrados() {
+        var searchQuery = document.getElementById('produto-search').value;
+        var departamentoId = document.getElementById('departamento').value;
+        var categoriaId = document.getElementById('categoria').value;
+        var subcategoriaId = document.getElementById('subcategoria').value;
+        var url = `http://127.0.0.1:8000/cotacoes/api/produtos?q=${encodeURIComponent(searchQuery)}&departamento_id=${departamentoId}&categoria_id=${categoriaId}&subcategoria_id=${subcategoriaId}`;
+    
+        fetch(url)
+            .then(response => response.json())
+            .then(data => {
+                var select = document.getElementById('produto');
+                select.innerHTML = '<option value="">Selecione um Produto</option>';
+                data.forEach(p => {
+                    select.innerHTML += `<option value="${p.id}">${p.nome} (${p.sku})</option>`;
+                });
+            })
+            .catch(error => {
+                console.error('Erro ao carregar produtos:', error);
+            });
+    }
+    function loadProdutos(cotacaoId) {
+        const urlProdutos = `{% url 'cotacao:produtos_api' %}`;  // Assegure-se de ter a URL correta aqui
+        const selectProduto = document.getElementById(`produto-${cotacaoId}`);
+    
+        fetch(urlProdutos)
+        .then(response => response.json())
+        .then(data => {
+            selectProduto.innerHTML = '';  // Limpa opções antigas
+            data.forEach(produto => {
+                const option = document.createElement('option');
+                option.value = produto.id;
+                option.textContent = produto.nome;
+                selectProduto.appendChild(option);
+            });
+        })
+        .catch(error => {
+            console.error('Erro ao carregar produtos:', error);
+            selectProduto.innerHTML = '<option>Erro ao carregar produtos</option>';
+        });
     }
     
     </script>
