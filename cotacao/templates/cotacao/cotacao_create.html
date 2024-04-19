@@ -25,19 +25,20 @@
                     {{ cotacao.nome }} - {{ cotacao.departamento.nome }}
                 </div>
                 <div class="col-md-4">
-                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addProductModal-{{ cotacao.id }}" onclick="loadItensCotacao({{ cotacao.id }}); loadProdutos({{ cotacao.id }});">
+                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addProductModal-{{ cotacao.id }}">
                         Adicionar Produtos
                     </button>
                 </div>
             </div>
             {% endfor %}
         </div>
+    </div>
         <div class="tab-pane fade" id="profile" role="tabpanel" aria-labelledby="profile-tab">
             <!-- Conteúdo da segunda aba aqui -->
         </div>
-    </div>
 
-    <!-- Modais para cada cotação -->
+
+    </div>
     {% for cotacao in cotacoes %}
     <div class="modal fade" id="addProductModal-{{ cotacao.id }}" tabindex="-1" aria-labelledby="addProductModalLabel-{{ cotacao.id }}" aria-hidden="true">
         <div class="modal-dialog modal-lg">
@@ -47,79 +48,18 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body" id="modal-body-{{ cotacao.id }}">
-                    <div class="row">
-                        <div class="col-md-4 mb-3">
-                            <label for="departamento-{{ cotacao.id }}" class="form-label">Departamento</label>
-                            <select class="form-select" id="departamento" onchange="updateCategorias();">
-                                <option value="">Selecione um Departamento</option>
-                                {% for depto in departamentos %}
-                                <option value="{{ depto.id }}">{{ depto.nome }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                        <div class="col-md-4 mb-3">
-                            <label for="categoria" class="form-label">Categoria</label>
-                            <select class="form-select" id="categoria" onchange="updateSubcategorias();">
-                                <option value="">Selecione uma Categoria</option>
-                            </select>
-                        </div>
-                        <div class="col-md-4 mb-3">
-                            <label for="subcategoria" class="form-label">Subcategoria</label>
-                            <select class="form-select" id="subcategoria">
-                                <option value="">Selecione uma Subcategoria</option>
-                            </select
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-4 mb-3">
-                        <label for="produto-search" class="form-label">Buscar Produto</label>
-                        <input type="text" class="form-control" id="produto-search" oninput="loadProdutosFiltrados();" placeholder="Nome, SKU ou EAN">
-                    </div>
-                    <div class="col-md-8 mb-3">
-                        <label for="produto" class="form-label">Produto</label>
-                        <select class="form-select" id="produto">
-                            <option value="">Selecione um Produto</option>
-                        </select>
-                    </div>
-                </div>
-                    <div class="row">                              
-                        <div class="col-md-6 mb-2">
-                            <label for="quantidade-{{ cotacao.id }}" class="form-label">Quantidade</label>
-                            <input type="number" class="form-control" id="quantidade-{{ cotacao.id }}" name="quantidade" required>
-                        </div>
-                        <div class="col-md-6 mb-2">
-                            <label for="tipo-volume-{{ cotacao.id }}" class="form-label">Tipo de Volume</label>
-                            <select class="form-select" id="tipo-volume-{{ cotacao.id }}" name="tipo_volume">
-                                <option value="Kg">Quilo</option>
-                                <option value="L">Litro</option>
-                                <option value="Dp">Display</option>
-                                <option value="Un">Unidade</option>
-                                <option value="Cx">Caixa</option>
-                                <option value="Fd">Fardo</option>
-                                <option value="Bd">Bandeija</option>
-                                <option value="Pc">Pacote</option>
-                                <option value="Sc">Sache</option>
-                                <option value="Tp">Take Profit</option>
-                            </select>
-                        </div>        
-                </div>  
-
-                    <div class=" mb-3">
-                        <label for="observacao-{{ cotacao.id }}" class="form-label">Observação</label>
-                        <textarea class="form-control" id="observacao-{{ cotacao.id }}" name="observacao"></textarea>
-                    </div>
+                    <input type="text" class="form-control mb-3" id="produto-search-{{ cotacao.id }}" placeholder="Digite nome, SKU ou EAN">
+                    <div id="product-list-{{ cotacao.id }}"></div>
+                    <div class="added-products-list" id="added-products-list-{{ cotacao.id }}"></div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-primary">Adicionar</button>
                 </div>
             </div>
-        </div>
+        </div
     </div>
     {% endfor %}
 </div>
-
-
 
     <div class="tab-pane fade" id="profile" role="tabpanel" aria-labelledby="profile-tab">
         <!-- Conteúdo da segunda aba aqui -->
@@ -127,80 +67,63 @@
 </div>
 
 <script>
-    function updateCategorias() {
-        var departamentoId = document.getElementById('departamento').value;
-        var url = `http://127.0.0.1:8000/cotacoes/api/categorias/?departamento_id=${departamentoId}`;
-    
-        fetch(url)
-            .then(response => response.json())
-            .then(data => {
-                var select = document.getElementById('categoria');
-                select.innerHTML = '<option value="">Selecione uma Categoria</option>';
-                data.forEach(c => {
-                    select.innerHTML += `<option value="${c.id}">${c.nome}</option>`;
-                });
-            })
-            .catch(error => {
-                console.error('Erro ao carregar categorias:', error);
-            });
-    }
-    
-    function updateSubcategorias() {
-        var categoriaId = document.getElementById('categoria').value;
-        fetch(`/api/subcategorias/?categoria_id=${categoriaId}`)
-            .then(response => response.json())
-            .then(data => {
-                var select = document.getElementById('subcategoria');
-                select.innerHTML = '<option value="">Selecione uma Subcategoria</option>';
-                data.forEach(sc => {
-                    select.innerHTML += `<option value="${sc.id}">${sc.nome}</option>`;
-                });
-            });
-    }
-    
-    function loadProdutosFiltrados() {
-        var searchQuery = document.getElementById('produto-search').value;
-        var departamentoId = document.getElementById('departamento').value;
-        var categoriaId = document.getElementById('categoria').value;
-        var subcategoriaId = document.getElementById('subcategoria').value;
-        var url = `http://127.0.0.1:8000/cotacoes/api/produtos?q=${encodeURIComponent(searchQuery)}&departamento_id=${departamentoId}&categoria_id=${categoriaId}&subcategoria_id=${subcategoriaId}`;
-    
-        fetch(url)
-            .then(response => response.json())
-            .then(data => {
-                var select = document.getElementById('produto');
-                select.innerHTML = '<option value="">Selecione um Produto</option>';
-                data.forEach(p => {
-                    select.innerHTML += `<option value="${p.id}">${p.nome} (${p.sku})</option>`;
-                });
-            })
-            .catch(error => {
-                console.error('Erro ao carregar produtos:', error);
-            });
-    }
-    function loadProdutos(cotacaoId) {
-        const urlProdutos = `{% url 'cotacao:produtos_api' %}`;  // Assegure-se de ter a URL correta aqui
-        const selectProduto = document.getElementById(`produto-${cotacaoId}`);
-    
-        fetch(urlProdutos)
-        .then(response => response.json())
-        .then(data => {
-            selectProduto.innerHTML = '';  // Limpa opções antigas
-            data.forEach(produto => {
-                const option = document.createElement('option');
-                option.value = produto.id;
-                option.textContent = produto.nome;
-                selectProduto.appendChild(option);
-            });
-        })
-        .catch(error => {
-            console.error('Erro ao carregar produtos:', error);
-            selectProduto.innerHTML = '<option>Erro ao carregar produtos</option>';
+    $(document).ready(function() {
+        let timer;
+        $('input[id^="produto-search"]').on('input', function() {
+            clearTimeout(timer);
+            var cotacaoId = $(this).attr('id').split('-')[2];
+            var searchTerm = $(this).val();
+            timer = setTimeout(() => {
+                if (searchTerm.length >= 2) {
+                    $.ajax({
+                        url: "/cotacoes/api/produtos/",
+                        dataType: "json",
+                        data: { q: searchTerm },
+                        success: function(data) {
+                            var productList = $('#product-list-' + cotacaoId);
+                            productList.empty();
+                            data.forEach(function(item) {
+                                productList.append(`
+                                    <div class="selectable-product p-2 my-1" data-product-id="${item.id}" style="cursor: pointer; background-color: #f8f9fa;">
+                                        ${item.nome} (${item.sku})${item.ean ? ' [' + item.ean + ']' : ''}
+                                    </div>
+                                `);
+                            });
+                        }
+                    });
+                }
+            }, 300);
         });
-    }
     
+        $(document).on('click', '.selectable-product', function() {
+            var cotacaoId = $(this).closest('.modal-body').attr('id').split('-')[3];
+            var productId = $(this).data('product-id');
+            var productName = $(this).text().trim();
+            if ($('#added-product-' + productId).length === 0) {
+                $('#added-products-list-' + cotacaoId).append(`
+                    <div class="p-2 my-1 bg-light" id="added-product-${productId}">
+                        <strong>${productName}</strong>
+                        <input type="number" class="form-control my-1" placeholder="Quantidade" required>
+                        <select class="form-select my-1">
+                            <option value="Kg">Quilo</option>
+                            <option value="L">Litro</option>
+                            <option value="Dp">Display</option>
+                            <option value="Un">Unidade</option>
+                            <option value="Cx">Caixa</option>
+                            <option value="Fd">Fardo</option>
+                            <option value="Bd">Bandeija</option>
+                            <option value="Pc">Pacote</option>
+                            <option value="Sc">Sache</option>
+                            <option value="Tp">Take Profit</option>
+                        </select>
+                        <textarea class="form-control my-1" placeholder="Observação"></textarea>
+                    </div>
+                `);
+            }
+        });
+    });
     </script>
-
+    
     
 
 </div>

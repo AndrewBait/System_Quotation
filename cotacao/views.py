@@ -11,6 +11,7 @@ from .models import Cotacao
 from .forms import CotacaoForm
 from django.contrib import messages
 from .models import ItemCotacao
+from django.urls import get_resolver
 
 
 
@@ -66,6 +67,11 @@ class ProdutoAPI(View):
         categoria_id = request.GET.get('categoria_id')
         subcategoria_id = request.GET.get('subcategoria_id')
 
+        print("Query:", q)
+        print("Departamento:", departamento_id)
+        print("Categoria:", categoria_id)
+        print("Subcategoria:", subcategoria_id)
+
         produtos = Product.objects.all()
         if q:
             produtos = produtos.filter(Q(name__icontains=q) | Q(sku__icontains=q) | Q(ean__icontains=q))
@@ -76,13 +82,16 @@ class ProdutoAPI(View):
         if subcategoria_id:
             produtos = produtos.filter(subcategoria_id=subcategoria_id)
 
+        print("Produtos encontrados:", produtos.count())
+
         data = [{'id': p.id, 'nome': p.name, 'sku': p.sku, 'ean': p.ean} for p in produtos]
         return JsonResponse(data, safe=False)
 
 
 class DepartamentoAPI(View):
     def get(self, request, *args, **kwargs):
-        departamentos = Departamento.objects.all().values('id', 'name')
+        departamentos = Departamento.objects.all().values('id', 'nome')  # Alterado de 'name' para 'nome'
+        print(get_resolver().url_patterns)
         return JsonResponse(list(departamentos), safe=False)
     
 class CategoriaAPI(View):
