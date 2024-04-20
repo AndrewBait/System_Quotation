@@ -1,130 +1,68 @@
 {% extends "base.html" %}
+{% load static crispy_forms_tags %}
+
+
 {% block content %}
-<div class="container">
+<div class="container mt-4">
+    <!-- Navegação por Abas -->
     <ul class="nav nav-tabs" id="myTab" role="tablist">
         <li class="nav-item">
-            <button class="nav-link active" id="home-tab" data-bs-toggle="tab" data-bs-target="#home" type="button" role="tab" aria-controls="home" aria-selected="true">Criação e Lista</button>
+            <a class="nav-link active" id="home-tab" data-bs-toggle="tab" data-bs-target="#home" role="tab" aria-controls="home" aria-selected="true" aria-label="Criação e Lista de Cotações">Criação e Lista</a>
         </li>
         <li class="nav-item">
-            <button class="nav-link" id="profile-tab" data-bs-toggle="tab" data-bs-target="#profile" type="button" role="tab" aria-controls="profile" aria-selected="false">Respostas</button>
+            <a class="nav-link" id="profile-tab" data-bs-toggle="tab" data-bs-target="#profile" role="tab" aria-controls="profile" aria-selected="false" aria-label="Respostas">Respostas</a>
         </li>
     </ul>
     
+    <!-- Conteúdo das Abas -->
     <div class="tab-content" id="myTabContent">
+        <!-- Aba de Criação de Cotações -->
         <div class="tab-pane fade show active" id="home" role="tabpanel" aria-labelledby="home-tab">
-            <h1>Criação de Cotações</h1>
-            <form method="post">
-                {% csrf_token %}
-                {{ form.as_p }}
-                <button type="submit" class="btn btn-primary">Criar Cotação</button>
-            </form>
 
-            {% for cotacao in cotacoes %}
-            <div class="row mt-2">
-                <div class="col-md-8">
-                    {{ cotacao.nome }} - {{ cotacao.departamento.nome }}
-                </div>
-                <div class="col-md-4">
-                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addProductModal-{{ cotacao.id }}">
-                        Adicionar Produtos
-                    </button>
-                </div>
-            </div>
-            {% endfor %}
-        </div>
-    </div>
-        <div class="tab-pane fade" id="profile" role="tabpanel" aria-labelledby="profile-tab">
-            <!-- Conteúdo da segunda aba aqui -->
-        </div>
+            <h2 class="mt-3">Criação de Cotação</h2>
+            <p>Utilize o formulário abaixo para criar uma nova cotação.</p>            
+            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#criacaoCotacaoModal">
+                Criar Cotação
+            </button>
+            
+<!-- Modal para criação de cotação -->
 
-
-    </div>
-    {% for cotacao in cotacoes %}
-    <div class="modal fade" id="addProductModal-{{ cotacao.id }}" tabindex="-1" aria-labelledby="addProductModalLabel-{{ cotacao.id }}" aria-hidden="true">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="addProductModalLabel-{{ cotacao.id }}">Adicionar Produto à Cotação</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body" id="modal-body-{{ cotacao.id }}">
-                    <input type="text" class="form-control mb-3" id="produto-search-{{ cotacao.id }}" placeholder="Digite nome, SKU ou EAN">
-                    <div id="product-list-{{ cotacao.id }}"></div>
-                    <div class="added-products-list" id="added-products-list-{{ cotacao.id }}"></div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                </div>
-            </div>
-        </div
-    </div>
-    {% endfor %}
-</div>
-
-    <div class="tab-pane fade" id="profile" role="tabpanel" aria-labelledby="profile-tab">
-        <!-- Conteúdo da segunda aba aqui -->
-    </div>
-</div>
-
-<script>
-    $(document).ready(function() {
-        let timer;
-        $('input[id^="produto-search"]').on('input', function() {
-            clearTimeout(timer);
-            var cotacaoId = $(this).attr('id').split('-')[2];
-            var searchTerm = $(this).val();
-            timer = setTimeout(() => {
-                if (searchTerm.length >= 2) {
-                    $.ajax({
-                        url: "/cotacoes/api/produtos/",
-                        dataType: "json",
-                        data: { q: searchTerm },
-                        success: function(data) {
-                            var productList = $('#product-list-' + cotacaoId);
-                            productList.empty();
-                            data.forEach(function(item) {
-                                productList.append(`
-                                    <div class="selectable-product p-2 my-1" data-product-id="${item.id}" style="cursor: pointer; background-color: #f8f9fa;">
-                                        ${item.nome} (${item.sku})${item.ean ? ' [' + item.ean + ']' : ''}
-                                    </div>
-                                `);
-                            });
-                        }
-                    });
-                }
-            }, 300);
-        });
-    
-        $(document).on('click', '.selectable-product', function() {
-            var cotacaoId = $(this).closest('.modal-body').attr('id').split('-')[3];
-            var productId = $(this).data('product-id');
-            var productName = $(this).text().trim();
-            if ($('#added-product-' + productId).length === 0) {
-                $('#added-products-list-' + cotacaoId).append(`
-                    <div class="p-2 my-1 bg-light" id="added-product-${productId}">
-                        <strong>${productName}</strong>
-                        <input type="number" class="form-control my-1" placeholder="Quantidade" required>
-                        <select class="form-select my-1">
-                            <option value="Kg">Quilo</option>
-                            <option value="L">Litro</option>
-                            <option value="Dp">Display</option>
-                            <option value="Un">Unidade</option>
-                            <option value="Cx">Caixa</option>
-                            <option value="Fd">Fardo</option>
-                            <option value="Bd">Bandeija</option>
-                            <option value="Pc">Pacote</option>
-                            <option value="Sc">Sache</option>
-                            <option value="Tp">Take Profit</option>
-                        </select>
-                        <textarea class="form-control my-1" placeholder="Observação"></textarea>
+            <!-- Lista de Cotações -->
+            <div class="list-group mt-4">
+                {% for cotacao in cotacoes %}
+                <div class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                    <div>
+                        {{ cotacao.nome }} - {{ cotacao.departamento.nome }}
                     </div>
-                `);
-            }
-        });
-    });
-    </script>
-    
-    
+                    <a href="{% url 'cotacao:add_product_to_cotacao' cotacao.id %}" class="btn btn-primary">Adicionar Produtos</a>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
 
+        <div class="modal fade" id="criacaoCotacaoModal" tabindex="-1" aria-labelledby="criacaoCotacaoModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h5 class="modal-title" id="criacaoCotacaoModalLabel">Criar Cotação</h5>
+                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                  <form method="post">
+                    {% csrf_token %}
+                    {{ form|crispy }}
+                    <button type="submit" class="btn btn-primary">Salvar Cotação</button>
+                  </form>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        <!-- Aba de Respostas -->
+        <div class="tab-pane fade" id="profile" role="tabpanel" aria-labelledby="profile-tab">
+            <h2 class="mt-3">Respostas</h2>
+            <!-- Aqui você pode adicionar o conteúdo específico para esta aba -->
+        </div>
+    </div>
 </div>
 {% endblock %}

@@ -32,6 +32,8 @@ ALLOWED_HOSTS = ['*']
 
 # Application definition
 
+
+
 INSTALLED_APPS = [
     
     'django.contrib.admin',
@@ -42,6 +44,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     
     #minhas libs
+    'crispy_forms',
+    "crispy_bootstrap5",
     'widget_tweaks',
     'dal',
     'dal_select2',
@@ -54,6 +58,10 @@ INSTALLED_APPS = [
     'cotacao',
     'answers',
 ]
+
+CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
+
+CRISPY_TEMPLATE_PACK = "bootstrap5"
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',

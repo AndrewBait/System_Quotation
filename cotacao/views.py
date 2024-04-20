@@ -3,15 +3,16 @@ from django.views import View
 from django.http import JsonResponse
 from django.db.models import Q
 from products.models import Product, Departamento, Category, Subcategory
-from django.views.generic import View
+from django.views.generic import View, UpdateView
 from django.urls import reverse_lazy
 from django.views.generic.edit import CreateView
-from django.views.generic import UpdateView
 from .models import Cotacao
 from .forms import CotacaoForm
 from django.contrib import messages
 from .models import ItemCotacao
 from django.urls import get_resolver
+from .forms import ItemCotacaoForm
+from dal import autocomplete
 
 
 
@@ -31,22 +32,29 @@ class CotacaoCreateView(CreateView):
         context['cotacoes'] = Cotacao.objects.all()  # Adiciona todas as cotações ao contexto
         return context
 
-
-
     
     
 class AddProductToCotacaoView(CreateView):
     model = ItemCotacao
-    fields = ['produto', 'quantidade', 'tipo_volume', 'observacao']
-    template_name = 'cotacao/include/add_product_to_cotacao'  # Pode ser um snippet HTML só para o formulário
+    form_class = ItemCotacaoForm
+    template_name = 'cotacao/add_product_to_cotacao.html'
 
     def form_valid(self, form):
         form.instance.cotacao_id = self.kwargs['cotacao_id']
         return super().form_valid(form)
 
     def get_success_url(self):
+        # Redireciona para a página da cotação após adicionar o produto
         return reverse_lazy('cotacao:cotacao_create', kwargs={'pk': self.kwargs['cotacao_id']})
     
+    
+class ProductAutocomplete(autocomplete.Select2QuerySetView):
+    def get_queryset(self):
+        qs = Product.objects.all()
+        if self.q:
+            qs = qs.filter(Q(name__icontains=self.q) | Q(sku__icontains=self.q) | Q(ean__icontains=self.q))
+        return qs
+
 
 class ToggleCotacaoStatusView(UpdateView):
     model = Cotacao
@@ -67,10 +75,6 @@ class ProdutoAPI(View):
         categoria_id = request.GET.get('categoria_id')
         subcategoria_id = request.GET.get('subcategoria_id')
 
-        print("Query:", q)
-        print("Departamento:", departamento_id)
-        print("Categoria:", categoria_id)
-        print("Subcategoria:", subcategoria_id)
 
         produtos = Product.objects.all()
         if q:

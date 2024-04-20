@@ -20,19 +20,16 @@ class CotacaoForm(forms.ModelForm):
 
 
 class ItemCotacaoForm(forms.ModelForm):
+    produto = forms.ModelChoiceField(
+        queryset=Product.objects.all(),
+        widget=autocomplete.ModelSelect2(url='cotacao:product-autocomplete'),
+        label="Produto"
+    )
+
+
     class Meta:
         model = ItemCotacao
-        fields = '__all__'
-        produto = forms.ModelChoiceField(
-            queryset=Product.objects.all(),
-            widget=autocomplete.ModelSelect2(url='product-autocomplete')
-        )
-        widgets = {
-            'produto': forms.Select(attrs={'class': 'form-control'}),
-            'quantidade': forms.NumberInput(attrs={'class': 'form-control'}),
-            'tipo_volume': forms.Select(attrs={'class': 'form-control'}),
-            'observacao': forms.Textarea(attrs={'cols': 40, 'rows': 2}),        
-        }
+        fields = ['produto', 'quantidade', 'tipo_volume', 'observacao']
 
 
 class DepartamentoForm(forms.ModelForm):
