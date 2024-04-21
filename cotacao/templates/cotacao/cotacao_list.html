@@ -1,393 +1,102 @@
-{% extends "base.html" %}
-{% load static %}
-{% load cotacao_tags %}
+
+{% load static crispy_forms_tags %}
 
 {% block content %}
-
-<style>
-    .card:hover {
-        box-shadow: 0 4px 8px rgba(0,0,0,0.2); /* Sombra mais proeminente para destaque */
-        transform: scale(1.02); /* Leve aumento para dar sensação de elevação */
-        transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
-    }
-</style>
-<div class="container mt-5">
-    <h2 class="mb-3">Cotações</h2>
-    
-    <form id="filter-form" method="GET" class="mb-4">
-        
-        <div class="row g-3">           
-            <div class="col-md-3">                
-                <label for="status_filter" class="form-label">Status</label>
-                <select id="status_filter" name="status" class="form-control">
-                    <option value="">Todos</option>
-                    <option value="aberta">Aberta</option>
-                    <option value="fechada">Fechada</option>
+<div class="container mt-4">
+    <form method="get" class="search-form">
+        <input type="hidden" name="tab" value="list" />
+        <!-- Campos de Filtro -->
+        <div class="row">
+            <div class="col">
+                <input type="date" name="data_inicio" class="form-control" value="{{ request.GET.data_inicio }}" placeholder="De:">
+            </div>
+            <div class="col">
+                <input type="date" name="data_fim" class="form-control" value="{{ request.GET.data_fim }}" placeholder="Até:">
+            </div>
+            <div class="col">
+                <select name="status" class="form-control" id="status-filter">
+                    <option value="">Todos os Status</option>
+                    <option value="ativo" {% if request.GET.status == 'ativo' %}selected{% endif %}>Ativo</option>
+                    <option value="inativo" {% if request.GET.status == 'inativo' %}selected{% endif %}>Inativo</option>
                 </select>
             </div>
-            <div class="col-md-3">
-                <label for="from_date" class="form-label">De</label>
-                <input type="date" id="from_date" name="from_date" class="form-control">
-            </div>
-            <div class="col-md-3">
-                <label for="to_date" class="form-label">Até</label>
-                <input type="date" id="to_date" name="to_date" class="form-control">
-            </div>
-            {% comment %} <div class="col-md-3">
-                <label for="department_filter" class="form-label">Departamento</label>
-                <select id="department_filter" name="department" class="form-control">
-                    <option value="">Todos</option>
-                    {% for departamento in departamentos %}
-                    <option value="{{ departamento.id }}">{{ departamento.nome }}</option>
+            <div class="col">
+                <select name="usuario" class="form-control" id="user-filter">
+                    <option value="">Todos os Usuários</option>
+                    {% for usuario in usuarios %}
+                    <option value="{{ usuario.id }}" {% if request.GET.usuario == usuario.id|stringformat:"s" %}selected{% endif %}>{{ usuario.username }}</option>
                     {% endfor %}
                 </select>
-            </div> {% endcomment %}
+            </div>
+            <div class="col">
+                <select name="departamento" class="form-control" id="department-filter">
+                    <option value="">Todos os Departamentos</option>
+                    {% for departamento in departamentos %}
+                    <option value="{{ departamento.id }}" {% if request.GET.departamento == departamento.id|stringformat:"s" %}selected{% endif %}>{{ departamento.nome }}</option>
+                    {% endfor %}
+                </select>
+            </div>
         </div>
     </form>
+    <!-- Include JavaScript to auto-submit on changes -->
+    <script>
+        document.getElementById('status-filter').addEventListener('change', function() {
+            this.form.submit();
+        });
+        document.getElementById('user-filter').addEventListener('change', function() {
+            this.form.submit();
+        });
+        document.getElementById('department-filter').addEventListener('change', function() {
+            this.form.submit();
+        });
+    </script>
 
-
-    
-    
-    <div class="row text-center mb-3">
-        <div class="col-md-4">
-            <div class="alert alert-primary" role="alert">
-                Total de Cotações: {{ total_cotacoes }}
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="alert alert-success" role="alert">
-                Cotações Abertas: {{ total_abertas }}
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="alert alert-danger" role="alert">
-                Cotações Fechadas: {{ total_fechadas }}
-            </div>
-        </div>
-    </div>
-
-    
-    {% if cotacoes %}
-    <div class="row row-cols-1 row-cols-md-3 g-4">  <!-- Grid com 3 colunas -->
+    <!-- Lista de Cotações -->
+    <div class="list-group mt-4">
         {% for cotacao in cotacoes %}
-        <div class="col">
-            <div class="card h-100 cotacao-card" data-form-url="#">
-                <div class="card-body">
-                    <h5 class="card-title"><a href="#" class="text-decoration-none">{{ cotacao.nome }}</a></h5>
-                    <p class="card-text">
-                        <small id="status-{{ cotacao.pk }}">{{ cotacao.get_status_display }}</small><br>
-                        <small>Criado por: {{ user.username }}</small><br>
-                        <small>Prazo: {{ cotacao.prazo_aviso }} dias</small><br>
-                        <small>Abertura: {{ cotacao.data_abertura|date:"d M Y" }}</small><br>
-                        <small>Fechamento: {{ cotacao.data_fechamento|date:"d M Y" }}</small>
-                    </p>
-                    <span class="badge bg-primary">{{ cotacao.departamento.nome }}</span>
-                </div>
-                <div class="card-footer">
-                    <div class="btn-group">
-                        {% if cotacao.status == 'ativo' %}
-                        <button type="button" class="btn btn-outline-danger btn-sm toggle-status" data-cotacao-id="{{ cotacao.pk }}" data-toggle-url="{% url 'cotacao:toggle_status' cotacao.pk %}">Fechar Cotação</button>
-                        {% else %}
-                        <button type="button" class="btn btn-outline-success btn-sm toggle-status" data-cotacao-id="{{ cotacao.pk }}" data-toggle-url="{% url 'cotacao:toggle_status' cotacao.pk %}">Abrir Cotação</button>
-                        {% endif %}
-                        <a href="{% url 'cotacao:add_products_to_cotacao' cotacao.pk %}" class="btn btn-outline-secondary btn-sm mx-1">
-                            <i class="bi bi-plus-circle"></i> Adicionar Produtos
-                        </a>
-                        <a href="{% url 'cotacao:enviar_cotacao' cotacao.pk %}" class="btn btn-outline-primary btn-sm mx-1"><i class="bi bi-send"></i> Enviar Cotação</a>
-                        <button type="button" class="btn btn-outline-danger btn-sm mx-1 delete-cotacao" data-cotacao-id="{{ cotacao.pk }}" data-delete-url="{% url 'cotacao:cotacao_delete' cotacao.pk %}"><i class="bi bi-trash"></i> Deletar</button>
-
-                        
-                        
-                    </div>
-                </div>
+        <div class="list-group-item d-flex justify-content-between align-items-center">
+            <div>
+                <h5>{{ cotacao.nome }} - {{ cotacao.departamento.nome }}</h5>
+                <p>Criado por: {{ cotacao.usuario_criador.username }} </p>
+                <p>Aberta em: {{ cotacao.data_abertura }}  </p>
+                <p>Fechamento em: {{ cotacao.data_fechamento }}   </p>
+                <p>Status: {{ cotacao.get_status_display }} </p>
+                <p>Prazo: {{ cotacao.prazo }} dias</p>
+            </div>
+            <div>
+                <a href="{% url 'cotacao:toggle_cotacao_status' cotacao.id %}" class="btn btn-secondary">{{ cotacao.get_status_display }}</a>
+                <a href="{% url 'cotacao:edit_cotacao' cotacao.id %}" class="btn btn-warning">Editar</a>
+                <a href="{% url 'cotacao:add_product_to_cotacao' cotacao.id %}" class="btn btn-primary">Adicionar Produtos</a>
+                <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteCotacaoModal{{ cotacao.id }}">Excluir Cotação</button>
             </div>
         </div>
+        {% empty %}
+        <p class="text-muted">Não há cotações cadastradas no momento.</p>
         {% endfor %}
     </div>
-    {% else %}
-    <div class="alert alert-info text-center" role="alert">
-        Nenhuma cotação encontrada.
-    </div>
-    {% endif %}
-
 </div>
-<br>
-<nav aria-label="Navegação de página">
-    <ul class="pagination justify-content-center">
-        {% if cotacoes.has_previous %}
-            <li class="page-item">
-                <a class="page-link" href="?page=1" aria-label="Primeiro">
-                    <span aria-hidden="true">« Primeiro</span>
-                </a>
-            </li>
-            <li class="page-item">
-                <a class="page-link" href="?page={{ cotacoes.previous_page_number }}" aria-label="Anterior">
-                    <span aria-hidden="true">‹ Anterior</span>
-                </a>
-            </li>
-        {% else %}
-            <li class="page-item disabled">
-                <span class="page-link">
-                    <span aria-hidden="true">« Primeiro</span>
-                </span>
-            </li>
-            <li class="page-item disabled">
-                <span class="page-link">
-                    <span aria-hidden="true">‹ Anterior</span>
-                </span>
-            </li>
-        {% endif %}
 
-        <li class="page-item active" aria-current="page">
-            <span class="page-link">
-                Página {{ cotacoes.number }} de {{ cotacoes.paginator.num_pages }}.
-            </span>
-        </li>
-
-        {% if cotacoes.has_next %}
-            <li class="page-item">
-                <a class="page-link" href="?page={{ cotacoes.next_page_number }}" aria-label="Próximo">
-                    <span aria-hidden="true">Próximo ›</span>
-                </a>
-            </li>
-            <li class="page-item">
-                <a class="page-link" href="?page={{ cotacoes.paginator.num_pages }}" aria-label="Último">
-                    <span aria-hidden="true">Último »</span>
-                </a>
-            </li>
-        {% else %}
-            <li class="page-item disabled">
-                <span class="page-link">
-                    <span aria-hidden="true">Próximo ›</span>
-                </span>
-            </li>
-            <li class="page-item disabled">
-                <span class="page-link">
-                    <span aria-hidden="true">Último »</span>
-                </span>
-            </li>
-        {% endif %}
-    </ul>
-</nav>
-<!-- Modal para Seleção de Produtos -->
-
-
-
-<!-- Modal de Confirmação de Deleção -->
-<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title" id="deleteModalLabel">Confirmar Exclusão</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+{% for cotacao in cotacoes %}
+<!-- Modal de Exclusão -->
+<div class="modal fade" id="deleteCotacaoModal{{ cotacao.id }}" tabindex="-1" role="dialog" aria-labelledby="deleteCotacaoModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteCotacaoModalLabel">Confirmar Exclusão</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                Tem certeza que deseja excluir esta cotação "{{ cotacao.nome }}"?
+            </div>
+            <div class="modal-footer">
+                <form method="post" action="{% url 'cotacao:delete_cotacao' cotacao.id %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">Excluir</button>
+                </form>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+            </div>
         </div>
-        <div class="modal-body">
-          Tem certeza de que deseja excluir esta cotação?
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-          <a href="#" class="btn btn-danger" id="deleteConfirmButton">Deletar</a>
-        </div>
-      </div>
     </div>
-  </div>
-
-  <br>
-    
-
-{% endblock %}
-
-{% block scripts %}
-
-
-<script type="text/template" id="productRowTemplate"> <!-- Template para adicionar produtos -->
-    <td>{{productName}}</td>
-    <td>{{quantity}}</td>
-    <td>{{volumeType}}</td>
-</script>
-<script>
-
-
-    
-    $(document).ready(function() {
-        // Adiciona um evento de clique em todos os cards de cotação
-        $('.cotacao-card').click(function(e) {
-            // Verifica se o clique foi em um link ou em um botão dentro do card
-            if ($(e.target).closest('a, button').length) {
-                return; // Permite a ação padrão de links e botões
-            }
-    
-            e.preventDefault(); // Impede a ação padrão para outros elementos dentro do card
-    
-            // Lógica para abrir a modal, caso necessário
-            $('#productModal').modal('show');
-            loadProducts();
-        });
-    // Função para carregar os produtos no modal
-    function loadProducts() {
-        var searchQuery = $('#productSearch').val(); // Obtém o valor do campo de pesquisa
-
-        $.ajax({
-            url: '{% url "cotacao:api_produtos" %}?q=' + encodeURIComponent(searchQuery),
-            type: 'GET',
-            success: function(data) {
-                var productList = $('#productList');
-                productList.empty();
-                data.forEach(function(product) {
-                    var row = $('<tr></tr>');
-                    row.append($('<td></td>').text(product.name));
-                    row.append($('<td></td>').html('<input type="number" class="form-control" name="quantidade">'));
-                    row.append($('<td></td>').html('<select class="form-control" name="tipo_volume"><option value="un">Unidade</option><option value="kg">Kg</option></select>'));
-                    row.append($('<td></td>').html('<button type="button" class="btn btn-primary add-product" data-product-id="{{ product.id }}" data-cotacao-id="{{ cotacao.id }}">Adicionar</button>'));
-                    productList.append(row);
-                });
-            },
-            error: function() {
-                alert('Erro ao carregar produtos');
-            }
-        });
-    }
-
-        $(document).on('click', '.add-product', function() { // Adiciona um evento de clique em todos os botões de adicionar produto
-            var productId = $(this).data('product-id');   // Obtém o ID do produto
-            var cotacaoId = $(this).data('cotacao-id');  // Obtém o ID da cotação
-            var quantity = $(this).closest('tr').find('input[name="quantidade"]').val();  // Obtém a quantidade do produto
-            var volumeType = $(this).closest('tr').find('select[name="tipo_volume"]').val(); // Obtém o tipo de volume do produto
-            var cotacaoId = $('#cotacaoId').val(); // Obtém o ID da cotação
-
-            $.ajax({ // Faz uma requisição AJAX para adicionar o produto à cotação
-                url: '{% url "cotacao:add_product_to_cotacao" %}', // URL da view
-                type: 'POST',
-                data: { // Dados a serem enviados
-                    'product_id': productId,  // ID do produto
-                    'quantity': quantity, // Quantidade do produto
-                    'volume_type': volumeType, // Tipo de volume do produto
-                    'cotacao_id': cotacaoId, // ID da cotação
-                    'csrfmiddlewaretoken': '{{ csrf_token }}' // Token CSRF para segurança
-                },
-                success: function(response) { // Função de callback para sucesso
-                    if(response.status === 'success') { // Se a resposta for bem-sucedida
-                        alert('Produto adicionado com sucesso!'); 
-                        // Obtenha os dados do produto da resposta
-                        var productName = response.product_name;   
-                        var quantity = response.quantity; 
-                        var volumeType = response.volume_type;
-
-                        // Utilize o template para criar uma nova linha
-                        var template = $('#productRowTemplate').html();    
-                        var productRowHtml = template.replace('{{productName}}', productName)   
-                                                    .replace('{{quantity}}', quantity)  
-                                                    .replace('{{volumeType}}', volumeType);  
-                        $('#addedProductsTable tbody').append(productRowHtml);  // Adiciona a linha à tabela de produtos adicionados 
-                    } else {
-                        alert('Erro ao adicionar produto: ' + response.message);
-                    }
-                },
-                error: function() {
-                    alert('Erro ao fazer a requisição.');
-                }
-            });
-        });
-
-        $('#productSearch').on('keyup', function() {
-            loadProducts();  // Chama loadProducts sempre que o texto no campo de pesquisa mudar
-        });
-
-        $(document).on('submit', '#itemCotacaoForm', function(e) {
-    e.preventDefault(); // Impede o envio padrão do formulário
-
-    var formData = $(this).serialize(); // Serializa os dados do formulário
-
-    $.ajax({
-        url: '{% url "cotacao:add_product_to_cotacao" %}', // URL da view
-        type: 'POST',
-        data: formData, // Dados do formulário
-        success: function(response) {
-            if(response.status === 'success') {
-                alert('Produto adicionado com sucesso!');
-
-                // Obtenha os dados do produto da resposta
-                var productName = response.product_name;
-                var quantity = response.quantity;
-                var volumeType = response.volume_type;
-
-                // Utilize o template para criar uma nova linha
-                var template = $('#productRowTemplate').html();
-                var productRowHtml = template.replace('{{productName}}', productName)
-                                            .replace('{{quantity}}', quantity)
-                                            .replace('{{volumeType}}', volumeType);
-                $('#addedProductsTable tbody').append(productRowHtml); 
-
-                // Limpe o formulário
-                $('#itemCotacaoForm')[0].reset();
-            } else {
-                alert('Erro ao adicionar produto: ' + response.message);
-            }
-        },
-        error: function() {
-            alert('Erro ao fazer a requisição.');
-        }
-    });
-});
-
-
-        $('.delete-cotacao, .toggle-status').click(function(e) {
-            e.stopPropagation(); // Impede que o evento de clique se propague para o card
-            e.preventDefault(); // Impede o comportamento padrão do link
-            if ($(this).hasClass('delete-cotacao')) { // Se o botão clicado for de deleção
-                const deleteUrl = $(this).data('delete-url'); // Obtém a URL de deleção
-                $('#deleteConfirmButton').off('click').on('click', function() { // Adiciona um evento de clique ao botão de confirmação
-                    $.ajax({  // Faz uma requisição AJAX para deletar a cotação
-                        url: deleteUrl,
-                        type: 'POST', 
-                        data: {'csrfmiddlewaretoken': '{{ csrf_token }}'}, // Token CSRF para segurança
-                        success: function(result) { // Função de callback para sucesso
-                            $('#deleteModal').modal('hide'); // Fecha o modal
-                            location.reload();
-                        }
-                    });
-                });
-                $('#deleteModal').modal('show'); // Abre o modal de confirmação
-            } else {
-                const toggleUrl = $(this).data('toggle-url'); // Obtém a URL de troca de status
-                const btn = $(this);  // Obtém o botão clicado
-                const statusText = $(`#status-${btn.data('cotacao-id')}`);   // Obtém o texto de status
-                $.ajax({
-                    url: toggleUrl, 
-                    type: 'POST',
-                    data: {'csrfmiddlewaretoken': '{{ csrf_token }}'},
-                    dataType: 'json',
-                    success: function(data) {
-                        $('.alert-primary').text(`Total de Cotações: ${data.total_cotacoes}`);
-                        $('.alert-success').text(`Cotações Abertas: ${data.total_abertas}`);
-                        $('.alert-danger').text(`Cotações Fechadas: ${data.total_fechadas}`);
-    
-                        if (btn.text().trim() === 'Fechar Cotação') {
-                            btn.text('Abrir Cotação');
-                            btn.removeClass('btn-outline-danger').addClass('btn-outline-success');
-                            statusText.text('Inativo'); 
-                        } else {
-                            btn.text('Fechar Cotação');
-                            btn.removeClass('btn-outline-success').addClass('btn-outline-danger');
-                            statusText.text('Ativo'); 
-                        }
-                    }
-                });
-            }
-        });
-    
-        $('.cotacao-card').click(function(e) {
-            // Se o elemento clicado ou um de seus pais for um link, não faça nada (permita a ação padrão)
-            if ($(e.target).closest('a').length) {
-                return;
-            }
-        
-            e.preventDefault(); // Impede outras ações, como a abertura da modal, se não for um clique em um link
-        
-            // Abre a modal e carrega produtos se o clique não foi em um link
-            $('#productModal').modal('show');
-            loadProducts();
-        });
-    });
-</script>
+</div>
+{% endfor %}
 {% endblock %}

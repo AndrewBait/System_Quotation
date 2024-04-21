@@ -1,6 +1,7 @@
 from django.db import models
 from django.core.exceptions import ValidationError
-from django.utils.translation import gettext_lazy as _  
+from django.utils.translation import gettext_lazy as _
+from django.conf import settings
 import uuid
 from products.models import Departamento
 
@@ -8,6 +9,7 @@ class Cotacao(models.Model):
     uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
     nome = models.CharField(max_length=200)
     departamento = models.ForeignKey(Departamento, on_delete=models.SET_NULL, null=True )
+    usuario_criador = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='cotacoes_criadas', null=True, )
     data_abertura = models.DateField()
     data_fechamento = models.DateField()    
     status = models.CharField(max_length=10, default='ativo', choices=[('ativo', 'Ativo'), ('inativo', 'Inativo')])
@@ -27,7 +29,7 @@ class Cotacao(models.Model):
             raise ValidationError(_("Status inválido. Escolha entre 'ativo' e 'inativo'."))
 
     def __str__(self):
-        return f"{self.nome} ({self.departamento.nome})"       
+        return f"{self.nome} ({self.departamento.nome})"      
 
 
     class Meta:
