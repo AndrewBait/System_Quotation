@@ -12,5 +12,5 @@ urlpatterns = [
     path('suppliers/', include('suppliers.urls')),
     path('cotacoes/', include(('cotacao.urls', 'cotacao'), namespace='cotacao')),
     path('answers/', include('answers.urls', namespace='answers')), 
-    path('', RedirectView.as_view(url='/accounts/login/', permanent=True), name='home'), 
+    path('', RedirectView.as_view(url='/accounts/login/', permanent=True), name='home'),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

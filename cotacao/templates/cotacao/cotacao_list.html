@@ -1,102 +1,161 @@
-
+{% extends "base.html" %}
+{% load cotacao_filters %}
 {% load static crispy_forms_tags %}
 
 {% block content %}
+<style>
+    .badge-ativo {
+    background-color: #28a745; /* Verde para ativo */
+    color: white;
+}
+
+.badge-inativo {
+    background-color: #dc3545; /* Vermelho para inativo */
+    color: white;
+}
+
+a[href*="toggle_cotacao_status"] {
+    background-color: #007bff; /* Azul padrão para o botão */
+    color: white;
+}
+
+a[href*="toggle_cotacao_status"][href*="ativo"] {
+    background-color: #dc3545; /* Vermelho para desativar */
+}
+a[href*="toggle_cotacao_status"] {
+    background-color: #007bff; /* Azul padrão para o botão */
+    color: white;
+}
+
+a[href*="toggle_cotacao_status"].status-ativo {
+    background-color: #28a745; /* Verde para cotação ativa */
+}
+
+a[href*="toggle_cotacao_status"].status-inativo {
+    background-color: #dc3545; /* Vermelho para cotação inativa */
+}
+
+div.card-footer a[href*="toggle_cotacao_status"] {
+    background-color: #007bff; /* Azul padrão para o botão */
+    color: white;
+}
+
+div.card-footer a[href*="toggle_cotacao_status"].status-ativo {
+    background-color: #28a745; /* Verde para cotação ativa */
+}
+
+div.card-footer a[href*="toggle_cotacao_status"].status-inativo {
+    background-color: #dc3545; /* Vermelho para cotação inativa */
+}
+
+</style>
+
 <div class="container mt-4">
-    <form method="get" class="search-form">
-        <input type="hidden" name="tab" value="list" />
-        <!-- Campos de Filtro -->
-        <div class="row">
-            <div class="col">
-                <input type="date" name="data_inicio" class="form-control" value="{{ request.GET.data_inicio }}" placeholder="De:">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2>Cotações</h2>
+        <a href="{% url 'cotacao:cotacao_create' %}" class="btn btn-success">
+            <i class="bi bi-plus-lg"></i> Criar Cotação
+        </a>
+    </div>
+
+    <form method="get" class="mb-4">
+        <div class="row g-3">
+            <div class="col-md-4">
+                <label for="data_inicio" class="form-label">Data de Início</label>
+                <input type="date" name="data_inicio" class="form-control" id="data_inicio" value="{{ request.GET.data_inicio }}">
             </div>
-            <div class="col">
-                <input type="date" name="data_fim" class="form-control" value="{{ request.GET.data_fim }}" placeholder="Até:">
+            <div class="col-md-4">
+                <label for="data_fim" class="form-label">Data de Fim</label>
+                <input type="date" name="data_fim" class="form-control" id="data_fim" value="{{ request.GET.data_fim }}">
             </div>
-            <div class="col">
-                <select name="status" class="form-control" id="status-filter">
+            <div class="col-md-4">
+                <label for="status" class="form-label">Status</label>
+                <select name="status" class="form-control" id="status">
                     <option value="">Todos os Status</option>
                     <option value="ativo" {% if request.GET.status == 'ativo' %}selected{% endif %}>Ativo</option>
                     <option value="inativo" {% if request.GET.status == 'inativo' %}selected{% endif %}>Inativo</option>
                 </select>
             </div>
-            <div class="col">
-                <select name="usuario" class="form-control" id="user-filter">
-                    <option value="">Todos os Usuários</option>
-                    {% for usuario in usuarios %}
-                    <option value="{{ usuario.id }}" {% if request.GET.usuario == usuario.id|stringformat:"s" %}selected{% endif %}>{{ usuario.username }}</option>
+            <div class="col-md-4">
+                <label for="departamento" class="form-label">Departamento</label>
+                <select name="departamento" class="form-control" id="departamento">
+                    <option value="">Todos os Departamentos</option>
+                    {% for departamento in departamentos %}
+                    <option value="{{ departamento.id }}" {% if request.GET.departamento|stringformat:"s" == departamento.id|stringformat:"s" %}selected{% endif %}>{{ departamento.nome }}</option>
                     {% endfor %}
                 </select>
             </div>
-            <div class="col">
-                <select name="departamento" class="form-control" id="department-filter">
-                    <option value="">Todos os Departamentos</option>
-                    {% for departamento in departamentos %}
-                    <option value="{{ departamento.id }}" {% if request.GET.departamento == departamento.id|stringformat:"s" %}selected{% endif %}>{{ departamento.nome }}</option>
+            <div class="col-md-4">
+                <label for="usuario" class="form-label">Usuário</label>
+                <select name="usuario" class="form-control" id="usuario">
+                    <option value="">Todos os Usuários</option>
+                    {% for usuario in usuarios %}
+                    <option value="{{ usuario.id }}" {% if request.GET.usuario|stringformat:"s" == usuario.id|stringformat:"s" %}selected{% endif %}>{{ usuario.username }}</option>
                     {% endfor %}
                 </select>
+            </div>
+            <div class="col-md-4">
+                <label for="prazo" class="form-label">Prazo</label>
+                <select name="prazo" class="form-control" id="prazo">
+                    <option value="">Escolher Prazo</option>
+                    <option value="0">à vista</option>
+                    <option value="7">7 dias</option>
+                    <option value="14">14 dias</option>
+                    <option value="21">21 dias</option>
+                    <option value="28">28 dias</option>
+                </select>
+            </div>
+            <div class="col-12 text-end">
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-funnel"></i> Filtrar
+                </button>
             </div>
         </div>
     </form>
-    <!-- Include JavaScript to auto-submit on changes -->
-    <script>
-        document.getElementById('status-filter').addEventListener('change', function() {
-            this.form.submit();
-        });
-        document.getElementById('user-filter').addEventListener('change', function() {
-            this.form.submit();
-        });
-        document.getElementById('department-filter').addEventListener('change', function() {
-            this.form.submit();
-        });
-    </script>
 
-    <!-- Lista de Cotações -->
-    <div class="list-group mt-4">
+    <div class="row row-cols-1 row-cols-md-3 g-4">
         {% for cotacao in cotacoes %}
-        <div class="list-group-item d-flex justify-content-between align-items-center">
-            <div>
-                <h5>{{ cotacao.nome }} - {{ cotacao.departamento.nome }}</h5>
-                <p>Criado por: {{ cotacao.usuario_criador.username }} </p>
-                <p>Aberta em: {{ cotacao.data_abertura }}  </p>
-                <p>Fechamento em: {{ cotacao.data_fechamento }}   </p>
-                <p>Status: {{ cotacao.get_status_display }} </p>
-                <p>Prazo: {{ cotacao.prazo }} dias</p>
-            </div>
-            <div>
-                <a href="{% url 'cotacao:toggle_cotacao_status' cotacao.id %}" class="btn btn-secondary">{{ cotacao.get_status_display }}</a>
-                <a href="{% url 'cotacao:edit_cotacao' cotacao.id %}" class="btn btn-warning">Editar</a>
-                <a href="{% url 'cotacao:add_product_to_cotacao' cotacao.id %}" class="btn btn-primary">Adicionar Produtos</a>
-                <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteCotacaoModal{{ cotacao.id }}">Excluir Cotação</button>
+        <div class="col">
+            <div class="card h-100 shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="card-title">{{ cotacao.nome }}</h5>
+                </div>
+                <div class="card-body">
+                    <h6 class="card-subtitle mb-2 text-muted">{{ cotacao.departamento.nome }}</h6>
+                    <p class="card-text">
+                        Criado por: {{ cotacao.usuario_criador.username }}<br>
+                        Aberta em: {{ cotacao.data_abertura|date:"d/m/Y" }}<br>
+                        Fechamento em: {{ cotacao.data_fechamento|date:"d/m/Y" }}<br>
+                        Status: <span class="badge {% if cotacao.status == 'ativo' %}badge-ativo{% else %}badge-inativo{% endif %}">{{ cotacao.get_status_display }}</span><br>
+                        Prazo: {{ cotacao.prazo }} dias
+                    </p>
+                </div>
+                <div class="card-footer text-center">
+                    <a href="{% url 'cotacao:edit_cotacao' cotacao.id %}" class="btn btn-warning btn-sm">
+                        <i class="bi bi-pencil-square"></i>
+                    </a>
+                    <a href="{% url 'cotacao:add_product_to_cotacao' cotacao.id %}" class="btn btn-primary btn-sm">
+                        <i class="bi bi-basket"></i>
+                    </a>
+
+                    <a href="{% url 'cotacao:delete_cotacao' cotacao.id %}" class="btn btn-danger btn-sm">
+                        <i class="bi bi-trash"></i>
+                    </a>
+                    <a href="{% url 'cotacao:toggle_cotacao_status' cotacao.id %}" class="btn btn-outline-success btn-sm status-{{ cotacao.status }}">
+                        <i class="bi bi-toggle-on">Status</i>
+                    </a>
+                    <a href="{% url 'cotacao:enviar_cotacao' cotacao.id %}" class="btn btn-info btn-sm">
+                        <i class="bi bi-send"></i> Enviar Cotação
+                    </a>
+                </div>
             </div>
         </div>
         {% empty %}
-        <p class="text-muted">Não há cotações cadastradas no momento.</p>
+        <div class="col">
+            <p class="text-muted">Não há cotações cadastradas no momento.</p>
+        </div>
         {% endfor %}
     </div>
 </div>
 
-{% for cotacao in cotacoes %}
-<!-- Modal de Exclusão -->
-<div class="modal fade" id="deleteCotacaoModal{{ cotacao.id }}" tabindex="-1" role="dialog" aria-labelledby="deleteCotacaoModalLabel" aria-hidden="true">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="deleteCotacaoModalLabel">Confirmar Exclusão</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                Tem certeza que deseja excluir esta cotação "{{ cotacao.nome }}"?
-            </div>
-            <div class="modal-footer">
-                <form method="post" action="{% url 'cotacao:delete_cotacao' cotacao.id %}">
-                    {% csrf_token %}
-                    <button type="submit" class="btn btn-danger">Excluir</button>
-                </form>
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-            </div>
-        </div>
-    </div>
-</div>
-{% endfor %}
 {% endblock %}

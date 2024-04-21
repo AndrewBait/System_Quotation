@@ -3,6 +3,7 @@ from .models import Cotacao, ItemCotacao, Departamento
 from django.core.exceptions import ValidationError
 from dal import autocomplete
 from products.models import Product
+from suppliers.models import Supplier
 
 
 class CotacaoForm(forms.ModelForm):
@@ -44,7 +45,13 @@ class DepartamentoForm(forms.ModelForm):
             raise ValidationError("Um departamento com este nome já existe.")
         return nome
     
-
+    
+class EnviarCotacaoForm(forms.Form):
+    fornecedores = forms.ModelMultipleChoiceField(
+        queryset=Supplier.objects.all(),
+        widget=forms.CheckboxSelectMultiple,
+        required=True
+    )
 
 
 

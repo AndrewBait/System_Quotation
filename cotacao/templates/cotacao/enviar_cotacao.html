@@ -1,48 +1,164 @@
 {% extends "base.html" %}
-
 {% block content %}
 <div class="container mt-4">
-    <h2>Enviar Cotação: {{ cotacao.nome }}</h2>
-    <form method="get" class="mb-4">
-        <div class="row g-3">
-            <div class="col-md-3">
-                <label for="departamentoFilter" class="form-label">Departamento:</label>
-                <select id="departamentoFilter" name="departamento_id" class="form-select" onchange="this.form.submit()">
-                    <option value="">Todos</option>
+    <h2>Lista de Fornecedores</h2><br>
+    <h5>Enviar Cotação: {{ cotacao.nome }}</h5>
+
+    <!-- Filtros e busca -->
+    <form method="get" id="searchForm">
+        <div class="row mb-3">
+            <div class="col-md-4">
+                <select id="departamentoFilter" class="form-control" name="departamento" onchange="this.form.submit()">
+                    <option value="">Todos os Departamentos</option>
                     {% for departamento in departamentos %}
-                        <option value="{{ departamento.id }}" {% if request.GET.departamento_id == departamento.id|stringformat:"s" %}selected{% endif %}>
-                            {{ departamento.name }}
-                        </option>
+                    <option value="{{ departamento.id }}" {% if request.GET.departamento|stringformat:"s" == departamento.id|stringformat:"s" %}selected{% endif %}>
+                        {{ departamento.nome }}
+                    </option>
                     {% endfor %}
                 </select>
             </div>
-            <div class="col-md-3">
-                <label for="categoriaFilter" class="form-label">Categoria:</label>
-                <select id="categoriaFilter" name="categoria_id" class="form-select" onchange="this.form.submit()">
-                    <option value="">Todas</option>
-                    {% for categoria in categorias %}
-                        <option value="{{ categoria.id }}" {% if request.GET.categoria_id == categoria.id|stringformat:"s" %}selected{% endif %}>
-                            {{ categoria.name }}
-                        </option>
-                    {% endfor %}
-                </select>
+            <div class="col-md-8">
+                <input type="text" name="busca" id="busca" class="form-control" placeholder="Pesquisar por nome...">
             </div>
-            <!-- Repita para subcategorias, marcas e linhas de indústria conforme necessário -->
         </div>
     </form>
-    <form method="post">
+
+    <!-- Formulário de envio de cotações com a lista de fornecedores -->
+    <form method="post" id="fornecedoresForm">
         {% csrf_token %}
-        <div class="mb-3">
-            {% for fornecedor in fornecedores %}
-                <div class="form-check">
-                    <input class="form-check-input" type="checkbox" name="fornecedores" value="{{ fornecedor.id }}" id="fornecedor{{ forloop.counter }}">
-                    <label class="form-check-label" for="fornecedor{{ forloop.counter }}">
-                        {{ fornecedor.name }}
-                    </label>
+        <div class="row" id="fornecedorList">
+            {% for fornecedor in page_obj %}
+            <div class="col-md-4 mb-3">
+                <div class="card clickable-card" data-fornecedor-id="{{ fornecedor.id }}">
+                    <div class="card-body">
+                        <h5 class="card-title">{{ fornecedor.name }}</h5>
+                        <h6 class="card-subtitle mb-2 text-muted">Departamentos: {{ fornecedor.departments.all|join:', ' }}</h6>
+                        <p>{{ fornecedor.email }}</p>
+                        <div class="form-check">
+                            <input type="checkbox" name="fornecedores" value="{{ fornecedor.id }}" class="form-check-input fornecedor-checkbox" id="fornecedorCheck-{{ fornecedor.id }}">
+                            <label class="form-check-label" for="fornecedorCheck-{{ fornecedor.id }}">Selecionar</label>
+                        </div>
+                    </div>
                 </div>
+            </div>
             {% endfor %}
         </div>
-        <button type="submit" class="btn btn-primary">Enviar para Selecionados</button>
+
+
+
+
+
+        
+
+
+        <div class="row mb-3">
+            <div class="col-md-4">
+                <button type="button" id="selectAllVisible" class="btn btn-primary">Selecionar/Deselecionar Todos Visíveis</button>
+            </div>
+            <div class="col-md-4">
+                <button type="submit" class="btn btn-primary">Enviar Cotação</button>
+            </div>
+            <div class="col-md-4">
+                <a href="{% url 'cotacao:cotacao_list' %}" class="btn btn-secondary">Voltar para a lista de cotações</a>
+            </div>
+        </div>
     </form>
 </div>
+<br>
+                <!-- Paginação -->
+                <nav aria-label="Page navigation example">
+                    <ul class="pagination justify-content-center">
+                        {% if page_obj.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page=1{% if request.GET.busca %}&busca={{ request.GET.busca }}{% endif %}{% if request.GET.departamento %}&departamento={{ request.GET.departamento }}{% endif %}">Primeira</a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.busca %}&busca={{ request.GET.busca }}{% endif %}{% if request.GET.departamento %}&departamento={{ request.GET.departamento }}{% endif %}">Anterior</a>
+                        </li>
+                        {% endif %}
+                        {% for i in page_obj.paginator.page_range %}
+                            <li class="page-item {% if page_obj.number == i %}active{% endif %}">
+                                <a class="page-link" href="?page={{ i }}{% if request.GET.busca %}&busca={{ request.GET.busca }}{% endif %}{% if request.GET.departamento %}&departamento={{ request.GET.departamento }}{% endif %}">{{ i }}</a>
+                            </li>
+                        {% endfor %}
+                        {% if page_obj.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.busca %}&busca={{ request.GET.busca }}{% endif %}{% if request.GET.departamento %}&departamento={{ request.GET.departamento }}{% endif %}">Próxima</a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if request.GET.busca %}&busca={{ request.GET.busca }}{% endif %}{% if request.GET.departamento %}&departamento={{ request.GET.departamento }}{% endif %}">Última</a>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+<script>
+document.getElementById('busca').addEventListener('input', function() {
+    var searchTerm = this.value;
+    var departamentoId = document.getElementById('departamentoFilter').value;
+    fetch(`/pesquisa-fornecedor/?termo=${searchTerm}&departamento=${departamentoId}`)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Falha na rede');
+            }
+            return response.json();
+        })
+        .then(data => {
+            var fornecedorList = document.getElementById('fornecedorList');
+            fornecedorList.innerHTML = '';
+            data.forEach(fornecedor => {
+                fornecedorList.innerHTML += `
+                <div class="col-md-4 mb-3">
+                    <div class="card clickable-card" data-fornecedor-id="${fornecedor.id}">
+                        <div class="card-body">
+                            <h5 class="card-title">${fornecedor.name}</h5>
+                            <h6 class="card-subtitle mb-2 text-muted">Departamentos: ${fornecedor.departments.join(', ')}</h6>
+                            <p>${fornecedor.email}</p>
+                            <div class="form-check">
+                                <input type="checkbox" name="fornecedores" value="${fornecedor.id}" class="form-check-input fornecedor-checkbox" id="fornecedorCheck-${fornecedor.id}">
+                                <label class="form-check-label" for="fornecedorCheck-${fornecedor.id}">Selecionar</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                `;
+            });
+        })
+        .catch(error => console.error('Erro na busca:', error));
+});
+    
+
+
+
+    
+document.querySelectorAll('.clickable-card').forEach(function(card) {
+    card.addEventListener('click', function(event) {
+        if (event.target.type !== 'checkbox') {
+            var checkbox = document.getElementById('fornecedorCheck-' + this.dataset.fornecedorId);
+            checkbox.checked = !checkbox.checked;
+            this.classList.toggle('selected'); 
+        }
+    });
+});
+
+document.getElementById('selectAllVisible').addEventListener('click', function() {
+    const cards = document.querySelectorAll('#fornecedorList .col-md-4');
+    const anyUnchecked = Array.from(cards).some(card => !card.querySelector('.fornecedor-checkbox').checked);
+    cards.forEach(card => {
+        if (card.style.display !== 'none') {
+            const checkbox = card.querySelector('.fornecedor-checkbox');
+            checkbox.checked = anyUnchecked;
+            card.classList.toggle('selected', anyUnchecked);
+        }
+    });
+});
+</script>
+
+<style>
+    .clickable-card:hover, .clickable-card.selected,
+    .card.selected {
+        background-color: #2f659b;
+        cursor: pointer;
+        border: 2px solid #007bff;
+    }
+</style>
 {% endblock %}

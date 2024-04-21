@@ -51,6 +51,7 @@ INSTALLED_APPS = [
     'dal_select2',
     'simple_history',
     'django_select2',
+    
     #minhas apps
     'products',
     'accounts',

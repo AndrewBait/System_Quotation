@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-4">
+    <div class="card p-4 text-center">
+        <h2>Confirmar Exclusão</h2>
+        <p>Tem certeza de que deseja excluir a cotação "{{ object.nome }}"?</p>
+        <form action="{% url 'cotacao:delete_cotacao' object.id %}" method="post">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-danger btn-lg mx-2">Excluir</button>
+            <a href="{% url 'cotacao:cotacao_list' %}" class="btn btn-secondary btn-lg mx-2">Cancelar</a>
+        </form>
+    </div>
+</div>
+{% endblock %}

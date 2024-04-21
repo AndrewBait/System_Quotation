@@ -16,32 +16,66 @@ from django.core.paginator import Paginator
 from django.contrib.auth.models import User
 from django.views.generic import ListView
 from django.http import JsonResponse
-from django.views.generic import TemplateView
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.views.generic.edit import FormView
+from .forms import EnviarCotacaoForm
+from suppliers.models import Supplier
+from django.http import request
 
 
+class CotacaoListView(ListView):
+    model = Cotacao
+    template_name = 'cotacao/cotacao_list.html'
+    context_object_name = 'cotacoes'
 
-class CotacaoMainView(TemplateView):
-    template_name = 'cotacao/cotacoes.html'
+    def get_context_data(self, **kwargs):#contexto para filtro pra ser usado no queryset
+        context = super().get_context_data(**kwargs)
+        context['departamentos'] = Departamento.objects.all().order_by('nome')
+        context['usuarios'] = User.objects.all().order_by('username')  # Assumindo que User é seu modelo de usuário
+        return context
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        data_inicio = self.request.GET.get('data_inicio', '')
+        data_fim = self.request.GET.get('data_fim', '')
+        status = self.request.GET.get('status')
+        usuario_id = self.request.GET.get('usuario')
+        departamento_id = self.request.GET.get('departamento')
+        prazo = self.request.GET.get('prazo')
+
+        if data_inicio:
+            queryset = queryset.filter(data_abertura__gte=data_inicio)
+        if data_fim:
+            queryset = queryset.filter(data_fechamento__lte=data_fim)
+        if status:
+            queryset = queryset.filter(status=status)
+        if usuario_id:
+            queryset = queryset.filter(usuario_criador_id=usuario_id)
+        if departamento_id:
+            queryset = queryset.filter(departamento_id=departamento_id)
+        if prazo:
+            queryset = queryset.filter(prazo=prazo)
+
+        return queryset
+    
+
+class CotacaoDeleteView(DeleteView):
+    model = Cotacao
+    template_name = 'cotacao/cotacao_confirm_delete.html'
+    success_url = reverse_lazy('cotacao:cotacao_list')  # Para onde ir após a exclusão
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        cotacao_form = CotacaoForm()
-        cotacoes = Cotacao.objects.all()  # Assumindo que você tem uma instância inicial aqui
-        context['cotacao_form'] = cotacao_form
-        context['cotacoes'] = cotacoes
-        context['usuarios'] = User.objects.all()
-        context['departamentos'] = Departamento.objects.all()
-        context['active_tab'] = self.request.GET.get('tab', 'default_tab_name')
-        # Adicionar qualquer outra variável necessária
-
+        context['title'] = 'Excluir Cotação'
         return context
+
+
 
 class CotacaoCreateView( LoginRequiredMixin,CreateView):
     model = Cotacao
     form_class = CotacaoForm
-    template_name = 'cotacao/cotacao_list.html'
-    success_url = reverse_lazy('cotacao:cotacoes')  # Ajuste conforme necessário
+    template_name = 'cotacao/cotacao_create.html'
+    success_url = reverse_lazy('cotacao:cotacao_list')  # Ajuste conforme necessário
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -56,57 +90,62 @@ class CotacaoCreateView( LoginRequiredMixin,CreateView):
         cotacao.save()
         messages.success(self.request, "Cotação criada com sucesso!", extra_tags='success')
         return response
-    
-class CotacaoListView(ListView):
-    model = Cotacao
-    template_name = 'cotacao/cotacao_list.html'  # Template específico para listagem
-    context_object_name = 'cotacoes'
-    
 
-    def get_queryset(self):
-        queryset = super().get_queryset()
-        data_inicio = self.request.GET.get('data_inicio')
-        data_fim = self.request.GET.get('data_fim')
-        status = self.request.GET.get('status')
-        usuario_id = self.request.GET.get('usuario')
-        departamento_id = self.request.GET.get('departamento')
 
-        # Aplicar filtros
-        if data_inicio:
-            queryset = queryset.filter(data_abertura__gte=data_inicio)
-        if data_fim:
-            queryset = queryset.filter(data_fechamento__lte=data_fim)
-        if status:
-            queryset = queryset.filter(status=status)
-        if usuario_id:
-            queryset = queryset.filter(usuario_criador_id=usuario_id)
-        if departamento_id:
-            queryset = queryset.filter(departamento_id=departamento_id)
+class EnviarCotacaoView(FormView):
+    template_name = 'cotacao/enviar_cotacao.html'
+    form_class = EnviarCotacaoForm
+    success_url = reverse_lazy('cotacao:cotacao_list')
 
-        print("Cotações encontradas:", queryset.count())
-        print("Data de início:", data_inicio)
-        print("Data de fim:", data_fim)
-        print("Status:", status)
-        print("Usuário:", usuario_id)
-        print("Departamento:", departamento_id)
-        print("Queryset:", queryset)
-        print("Queryset após aplicar todos os filtros:", queryset.query)
-
-        return queryset
-    
     def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['usuarios'] = User.objects.all()
-        context['departamentos'] = Departamento.objects.all()
-        # Adicionar qualquer outra variável necessária
+        context = super().get_context_data(**kwargs)        
+        cotacao = Cotacao.objects.get(pk=self.kwargs['pk'])
+        busca = self.request.GET.get('busca', '')
+        departamento_id = self.request.GET.get('departamento', '')
+
+        fornecedores_query = Supplier.objects.all().order_by('name')
+        if departamento_id:
+            fornecedores_query = fornecedores_query.filter(departments__id=departamento_id)
+        if busca:
+            fornecedores_query = fornecedores_query.filter(name__icontains=busca)
+
+        paginator = Paginator(fornecedores_query, 6)  # 6 fornecedores por página
+        page_number = self.request.GET.get('page')
+        page_obj = paginator.get_page(page_number)
+
+        context['cotacao'] = cotacao
+        context['fornecedores'] = fornecedores_query
+        context['departamentos'] = Departamento.objects.all().order_by('nome')
+        context['page_obj'] = page_obj
         return context
 
+    def form_valid(self, form):
+        fornecedores_selecionados = form.cleaned_data['fornecedores']
+        cotacao = Cotacao.objects.get(pk=self.kwargs['pk'])  # Recuperando novamente a cotação
+        # Aqui você colocaria o código para processar a cotação e enviar aos fornecedores selecionados
+        messages.success(self.request, 'Cotação enviada com sucesso!')
+        return super().form_valid(form)
+
+
+class PesquisaFornecedorAjaxView(View):
     def get(self, request, *args, **kwargs):
-        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-            cotacoes = self.get_queryset()
-            data = [{'id': cotacao.id, 'nome': cotacao.nome, 'status': cotacao.get_status_display(), 'usuario': cotacao.usuario_criador.username, 'departamento': cotacao.departamento.nome, 'data_abertura': cotacao.data_abertura, 'data_fechamento': cotacao.data_fechamento} for cotacao in cotacoes]
-            return JsonResponse(data, safe=False)
-        return super().get(request, *args, **kwargs)
+        busca = request.GET.get('termo', '')
+        departamento_id = request.GET.get('departamento', '')
+
+        fornecedores_query = Supplier.objects.all().order_by('name')
+        if departamento_id:
+            fornecedores_query = fornecedores_query.filter(departments__id=departamento_id)
+        if busca:
+            fornecedores_query = fornecedores_query.filter(name__icontains=busca)
+
+        dados = [{
+            'id': fornecedor.id,
+            'name': fornecedor.name,
+            'departments': list(fornecedor.departments.all().values_list('nome', flat=True)),
+            'email': fornecedor.email
+        } for fornecedor in fornecedores_query]
+
+        return JsonResponse(dados, safe=False)
 
 
     
@@ -200,18 +239,11 @@ class CotacaoUpdateView(UpdateView):
     model = Cotacao
     form_class = CotacaoForm
     template_name = 'cotacao/add_product_to_cotacao.html'
-    success_url = reverse_lazy('cotacao:cotacao_create')  # ajuste para o nome correto da URL de listagem
+    success_url = reverse_lazy('cotacao:cotacao_list')  # ajuste para o nome correto da URL de listagem
 
     def form_valid(self, form):
         messages.success(self.request, 'Cotação atualizada com sucesso!')
         return super().form_valid(form)
     
-
-class CotacaoDeleteView(DeleteView):
-    model = Cotacao
-    success_url = reverse_lazy('cotacao:cotacoes')  # Redireciona para a lista após exclusão
-
-    def get(self, request, *args, **kwargs):
-        return self.post(request, *args, **kwargs)
 
 
