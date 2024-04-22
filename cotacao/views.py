@@ -1,6 +1,6 @@
 from django.shortcuts import get_object_or_404, render
 from django.views import View
-from django.http import Http404, JsonResponse
+from django.http import Http404, HttpResponseBadRequest, JsonResponse
 from django.db.models import Q
 from products.models import Product, Departamento, Category, Subcategory
 from django.views.generic import View, RedirectView
@@ -31,6 +31,7 @@ class CotacaoListView(ListView):
     model = Cotacao
     template_name = 'cotacao/cotacao_list.html'
     context_object_name = 'cotacoes'
+    paginate_by = 6
 
 
     def get_context_data(self, **kwargs):
@@ -80,7 +81,7 @@ class CotacaoCreateView( LoginRequiredMixin,CreateView):
     model = Cotacao
     form_class = CotacaoForm
     template_name = 'cotacao/cotacao_create.html'
-    success_url = reverse_lazy('cotacao:cotacao_list')  # Ajuste conforme necessário
+    success_url = reverse_lazy('cotacao:cotacao_create')  # Ajuste conforme necessário
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -199,8 +200,30 @@ class ListProductsView(ListView):
             )
         else:
             return Product.objects.all()
+
+class UpdateItemCotacaoView(UpdateView):
+    model = ItemCotacao
+    fields = ['quantidade', 'tipo_volume', 'observacao']
+  # Se necessário, ou use apenas HttpResponse
+    template_name = 'cotacao/update_item_cotacao.html'
+    success_url = reverse_lazy('cotacao:cotacao_list')  # ajuste para o nome correto da URL de listagem
+
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        messages.success(self.request, "Item atualizado com sucesso!")
+        return response
+
+class DeleteItemCotacaoView(DeleteView):
+    model = ItemCotacao
+    success_url = reverse_lazy('cotacao:cotacao_list')  # ajuste para o nome correto da URL de listagem
+
+    def delete(self, request, *args, **kwargs):
+        response = super().delete(request, *args, **kwargs)
+        messages.success(request, "Item removido com sucesso!")
+        return response
     
     
+  
 class AddProductToCotacaoView(CreateView):
     model = ItemCotacao
     form_class = ItemCotacaoForm
@@ -208,18 +231,42 @@ class AddProductToCotacaoView(CreateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        # Certifique-se de que a cotação está sendo passada corretamente
         cotacao = get_object_or_404(Cotacao, id=self.kwargs['cotacao_id'])
         context['cotacao'] = cotacao
         return context
 
     def form_valid(self, form):
-        form.instance.cotacao_id = self.kwargs['cotacao_id']
+        cotacao_id = self.kwargs['cotacao_id']
+        produto_id = form.cleaned_data['produto'].id
+        # Verificar se o produto já está na cotação
+        if ItemCotacao.objects.filter(cotacao_id=cotacao_id, produto_id=produto_id).exists():
+            return HttpResponseBadRequest("Este produto já foi adicionado à cotação.")
+        form.instance.cotacao_id = cotacao_id
         form.save()
+        messages.success(self.request, "Produto adicionado com sucesso!")
         return super().form_valid(form)
 
     def get_success_url(self):
         return reverse('cotacao:list_products_to_add', kwargs={'cotacao_id': self.kwargs['cotacao_id']})
+    
+    
+    def post(self, request, cotacao_id):
+        produto_id = request.POST.get('produto_id')
+        quantidade = request.POST.get('quantidade')
+        tipo_volume = request.POST.get('tipo_volume')
+        observacao = request.POST.get('observacao')
+
+        cotacao = get_object_or_404(Cotacao, id=cotacao_id)
+        item = ItemCotacao(
+            cotacao=cotacao,
+            produto_id=produto_id,
+            quantidade=quantidade,
+            tipo_volume=tipo_volume,
+            observacao=observacao
+        )
+        item.save()
+
+        return JsonResponse({"message": "Produto adicionado com sucesso!"}, status=200)
     
     
 class ProductAutocomplete(autocomplete.Select2QuerySetView):

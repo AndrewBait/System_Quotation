@@ -4,7 +4,8 @@ from .views import (
     ItensCotacaoAPI, CotacaoCreateView, AddProductToCotacaoView, 
     ProductAutocomplete, ToggleCotacaoStatusView, CotacaoUpdateView, 
     CotacaoDeleteView, CotacaoListView, PesquisaFornecedorAjaxView, 
-    EnviarCotacaoView, ListProductsToAddView  
+    EnviarCotacaoView, ListProductsToAddView, UpdateItemCotacaoView,
+    DeleteItemCotacaoView
 )
 
 app_name = 'cotacao'
@@ -24,6 +25,8 @@ urlpatterns = [
     path('delete/<int:pk>/', CotacaoDeleteView.as_view(), name='delete_cotacao'),
     path('enviar-cotacao/<int:pk>/', EnviarCotacaoView.as_view(), name='enviar_cotacao'),
     path('pesquisa-fornecedor/', PesquisaFornecedorAjaxView.as_view(), name='pesquisa-fornecedor-ajax'),
+    path('item/update/<int:pk>/', UpdateItemCotacaoView.as_view(), name='update_item_cotacao'),
+    path('item/delete/<int:pk>/', DeleteItemCotacaoView.as_view(), name='delete_item_cotacao'),
 
     # Produto handling
     path('product-autocomplete/', ProductAutocomplete.as_view(), name='product-autocomplete'),

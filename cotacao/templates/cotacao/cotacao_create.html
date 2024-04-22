@@ -22,7 +22,9 @@
     <form method="post" action="{% url 'cotacao:cotacao_create' %}">
         {% csrf_token %}
         {{ form|crispy }}
-        <button type="submit" class="btn btn-primary">Salvar Cotação</button>
+        <button type="submit" class="btn btn-primary">Salvar Cotação</button>  
+        <a href="{% url 'cotacao:cotacao_list' %}" class="btn btn-secondary">Voltar para a lista</a>      
+        
     </form>
 </div>
 {% endblock %}
