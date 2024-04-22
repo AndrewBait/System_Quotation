@@ -41,15 +41,16 @@
                     <td><input type="number" name="quantidade" value="{{ item.quantidade }}" class="form-control" min="1"></td>
                     <td>
                         <select name="tipo_volume" class="form-control">
-                            {% for key, value in item.tipo_volume_choices %}
+                            {% for key, value in item.tipo_volume_options %}
                                 <option value="{{ key }}" {% if key == item.tipo_volume %}selected{% endif %}>{{ value }}</option>
                             {% endfor %}
-                        </select>
+                        </select>                  
+                        
                     </td>
                     <td><input type="text" name="observacao" value="{{ item.observacao }}" class="form-control"></td>
                     <td>
-                        <button type="submit" class="btn btn-success">Salvar</button>
-                        <a href="{% url 'cotacao:delete_item_cotacao' item.id %}" class="btn btn-danger" onclick="return confirm('Tem certeza que deseja remover este item?');">Remover</a>
+                        <button type="submit" class="btn btn-info">Salvar</button>
+                        <a href="{% url 'cotacao:delete_item_cotacao' item.id %}" class="btn btn-danger" onclick="#">Remover</a>
                     </td>
                 </tr>
             </form>

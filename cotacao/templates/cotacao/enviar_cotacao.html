@@ -93,6 +93,48 @@
                     </ul>
                 </nav>
 <script>
+document.addEventListener('DOMContentLoaded', function() {
+    const searchField = document.getElementById('searchFornecedor');
+    searchField.addEventListener('input', debounce(function() {
+        fetch(`/sua-url-de-pesquisa-fornecedores?busca=${searchField.value}`)
+            .then(response => response.json())
+            .then(data => {
+                const resultsContainer = document.getElementById('fornecedorResults');
+                resultsContainer.innerHTML = '';
+                data.forEach(fornecedor => {
+                    const checkbox = document.createElement('input');
+                    checkbox.type = 'checkbox';
+                    checkbox.name = 'fornecedores';
+                    checkbox.value = fornecedor.id;
+                    checkbox.id = 'forn' + fornecedor.id;
+                    resultsContainer.appendChild(checkbox);
+
+                    const label = document.createElement('label');
+                    label.htmlFor = 'forn' + fornecedor.id;
+                    label.textContent = fornecedor.name + ' (' + fornecedor.email + ')';
+                    resultsContainer.appendChild(label);
+
+                    const br = document.createElement('br');
+                    resultsContainer.appendChild(br);
+                });
+            });
+    }, 300));
+});
+
+function debounce(func, wait, immediate) {
+    var timeout;
+    return function() {
+        var context = this, args = arguments;
+        var later = function() {
+            timeout = null;
+            if (!immediate) func.apply(context, args);
+        };
+        var callNow = immediate && !timeout;
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+        if (callNow) func.apply(context, args);
+    };
+}
 document.getElementById('busca').addEventListener('input', function() {
     var searchTerm = this.value;
     var departamentoId = document.getElementById('departamentoFilter').value;

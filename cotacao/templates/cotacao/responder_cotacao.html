@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <h2>Responder à Cotação: {{ cotacao.nome }}</h2>
+    <form method="post">
+        {% csrf_token %}
+        <input type="hidden" name="fornecedor_id" value="{{ fornecedor_id }}">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Código EAN</th>
+                    <th>Nome do Produto</th>
+                    <th>Quantidade Pedida</th>
+                    <th>Tipo de Volume</th>
+                    <th>Observação</th>
+                    <th>Preço</th>
+                    <th>Observação Fornecedor</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item_dict in itens_cotacao %}
+                <tr>
+                    <td>{{ item_dict.item.produto.ean }}</td>
+                    <td>{{ item_dict.item.produto.name }}</td>
+                    <td>{{ item_dict.item.quantidade }}</td>
+                    <td>{{ item_dict.item.tipo_volume }}</td>
+                    <td>{{ item_dict.item.observacao }}</td>
+                    {% with item_id=item_dict.item.id %}
+                        <td>{{ form.preco_item_id }}</td>
+                        <td>{{ form.observacao_item_id }}</td> 
+                    {% endwith %}
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <button type="submit" class="btn btn-primary">Enviar Resposta</button>
+    </form>
+</div>
+{% endblock %}

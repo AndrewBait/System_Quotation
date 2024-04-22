@@ -5,7 +5,7 @@ from .views import (
     ProductAutocomplete, ToggleCotacaoStatusView, CotacaoUpdateView, 
     CotacaoDeleteView, CotacaoListView, PesquisaFornecedorAjaxView, 
     EnviarCotacaoView, ListProductsToAddView, UpdateItemCotacaoView,
-    DeleteItemCotacaoView
+    DeleteItemCotacaoView, ResponderCotacaoView, SuccessView
 )
 
 app_name = 'cotacao'
@@ -36,4 +36,10 @@ urlpatterns = [
     
     path('add-product/<int:cotacao_id>/', AddProductToCotacaoView.as_view(), name='add_product_to_cotacao'),
     path('cotacao/<int:cotacao_id>/adicionar-produtos/', ListProductsToAddView.as_view(), name='list_products_to_add'),
+    
+    #fornecedor
+    path('responder/<int:pk>/<int:fornecedor_id>/', ResponderCotacaoView.as_view(), name='responder_cotacao'),
+    path('success/', SuccessView.as_view(), name='cotacao_success'),
+
+
 ]

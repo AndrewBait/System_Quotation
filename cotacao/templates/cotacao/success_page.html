@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="alert alert-success" role="alert">
+        <h4 class="alert-heading">Resposta Enviada com Sucesso!</h4>
+        <p>Obrigado por responder à cotação. Sua resposta foi enviada com sucesso e será analisada em breve.</p>
+        <hr>
+        <p class="mb-0">Se precisar fazer alguma alteração ou se tiver alguma dúvida, entre em contato conosco diretamente.</p>
+    </div>
+    <a href="{% url 'cotacao:cotacao_list' %}" class="btn btn-primary">Voltar para a Lista de Cotações</a>
+</div>
+{% endblock %}

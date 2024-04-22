@@ -5,6 +5,7 @@ from dal import autocomplete
 from products.models import Product
 from suppliers.models import Supplier
 from django_select2 import forms as s2forms
+from .models import RespostaCotacao
 
 
 class CotacaoForm(forms.ModelForm):
@@ -60,6 +61,24 @@ class EnviarCotacaoForm(forms.Form):
     )
 
 
+class RespostaCotacaoForm(forms.ModelForm):
+    fornecedor_id = forms.IntegerField(widget=forms.HiddenInput())
 
+    class Meta:
+        model = RespostaCotacao
+        fields = []
 
+    def __init__(self, *args, **kwargs):
+        itens_cotacao = kwargs.pop('itens_cotacao', None)
+        super(RespostaCotacaoForm, self).__init__(*args, **kwargs)
 
+        if itens_cotacao:
+            for item in itens_cotacao:
+                self.fields[f'preco_{item.id}'] = forms.DecimalField(
+                    label=f'Preço para {item.produto.name}',
+                    max_digits=10, decimal_places=2, required=False,
+                )
+                self.fields[f'observacao_{item.id}'] = forms.CharField(
+                    label='Observação', max_length=100, required=False,
+                    widget=forms.TextInput(attrs={'placeholder': 'Observação opcional'})
+                )

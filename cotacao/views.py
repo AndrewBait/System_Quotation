@@ -1,3 +1,4 @@
+from django import forms
 from django.shortcuts import get_object_or_404, render
 from django.views import View
 from django.http import Http404, HttpResponseBadRequest, JsonResponse
@@ -6,7 +7,7 @@ from products.models import Product, Departamento, Category, Subcategory
 from django.views.generic import View, RedirectView
 from django.urls import reverse, reverse_lazy
 from django.views.generic.edit import CreateView, UpdateView, DeleteView
-from .models import Cotacao
+from .models import Cotacao, ItemRespostaCotacao
 from .forms import CotacaoForm
 from django.contrib import messages
 from .models import ItemCotacao
@@ -23,7 +24,9 @@ from .forms import EnviarCotacaoForm
 from suppliers.models import Supplier
 from django.views.generic import TemplateView
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
-
+from django.core.mail import send_mail
+from .models import Cotacao, RespostaCotacao
+from .forms import RespostaCotacaoForm
 
 
 
@@ -141,11 +144,18 @@ class EnviarCotacaoView(FormView):
         context['departamentos'] = Departamento.objects.all().order_by('nome')
         context['page_obj'] = page_obj
         return context
-
+    
     def form_valid(self, form):
         fornecedores_selecionados = form.cleaned_data['fornecedores']
-        cotacao = Cotacao.objects.get(pk=self.kwargs['pk'])  # Recuperando novamente a cotação
-        # Aqui você colocaria o código para processar a cotação e enviar aos fornecedores selecionados
+        cotacao = Cotacao.objects.get(pk=self.kwargs['pk'])
+        for fornecedor in fornecedores_selecionados:
+                send_mail(
+                    'Nova Cotação Disponível',
+                    f'Olá {fornecedor.name}, uma nova cotação está disponível. Por favor, acesse o link para responder: {self.request.build_absolute_uri(reverse("cotacao:responder_cotacao", kwargs={'pk': cotacao.id, 'fornecedor_id': fornecedor.id}))}',
+                    'andrewsilva811@gmail.com',
+                    [fornecedor.email],
+                    fail_silently=False,
+                )
         messages.success(self.request, 'Cotação enviada com sucesso!')
         return super().form_valid(form)
 
@@ -170,6 +180,87 @@ class PesquisaFornecedorAjaxView(View):
 
         return JsonResponse(dados, safe=False)
 
+class ResponderCotacaoView(CreateView):
+    model = RespostaCotacao
+    form_class = RespostaCotacaoForm
+    template_name = 'cotacao/responder_cotacao.html'
+    
+    def get_form_class(self):
+        form_class = super().get_form_class()
+
+        if 'itens_cotacao' in self.kwargs:
+            itens_cotacao = self.kwargs['itens_cotacao']
+            for item in itens_cotacao:
+                form_class.base_fields[f'preco_{item.id}'] = forms.DecimalField(
+                    label=f'Preço para {item.produto.name}',
+                    max_digits=10, decimal_places=2, required=False,
+                )
+                form_class.base_fields[f'observacao_{item.id}'] = forms.CharField(
+                    label='Observação', max_length=100, required=False,
+                    widget=forms.TextInput(attrs={'placeholder': 'Observação opcional'})
+                )
+        return form_class
+    
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        cotacao = get_object_or_404(Cotacao, pk=self.kwargs['pk'])
+        kwargs['itens_cotacao'] = cotacao.itens_cotacao.all()
+        return kwargs
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        cotacao = get_object_or_404(Cotacao, pk=self.kwargs['pk'])
+        context['cotacao'] = cotacao
+        context['itens_cotacao'] = cotacao.itens_cotacao.all()
+        context['fornecedor_id'] = self.kwargs['fornecedor_id']
+        # Preparar os nomes dos campos
+        form_field_names = {
+            'precos': {item.id: f'preco_{item.id}' for item in cotacao.itens_cotacao.all()},
+            'observacoes': {item.id: f'observacao_{item.id}' for item in cotacao.itens_cotacao.all()}
+        }
+        context['form_field_names'] = form_field_names
+        return context
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        cotacao = get_object_or_404(Cotacao, pk=self.kwargs['pk'])
+        itens = []
+        for item in cotacao.itens_cotacao.all():
+            itens.append({
+                'item': item,
+                'field_preco': f'preco_{item.id}',
+                'field_observacao': f'observacao_{item.id}'
+            })
+        context['cotacao'] = cotacao
+        context['itens_cotacao'] = itens
+        context['fornecedor_id'] = self.kwargs['fornecedor_id']
+        return context
+    
+    def form_valid(self, form):
+        if form.is_valid():
+            resposta_cotacao = form.save(commit=False)
+            resposta_cotacao.cotacao_id = self.kwargs['pk']
+            resposta_cotacao.fornecedor_id = self.kwargs['fornecedor_id'] 
+            resposta_cotacao.save()
+            for item_id, preco in form.cleaned_data.items():
+                if item_id.startswith('preco_'):
+                    item_cotacao_id = int(item_id.replace('preco_', ''))
+                    observacao_id = f"observacao_{item_cotacao_id}"
+                    item_cotacao = ItemCotacao.objects.get(pk=item_cotacao_id)
+                    ItemRespostaCotacao.objects.create(
+                        resposta_cotacao=resposta_cotacao,
+                        item_cotacao=item_cotacao,
+                        fornecedor_id=resposta_cotacao.fornecedor_id,
+                        preco=preco,
+                        observacao=form.cleaned_data[observacao_id],
+                    )
+            return super().form_valid(form)
+
+    def get_success_url(self):
+        return reverse('cotacao:cotacao_success')
+
+class SuccessView(TemplateView):
+    template_name = 'cotacao/success_page.html'
 
 class ListProductsToAddView(TemplateView):
     template_name = 'cotacao/list_products_to_add.html'
@@ -204,9 +295,8 @@ class ListProductsView(ListView):
 class UpdateItemCotacaoView(UpdateView):
     model = ItemCotacao
     fields = ['quantidade', 'tipo_volume', 'observacao']
-  # Se necessário, ou use apenas HttpResponse
     template_name = 'cotacao/update_item_cotacao.html'
-    success_url = reverse_lazy('cotacao:cotacao_list')  # ajuste para o nome correto da URL de listagem
+    success_url = reverse_lazy('cotacao:cotacao_list')  
 
     def form_valid(self, form):
         response = super().form_valid(form)

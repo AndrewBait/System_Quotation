@@ -118,7 +118,7 @@ div.card-footer a[href*="toggle_cotacao_status"].status-inativo {
 
         <div class="col">
             <div class="card h-100 shadow-sm">
-                <div class="card-header bg-primary text-white">
+                <div class="card-header bg-secondary text-white">
                     <h5 class="card-title">{{ cotacao.nome }}</h5>
                 </div>
                 <div class="card-body">
@@ -146,7 +146,10 @@ div.card-footer a[href*="toggle_cotacao_status"].status-inativo {
                         <i class="bi bi-toggle-on">Status</i>
                     </a>
                     <a href="{% url 'cotacao:enviar_cotacao' cotacao.id %}" class="btn btn-info btn-sm">
-                        <i class="bi bi-send"></i> Enviar Cotação
+                        <i class="bi bi-send"></i> Enviar
+                    </a>
+                    <a href="" class="btn btn-success">
+                        <i class="bi bi-eye-fill"></i> Resp.
                     </a>
                 </div>
             </div>
