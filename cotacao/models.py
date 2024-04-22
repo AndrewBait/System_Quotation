@@ -50,7 +50,7 @@ class ItemCotacao(models.Model):
     quantidade = models.PositiveIntegerField(default=1, verbose_name='Quantidade', help_text='Quantidade do produto', blank=False, null=False)
     tipo_volume = models.CharField(max_length=2, choices=[('Kg', 'Quilo'), ('L', 'Litro'), ('Dp', 'Display'), ('Un', 'Unidade'), ('Cx', 'Caixa'), ('Fd', 'Fardo'), ('Bd', 'Bandeija'), ('Pc', 'Pacote'), ('Sc', 'Sache'), ('Tp', 'Take Profit'),], default='un', verbose_name='Tipo de Volume', help_text='Tipo de volume do produto', blank=False, null=False)
     observacao = models.TextField(blank=True, null=True, default='', verbose_name='Observação', help_text='Observações sobre o item', max_length=100)
-
+    
 
     def __str__(self):
         return f"{self.quantidade}x {self.produto.name} [{self.get_tipo_volume_display()}] na cotação {self.cotacao.nome} ({self.cotacao.departamento.nome}) "

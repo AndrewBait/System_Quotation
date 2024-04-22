@@ -1,3 +1,4 @@
+from django.shortcuts import get_object_or_404, render
 from django.views import View
 from django.http import Http404, JsonResponse
 from django.db.models import Q
@@ -20,7 +21,10 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic.edit import FormView
 from .forms import EnviarCotacaoForm
 from suppliers.models import Supplier
-from django.http import request
+from django.views.generic import TemplateView
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+
+
 
 
 class CotacaoListView(ListView):
@@ -28,10 +32,11 @@ class CotacaoListView(ListView):
     template_name = 'cotacao/cotacao_list.html'
     context_object_name = 'cotacoes'
 
-    def get_context_data(self, **kwargs):#contexto para filtro pra ser usado no queryset
+
+    def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['departamentos'] = Departamento.objects.all().order_by('nome')
-        context['usuarios'] = User.objects.all().order_by('username')  # Assumindo que User é seu modelo de usuário
+        context['usuarios'] = User.objects.all().order_by('username')
         return context
 
     def get_queryset(self):
@@ -90,6 +95,21 @@ class CotacaoCreateView( LoginRequiredMixin,CreateView):
         cotacao.save()
         messages.success(self.request, "Cotação criada com sucesso!", extra_tags='success')
         return response
+    
+
+class CotacaoUpdateView(UpdateView):
+    model = Cotacao
+    form_class = CotacaoForm
+    template_name = 'cotacao/cotacao_update.html'
+    success_url = reverse_lazy('cotacao:cotacao_list')  # ajuste para o nome correto da URL de listagem
+
+    def form_valid(self, form):
+
+        cotacao = form.save(commit=False) 
+        cotacao.usuario_criador = self.request.user  # Atribui o usuário logado
+        cotacao.save()
+        messages.success(self.request, 'Cotação atualizada com sucesso!')
+        return super().form_valid(form)
 
 
 class EnviarCotacaoView(FormView):
@@ -107,7 +127,9 @@ class EnviarCotacaoView(FormView):
         if departamento_id:
             fornecedores_query = fornecedores_query.filter(departments__id=departamento_id)
         if busca:
-            fornecedores_query = fornecedores_query.filter(name__icontains=busca)
+            fornecedores_query = fornecedores_query.filter(
+                Q(name__icontains=busca) | Q(company__icontains=busca)
+            )
 
         paginator = Paginator(fornecedores_query, 6)  # 6 fornecedores por página
         page_number = self.request.GET.get('page')
@@ -148,6 +170,35 @@ class PesquisaFornecedorAjaxView(View):
         return JsonResponse(dados, safe=False)
 
 
+class ListProductsToAddView(TemplateView):
+    template_name = 'cotacao/list_products_to_add.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        cotacao = get_object_or_404(Cotacao, pk=self.kwargs['cotacao_id'])
+        produtos_ja_adicionados = ItemCotacao.objects.filter(cotacao=cotacao).values_list('produto', flat=True)
+        context['form'] = ItemCotacaoForm()
+        context['produtos'] = Product.objects.exclude(id__in=produtos_ja_adicionados)
+        context['cotacao'] = cotacao
+        return context
+
+
+class ListProductsView(ListView):
+    model = Product
+    template_name = 'cotacao/list_products_to_add.html'  # Ajuste para o template correto
+    context_object_name = 'produtos'
+    paginate_by = 10
+
+    def get_queryset(self):
+        search_query = self.request.GET.get('search', '')
+        if search_query:
+            return Product.objects.filter(
+                Q(name__icontains=search_query) |
+                Q(sku__icontains=search_query) |
+                Q(ean__icontains=search_query)
+            )
+        else:
+            return Product.objects.all()
     
     
 class AddProductToCotacaoView(CreateView):
@@ -155,13 +206,20 @@ class AddProductToCotacaoView(CreateView):
     form_class = ItemCotacaoForm
     template_name = 'cotacao/add_product_to_cotacao.html'
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # Certifique-se de que a cotação está sendo passada corretamente
+        cotacao = get_object_or_404(Cotacao, id=self.kwargs['cotacao_id'])
+        context['cotacao'] = cotacao
+        return context
+
     def form_valid(self, form):
         form.instance.cotacao_id = self.kwargs['cotacao_id']
+        form.save()
         return super().form_valid(form)
 
     def get_success_url(self):
-        # Redireciona para a página da cotação após adicionar o produto
-        return reverse_lazy('cotacao:cotacao_create', kwargs={'pk': self.kwargs['cotacao_id']})
+        return reverse('cotacao:list_products_to_add', kwargs={'cotacao_id': self.kwargs['cotacao_id']})
     
     
 class ProductAutocomplete(autocomplete.Select2QuerySetView):
@@ -233,17 +291,3 @@ class ItensCotacaoAPI(View):
         itens = ItemCotacao.objects.filter(cotacao_id=cotacao_id).select_related('produto').values(
             'produto__name', 'quantidade', 'tipo_volume', 'observacao', 'produto__id')
         return JsonResponse(list(itens), safe=False)
-  
-    
-class CotacaoUpdateView(UpdateView):
-    model = Cotacao
-    form_class = CotacaoForm
-    template_name = 'cotacao/add_product_to_cotacao.html'
-    success_url = reverse_lazy('cotacao:cotacao_list')  # ajuste para o nome correto da URL de listagem
-
-    def form_valid(self, form):
-        messages.success(self.request, 'Cotação atualizada com sucesso!')
-        return super().form_valid(form)
-    
-
-

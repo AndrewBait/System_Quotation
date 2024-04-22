@@ -1,59 +1,51 @@
 {% extends "base.html" %}
-{% load static %}
-{% block extra_head %}
-<link href="{% static 'vendor/select2/css/select2.min.css' %}" rel="stylesheet"/>
-<script src="{% static 'vendor/select2/js/select2.min.js' %}"></script>
-<script src="{% static 'vendor/jquery/jquery.min.js' %}"></script>
-{% endblock %}
-
 {% block content %}
-<div class="container">
-    <h2>Adicionar Produto à Cotação</h2>
-    <form method="post">
-        {% csrf_token %}
-        {{ form.media }}
-        {{ form.as_p }}
-        <input type="text" id="produto-search" class="form-control" placeholder="Digite nome, SKU ou EAN do produto">
-<div id="product-results"></div>
 
-        <button type="submit" class="btn btn-primary">Adicionar Produto</button>
-    </form>
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Detalhes da Cotação: {{ cotacao.nome }}</h2>
+        <!-- Botão para adicionar produtos à cotação -->
+        {% if cotacao %}
+        <a href="{% url 'cotacao:list_products_to_add' cotacao.id %}" class="btn btn-primary">
+            <i class="bi bi-plus-lg"></i> Adicionar Produto à Cotação
+        </a>
+
+        <a href="{% url 'cotacao:cotacao_list' %}" class="btn btn-secondary">
+            <i class="bi bi-arrow-left"></i> Voltar
+        </a>
+
+        {% endif %}
+    </div>
+    
+    <!-- Tabela de produtos -->
+    {% if cotacao and cotacao.itens_cotacao.exists %}
+    <table class="table table-hover">
+        <thead>
+            <tr>
+                <th>EAN</th>
+                <th>SKU</th>
+                <th>Produto</th>
+                <th>Quantidade</th>
+                <th>Unidade de Medida</th>
+                <th>Observação</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for item in cotacao.itens_cotacao.all %}
+            <tr>
+                <td>{{ item.produto.ean }}</td>
+                <td>{{ item.produto.sku }}</td>
+                <td>{{ item.produto.name }}</td>
+                <td>{{ item.quantidade }}</td>
+                <td>{{ item.get_tipo_volume_display }}</td>
+                <td>{{ item.observacao }}</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div class="alert alert-info">Nenhum produto adicionado.</div>
+    {% endif %}
 </div>
-{% block extra_js %}
-<script>
-    $(document).ready(function() {
-        $('#produto-search').on('input', function() {
-            var query = $(this).val();
-    
-            if (query.length >= 2) { // Apenas faz a pesquisa se tiver 2 ou mais caracteres
-                $.ajax({
-                    url: '/api/produtos/', // Ajuste a URL conforme necessário
-                    data: { 'q': query },
-                    dataType: 'json',
-                    success: function(data) {
-                        var items = [];
-                        $.each(data, function(i, item) {
-                            items.push('<li><a href="#" class="product-item" data-id="' + item.id + '">' + item.nome + ' (' + item.sku + ')</a></li>');
-                        });
-                        $('#product-results').html('<ul>' + items.join('') + '</ul>');
-                    }
-                });
-            }
-        });
-    
-        // Evento para seleção de um produto
-        $(document).on('click', '.product-item', function(e) {
-            e.preventDefault();
-            var productId = $(this).data('id');
-            var productName = $(this).text();
-            // Aqui você pode adicionar o produto ao seu formulário ou o que precisar fazer
-            console.log('Produto selecionado:', productName, 'ID:', productId);
-        });
-    });
-    $(document).ready(function() {
-        $('.django-select2').djangoSelect2();
-    });
-</script>
-{% endblock %}
 
 {% endblock %}

@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags %}
+{% load static %}
+
+{% block extra_head %}
+<link href="{% static 'vendor/select2/css/select2.min.css' %}" rel="stylesheet"/>
+<link href="{% static 'css/bootstrap.min.css' %}" rel="stylesheet"/> <!-- Certifique-se de que este caminho está correto -->
+<script src="{% static 'vendor/jquery/jquery.min.js' %}"></script>
+<script src="{% static 'vendor/select2/js/select2.min.js' %}"></script>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="mb-4">Editar Cotação</h2>
+    <form method="post" class="needs-validation" novalidate>
+        {% csrf_token %}
+        {{ form.media }}
+        <div class="mb-3">
+            {{ form.nome|as_crispy_field }}
+        </div>
+        <div class="mb-3">
+            {{ form.departamento|as_crispy_field }}
+        </div>
+        <div class="mb-3">
+            {{ form.data_abertura|as_crispy_field }}
+        </div>
+        <div class="mb-3">
+            {{ form.data_fechamento|as_crispy_field }}
+        </div>
+        <div class="mb-3">
+            {{ form.status|as_crispy_field }}
+        </div>
+        <div class="mb-3">
+            {{ form.prazo|as_crispy_field }}
+        </div>
+        
+        <button type="submit" class="btn btn-primary">Salvar Alterações</button>
+        <a href="{% url 'cotacao:cotacao_list' %}" class="btn btn-secondary">Voltar</a>
+    </form>
+</div>
+{% endblock %}

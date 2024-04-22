@@ -115,6 +115,7 @@ div.card-footer a[href*="toggle_cotacao_status"].status-inativo {
 
     <div class="row row-cols-1 row-cols-md-3 g-4">
         {% for cotacao in cotacoes %}
+
         <div class="col">
             <div class="card h-100 shadow-sm">
                 <div class="card-header bg-primary text-white">
@@ -155,7 +156,35 @@ div.card-footer a[href*="toggle_cotacao_status"].status-inativo {
             <p class="text-muted">Não há cotações cadastradas no momento.</p>
         </div>
         {% endfor %}
+ 
     </div>
+    <br>
+<!-- Pagination -->
+<div class="d-flex justify-content-center">
+    {% if is_paginated %}
+        <nav>
+            <ul class="pagination">
+                {% if page_obj.has_previous %}
+                    <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.data_inicio %}&data_inicio={{ request.GET.data_inicio }}{% endif %}{% if request.GET.data_fim %}&data_fim={{ request.GET.data_fim }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.usuario %}&usuario={{ request.GET.usuario }}{% endif %}{% if request.GET.departamento %}&departamento={{ request.GET.departamento }}{% endif %}{% if request.GET.prazo %}&prazo={{ request.GET.prazo }}{% endif %}">Anterior</a></li>
+                {% endif %}
+                {% for i in paginator.page_range %}
+                    {% if page_obj.number == i %}
+                        <li class="page-item active"><a class="page-link">{{ i }}</a></li>
+                    {% else %}
+                        <li class="page-item"><a class="page-link" href="?page={{ i }}{% if request.GET.data_inicio %}&data_inicio={{ request.GET.data_inicio }}{% endif %}{% if request.GET.data_fim %}&data_fim={{ request.GET.data_fim }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.usuario %}&usuario={{ request.GET.usuario }}{% endif %}{% if request.GET.departamento %}&departamento={{ request.GET.departamento }}{% endif %}{% if request.GET.prazo %}&prazo={{ request.GET.prazo }}{% endif %}">{{ i }}</a></li>
+                    {% endif %}
+                {% endfor %}
+                {% if page_obj.has_next %}
+                    <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.data_inicio %}&data_inicio={{ request.GET.data_inicio }}{% endif %}{% if request.GET.data_fim %}&data_fim={{ request.GET.data_fim }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.usuario %}&usuario={{ request.GET.usuario }}{% endif %}{% if request.GET.departamento %}&departamento={{ request.GET.departamento }}{% endif %}{% if request.GET.prazo %}&prazo={{ request.GET.prazo }}{% endif %}">Próximo</a></li>
+                {% endif %}
+            </ul>
+        </nav>
+    {% endif %}
+</div>
+
+
+
+
 </div>
 
 {% endblock %}

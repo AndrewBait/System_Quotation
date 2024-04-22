@@ -4,6 +4,7 @@ from django.core.exceptions import ValidationError
 from dal import autocomplete
 from products.models import Product
 from suppliers.models import Supplier
+from django_select2 import forms as s2forms
 
 
 class CotacaoForm(forms.ModelForm):
@@ -22,16 +23,21 @@ class CotacaoForm(forms.ModelForm):
 
 
 class ItemCotacaoForm(forms.ModelForm):
-    produto = forms.ModelChoiceField(
-        queryset=Product.objects.all(),
-        widget=autocomplete.ModelSelect2(url='cotacao:product-autocomplete'),
-        label="Produto"
+    produto = s2forms.ModelSelect2Widget(
+        model=Product,
+        search_fields=['name__icontains', 'sku__icontains', 'ean__icontains'],
     )
-
-
     class Meta:
         model = ItemCotacao
-        fields = ['produto', 'quantidade', 'tipo_volume', 'observacao']
+        fields = ['produto','quantidade', 'tipo_volume', 'observacao']
+
+    def __init__(self, *args, **kwargs):
+        super(ItemCotacaoForm, self).__init__(*args, **kwargs)
+        self.fields['produto'].widget.attrs.update({'class': 'form-control'})
+        self.fields['quantidade'].widget.attrs.update({'class': 'form-control'})
+        self.fields['tipo_volume'].widget.attrs.update({'class': 'form-control'})
+        self.fields['observacao'].widget.attrs.update({'class': 'form-control'})
+
 
 
 class DepartamentoForm(forms.ModelForm):
