@@ -60,6 +60,10 @@
 </div>
 
 <script>
+    document.getElementById('searchField').addEventListener('input', function() {
+        fetchProducts();
+    });
+
     function fetchProducts() {
         const searchValue = document.getElementById('searchField').value;
         fetch(`{% url 'cotacao:produtos_api' %}?q=${searchValue}`)
@@ -76,7 +80,6 @@
                             <td><input type="number" name="quantidade" min="1" class="form-control" value="1"></td>
                             <td>
                                 <select name="tipo_volume" class="form-control">
-                                    <!-- Substituir com a lista dinâmica de tipos de volume se necessário -->
                                     <option value="Un">Unidade</option>
                                     <option value="Kg">Kilogram</option>
                                     <option value="L">Litro</option>
