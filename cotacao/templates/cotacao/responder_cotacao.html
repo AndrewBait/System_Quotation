@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load currency_filters %}
 
 {% block content %}
 <div class="container">
@@ -19,17 +20,15 @@
                 </tr>
             </thead>
             <tbody>
-                {% for item_dict in itens_cotacao %}
+                {% for item in itens_cotacao %}
                 <tr>
-                    <td>{{ item_dict.item.produto.ean }}</td>
-                    <td>{{ item_dict.item.produto.name }}</td>
-                    <td>{{ item_dict.item.quantidade }}</td>
-                    <td>{{ item_dict.item.tipo_volume }}</td>
-                    <td>{{ item_dict.item.observacao }}</td>
-                    {% with item_id=item_dict.item.id %}
-                        <td>{{ form.preco_item_id }}</td>
-                        <td>{{ form.observacao_item_id }}</td> 
-                    {% endwith %}
+                    <td>{{ item.produto.ean }}</td>
+                    <td>{{ item.produto.name }}</td>
+                    <td>{{ item.quantidade }}</td>
+                    <td>{{ item.tipo_volume }}</td>
+                    <td>{{ item.observacao }}</td>
+                    <td>{{ form.preco_item.id }}</td> 
+                    <td>{{ form.observacao_item.id }}</td>
                 </tr>
                 {% endfor %}
             </tbody>

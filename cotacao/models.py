@@ -14,7 +14,7 @@ class Cotacao(models.Model):
     usuario_criador = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='cotacoes_criadas', null=True, )
     data_abertura = models.DateField()
     data_fechamento = models.DateField()    
-    status = models.CharField(max_length=10, default='ativo', choices=[('ativo', 'Ativo'), ('inativo', 'Inativo')])
+    status = models.CharField(max_length=10, default='ativo', choices=[('ativo', 'Aberto'), ('inativo', 'Fechado')])
     prazo = models.IntegerField(
                                     choices=[(0, 'à vista'), (7, '7 dias'), (14, '14 dias'), (21, '21 dias'), (28, '28 dias')],
                                     default=21,

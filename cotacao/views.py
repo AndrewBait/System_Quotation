@@ -184,75 +184,35 @@ class ResponderCotacaoView(CreateView):
     model = RespostaCotacao
     form_class = RespostaCotacaoForm
     template_name = 'cotacao/responder_cotacao.html'
-    
-    def get_form_class(self):
-        form_class = super().get_form_class()
 
-        if 'itens_cotacao' in self.kwargs:
-            itens_cotacao = self.kwargs['itens_cotacao']
-            for item in itens_cotacao:
-                form_class.base_fields[f'preco_{item.id}'] = forms.DecimalField(
-                    label=f'Preço para {item.produto.name}',
-                    max_digits=10, decimal_places=2, required=False,
-                )
-                form_class.base_fields[f'observacao_{item.id}'] = forms.CharField(
-                    label='Observação', max_length=100, required=False,
-                    widget=forms.TextInput(attrs={'placeholder': 'Observação opcional'})
-                )
-        return form_class
-    
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
         cotacao = get_object_or_404(Cotacao, pk=self.kwargs['pk'])
-        kwargs['itens_cotacao'] = cotacao.itens_cotacao.all()
+        kwargs['instance'] = RespostaCotacao(cotacao=cotacao, fornecedor_id=self.kwargs['fornecedor_id'])
         return kwargs
 
-    def get_context_data(self, **kwargs):
+    def get_context_data(self, **kwargs): #onde exibe os ddados do formulario
         context = super().get_context_data(**kwargs)
         cotacao = get_object_or_404(Cotacao, pk=self.kwargs['pk'])
         context['cotacao'] = cotacao
         context['itens_cotacao'] = cotacao.itens_cotacao.all()
         context['fornecedor_id'] = self.kwargs['fornecedor_id']
-        # Preparar os nomes dos campos
-        form_field_names = {
-            'precos': {item.id: f'preco_{item.id}' for item in cotacao.itens_cotacao.all()},
-            'observacoes': {item.id: f'observacao_{item.id}' for item in cotacao.itens_cotacao.all()}
-        }
-        context['form_field_names'] = form_field_names
+        print("Itens da Cotação:", context['itens_cotacao'])
         return context
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        cotacao = get_object_or_404(Cotacao, pk=self.kwargs['pk'])
-        itens = []
-        for item in cotacao.itens_cotacao.all():
-            itens.append({
-                'item': item,
-                'field_preco': f'preco_{item.id}',
-                'field_observacao': f'observacao_{item.id}'
-            })
-        context['cotacao'] = cotacao
-        context['itens_cotacao'] = itens
-        context['fornecedor_id'] = self.kwargs['fornecedor_id']
-        return context
-    
     def form_valid(self, form):
         if form.is_valid():
-            resposta_cotacao = form.save(commit=False)
-            resposta_cotacao.cotacao_id = self.kwargs['pk']
-            resposta_cotacao.fornecedor_id = self.kwargs['fornecedor_id'] 
-            resposta_cotacao.save()
-            for item_id, preco in form.cleaned_data.items():
-                if item_id.startswith('preco_'):
-                    item_cotacao_id = int(item_id.replace('preco_', ''))
-                    observacao_id = f"observacao_{item_cotacao_id}"
-                    item_cotacao = ItemCotacao.objects.get(pk=item_cotacao_id)
+            resposta_cotacao = form.save()
+            for item in resposta_cotacao.cotacao.itens_cotacao.all():
+                preco_field = f'preco_{item.id}'
+                observacao_field = f'observacao_{item.id}'
+                if preco_field in form.cleaned_data:
                     ItemRespostaCotacao.objects.create(
                         resposta_cotacao=resposta_cotacao,
-                        item_cotacao=item_cotacao,
+                        item_cotacao=item,
                         fornecedor_id=resposta_cotacao.fornecedor_id,
-                        preco=preco,
-                        observacao=form.cleaned_data[observacao_id],
+                        preco=form.cleaned_data[preco_field],
+                        observacao=form.cleaned_data.get(observacao_field, '')
                     )
             return super().form_valid(form)
 

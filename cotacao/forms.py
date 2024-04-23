@@ -62,23 +62,33 @@ class EnviarCotacaoForm(forms.Form):
 
 
 class RespostaCotacaoForm(forms.ModelForm):
-    fornecedor_id = forms.IntegerField(widget=forms.HiddenInput())
-
     class Meta:
         model = RespostaCotacao
-        fields = []
+        fields = ['cotacao', 'fornecedor']  # Adicione outros campos se necessário
+        
+    
+    def clean(self):
+        cleaned_data = super().clean()
+        precos_fornecidos = any(
+            value for key, value in cleaned_data.items() if key.startswith('preco_')
+        )
+        if not precos_fornecidos:
+            raise forms.ValidationError("Forneça pelo menos um preço para responder à cotação.")
+        return cleaned_data
+    
 
     def __init__(self, *args, **kwargs):
-        itens_cotacao = kwargs.pop('itens_cotacao', None)
-        super(RespostaCotacaoForm, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
+        self.fields['cotacao'].widget = forms.HiddenInput()
+        self.fields['fornecedor'].widget = forms.HiddenInput()
 
-        if itens_cotacao:
-            for item in itens_cotacao:
-                self.fields[f'preco_{item.id}'] = forms.DecimalField(
-                    label=f'Preço para {item.produto.name}',
-                    max_digits=10, decimal_places=2, required=False,
-                )
-                self.fields[f'observacao_{item.id}'] = forms.CharField(
-                    label='Observação', max_length=100, required=False,
-                    widget=forms.TextInput(attrs={'placeholder': 'Observação opcional'})
-                )
+        # Adicionar campos para cada item da cotação
+        for item in self.instance.cotacao.itens_cotacao.all():
+            self.fields[f'preco_{item.id}'] = forms.DecimalField(
+                label=f'Preço para {item.produto.name}',
+                max_digits=10, decimal_places=2, required=False
+            )
+            self.fields[f'observacao_{item.id}'] = forms.CharField(
+                label='Observação', max_length=100, required=False,
+                widget=forms.TextInput(attrs={'placeholder': 'Observação opcional'})
+            )
