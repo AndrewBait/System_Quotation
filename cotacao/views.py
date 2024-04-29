@@ -1,7 +1,7 @@
 from django import forms
-from django.shortcuts import get_object_or_404, render
+from django.shortcuts import get_object_or_404, redirect, render
 from django.views import View
-from django.http import Http404, HttpResponseBadRequest, JsonResponse
+from django.http import Http404, HttpResponseBadRequest, HttpResponseRedirect, JsonResponse
 from django.db.models import Q
 from products.models import Product, Departamento, Category, Subcategory
 from django.views.generic import View, RedirectView
@@ -27,6 +27,8 @@ from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.core.mail import send_mail
 from .models import Cotacao, RespostaCotacao
 from .forms import RespostaCotacaoForm
+from django.db.transaction import atomic
+from django.db import transaction
 
 
 
@@ -122,8 +124,9 @@ class EnviarCotacaoView(FormView):
     success_url = reverse_lazy('cotacao:cotacao_list')
 
     def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)        
-        cotacao = Cotacao.objects.get(pk=self.kwargs['pk'])
+        context = super().get_context_data(**kwargs)
+        cotacao_id = self.kwargs['pk']
+        cotacao = Cotacao.objects.get(pk=cotacao_id)
         busca = self.request.GET.get('busca', '')
         departamento_id = self.request.GET.get('departamento', '')
 
@@ -140,23 +143,28 @@ class EnviarCotacaoView(FormView):
         page_obj = paginator.get_page(page_number)
 
         context['cotacao'] = cotacao
-        context['fornecedores'] = fornecedores_query
+        context['fornecedores'] = page_obj  # Passar page_obj em vez de fornecedores_query para respeitar a paginação
         context['departamentos'] = Departamento.objects.all().order_by('nome')
         context['page_obj'] = page_obj
         return context
-    
+
     def form_valid(self, form):
-        fornecedores_selecionados = form.cleaned_data['fornecedores']
         cotacao = Cotacao.objects.get(pk=self.kwargs['pk'])
+        fornecedores_selecionados = form.cleaned_data['fornecedores']
         for fornecedor in fornecedores_selecionados:
+            try:
                 send_mail(
                     'Nova Cotação Disponível',
-                    f'Olá {fornecedor.name}, uma nova cotação está disponível. Por favor, acesse o link para responder: {self.request.build_absolute_uri(reverse("cotacao:responder_cotacao", kwargs={'pk': cotacao.id, 'fornecedor_id': fornecedor.id}))}',
+                    f'Olá {fornecedor.name}, uma nova cotação está disponível. Por favor, acesse o link para responder: {self.request.build_absolute_uri(reverse("cotacao:responder_cotacao", kwargs={"pk": cotacao.id, "fornecedor_id": fornecedor.id}))}',
                     'andrewsilva811@gmail.com',
                     [fornecedor.email],
                     fail_silently=False,
                 )
-        messages.success(self.request, 'Cotação enviada com sucesso!')
+            except Exception as e:
+                messages.error(self.request, f'Erro ao enviar email para {fornecedor.email}: {str(e)}')
+                continue  # Continua tentando enviar para os próximos fornecedores mesmo se um falhar
+
+        
         return super().form_valid(form)
 
 
@@ -179,48 +187,49 @@ class PesquisaFornecedorAjaxView(View):
         } for fornecedor in fornecedores_query]
 
         return JsonResponse(dados, safe=False)
+    
 
-class ResponderCotacaoView(CreateView):
+
+
+class ResponderCotacaoView(UpdateView):
     model = RespostaCotacao
     form_class = RespostaCotacaoForm
     template_name = 'cotacao/responder_cotacao.html'
 
-    def get_form_kwargs(self):
-        kwargs = super().get_form_kwargs()
-        cotacao = get_object_or_404(Cotacao, pk=self.kwargs['pk'])
-        kwargs['instance'] = RespostaCotacao(cotacao=cotacao, fornecedor_id=self.kwargs['fornecedor_id'])
-        return kwargs
+    def get_success_url(self):
+        messages.success(self.request, "Resposta enviada com sucesso!")
+        return reverse('cotacao:cotacao_success')
 
-    def get_context_data(self, **kwargs): #onde exibe os ddados do formulario
-        context = super().get_context_data(**kwargs)
-        cotacao = get_object_or_404(Cotacao, pk=self.kwargs['pk'])
-        context['cotacao'] = cotacao
-        context['itens_cotacao'] = cotacao.itens_cotacao.all()
-        context['fornecedor_id'] = self.kwargs['fornecedor_id']
-        print("Itens da Cotação:", context['itens_cotacao'])
-        return context
+    def get_object(self, queryset=None):
+        cotacao_pk = self.kwargs.get('pk')
+        fornecedor_pk = self.kwargs.get('fornecedor_id')
+        # Utiliza get_or_create para assegurar que apenas uma instância é manipulada
+        obj, created = RespostaCotacao.objects.get_or_create(
+            cotacao_id=cotacao_pk, 
+            fornecedor_id=fornecedor_pk,
+            defaults={'cotacao_id': cotacao_pk, 'fornecedor_id': fornecedor_pk}
+        )
+        return obj
 
     def form_valid(self, form):
-        if form.is_valid():
-            resposta_cotacao = form.save()
-            for item in resposta_cotacao.cotacao.itens_cotacao.all():
-                preco_field = f'preco_{item.id}'
-                observacao_field = f'observacao_{item.id}'
-                if preco_field in form.cleaned_data:
-                    ItemRespostaCotacao.objects.create(
-                        resposta_cotacao=resposta_cotacao,
-                        item_cotacao=item,
-                        fornecedor_id=resposta_cotacao.fornecedor_id,
-                        preco=form.cleaned_data[preco_field],
-                        observacao=form.cleaned_data.get(observacao_field, '')
-                    )
-            return super().form_valid(form)
+        # Quando o formulário é válido
+        form.save()
+        return super().form_valid(form)
 
-    def get_success_url(self):
-        return reverse('cotacao:cotacao_success')
+    def form_invalid(self, form):
+        messages.error(self.request, "Erro no formulário. Por favor, verifique os dados inseridos.")
+        return super().form_invalid(form)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['itens_cotacao'] = self.object.cotacao.itens_cotacao.all()
+        return context
+    
+
 
 class SuccessView(TemplateView):
     template_name = 'cotacao/success_page.html'
+
 
 class ListProductsToAddView(TemplateView):
     template_name = 'cotacao/list_products_to_add.html'

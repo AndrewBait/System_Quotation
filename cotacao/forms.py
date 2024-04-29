@@ -1,11 +1,14 @@
 from django import forms
-from .models import Cotacao, ItemCotacao, Departamento
+from .models import Cotacao, ItemCotacao, Departamento, ItemRespostaCotacao
 from django.core.exceptions import ValidationError
 from dal import autocomplete
 from products.models import Product
 from suppliers.models import Supplier
 from django_select2 import forms as s2forms
 from .models import RespostaCotacao
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class CotacaoForm(forms.ModelForm):
@@ -54,41 +57,54 @@ class DepartamentoForm(forms.ModelForm):
     
     
 class EnviarCotacaoForm(forms.Form):
-    fornecedores = forms.ModelMultipleChoiceField(
-        queryset=Supplier.objects.all(),
-        widget=forms.CheckboxSelectMultiple,
-        required=True
+    fornecedores = forms.ModelMultipleChoiceField( # Campo para selecionar fornecedores
+        queryset=Supplier.objects.all(), # Obtendo todos os fornecedores
+        widget=forms.CheckboxSelectMultiple, # Utilizando um widget de seleção de múltipla escolha
+        required=True # O campo é obrigatório
     )
 
 
 class RespostaCotacaoForm(forms.ModelForm):
     class Meta:
         model = RespostaCotacao
-        fields = ['cotacao', 'fornecedor']  # Adicione outros campos se necessário
-        
-    
-    def clean(self):
-        cleaned_data = super().clean()
-        precos_fornecidos = any(
-            value for key, value in cleaned_data.items() if key.startswith('preco_')
-        )
-        if not precos_fornecidos:
-            raise forms.ValidationError("Forneça pelo menos um preço para responder à cotação.")
-        return cleaned_data
-    
+        exclude = []
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields['cotacao'].widget = forms.HiddenInput()
-        self.fields['fornecedor'].widget = forms.HiddenInput()
+        if self.instance and hasattr(self.instance, 'cotacao'):
+            itens_cotacao = self.instance.cotacao.itens_cotacao.all()
+            for item in itens_cotacao:
+                self.fields[f'preco_{item.id}'] = forms.DecimalField(
+                    required=False,
+                    max_digits=10,
+                    decimal_places=3,
+                    help_text='Insira o preço com até três casas decimais.'
+                )
+                self.fields[f'observacao_{item.id}'] = forms.CharField(
+                    max_length=100,
+                    required=False,
+                    widget=forms.Textarea(attrs={'rows': 1})
+                )
 
-        # Adicionar campos para cada item da cotação
-        for item in self.instance.cotacao.itens_cotacao.all():
-            self.fields[f'preco_{item.id}'] = forms.DecimalField(
-                label=f'Preço para {item.produto.name}',
-                max_digits=10, decimal_places=2, required=False
-            )
-            self.fields[f'observacao_{item.id}'] = forms.CharField(
-                label='Observação', max_length=100, required=False,
-                widget=forms.TextInput(attrs={'placeholder': 'Observação opcional'})
-            )
+    def save(self, commit=True):
+        resposta_cotacao = super().save(commit=False)
+        if commit:
+            resposta_cotacao.save()
+            self.save_m2m()
+
+            for item in resposta_cotacao.cotacao.itens_cotacao.all():
+                preco_field = f'preco_{item.id}'
+                observacao_field = f'observacao_{item.id}'
+                preco = self.cleaned_data.get(preco_field)
+                observacao = self.cleaned_data.get(observacao_field, "")
+                logger.debug(f"Saving item {item.id}: Price - {preco}, Observation - {observacao}")
+
+                obj, created = ItemRespostaCotacao.objects.update_or_create(
+                    resposta_cotacao=resposta_cotacao,
+                    item_cotacao=item,
+                    defaults={'preco': preco, 'observacao': observacao}
+                )
+                logger.debug(f"Item {'created' if created else 'updated'}: {obj.id}")
+                logger.debug(f"Received price {preco} for item {item.id}")
+        return resposta_cotacao
+

@@ -1,39 +1,38 @@
 {% extends "base.html" %}
-{% load currency_filters %}
 
 {% block content %}
-<div class="container">
-    <h2>Responder à Cotação: {{ cotacao.nome }}</h2>
-    <form method="post">
-        {% csrf_token %}
-        <input type="hidden" name="fornecedor_id" value="{{ fornecedor_id }}">
-        <table class="table">
-            <thead>
-                <tr>
-                    <th>Código EAN</th>
-                    <th>Nome do Produto</th>
-                    <th>Quantidade Pedida</th>
-                    <th>Tipo de Volume</th>
-                    <th>Observação</th>
-                    <th>Preço</th>
-                    <th>Observação Fornecedor</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for item in itens_cotacao %}
-                <tr>
-                    <td>{{ item.produto.ean }}</td>
-                    <td>{{ item.produto.name }}</td>
-                    <td>{{ item.quantidade }}</td>
-                    <td>{{ item.tipo_volume }}</td>
-                    <td>{{ item.observacao }}</td>
-                    <td>{{ form.preco_item.id }}</td> 
-                    <td>{{ form.observacao_item.id }}</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-        <button type="submit" class="btn btn-primary">Enviar Resposta</button>
-    </form>
-</div>
+  <form method="post">
+    {% csrf_token %}
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Código EAN</th>
+          <th>Nome do Produto</th>
+          <th>Quantidade Pedida</th>
+          <th>Tipo de Volume</th>
+          <th>Observação</th>
+          <th>Preço (R$)</th>
+          <th>Observação Fornecedor</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in itens_cotacao %}
+          <tr>
+            <td>{{ item.produto.ean }}</td>
+            <td>{{ item.produto.name }}</td>
+            <td>{{ item.quantidade }}</td>
+            <td>{{ item.get_tipo_volume_display }}</td>
+            <td>{{ item.observacao }}</td>
+            <td>
+                <input type="number" name="preco_{{ item.id }}" step="0.001" min="0" class="form-control" required>
+            </td>
+            <td>
+                <input type="text" name="observacao_{{ item.id }}" class="form-control">
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    <button type="submit" class="btn btn-primary">Enviar Resposta</button>
+  </form>
 {% endblock %}

@@ -100,22 +100,20 @@ class ItemCotacao(models.Model):
     def tipo_volume_options(self):
         return self._meta.get_field('tipo_volume').choices
     
-    
-class RespostaCotacao(models.Model):
-    cotacao = models.ForeignKey('cotacao.Cotacao', on_delete=models.CASCADE)  # Ajuste se necessário
-    fornecedor = models.ForeignKey('suppliers.Supplier', on_delete=models.CASCADE)  # Corrigido
-    preco = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='Preço', help_text='Preço do produto', blank=False, null=True, )
-    observacao = models.TextField(blank=True, null=True, default='', verbose_name='Observação', help_text='Observações sobre o item', max_length=100)
+#oq essa classe faz?
+class RespostaCotacao(models.Model): 
+    cotacao = models.ForeignKey('cotacao.Cotacao', on_delete=models.CASCADE)
+    fornecedor = models.ForeignKey('suppliers.Supplier', on_delete=models.CASCADE)
 
     def __str__(self):
         return f"{self.fornecedor.name} - {self.cotacao.nome}"
     
     
 class ItemRespostaCotacao(models.Model):
-    resposta_cotacao = models.ForeignKey(RespostaCotacao, on_delete=models.CASCADE)
-    item_cotacao = models.ForeignKey(ItemCotacao, on_delete=models.CASCADE)
-    fornecedor = models.ForeignKey(Supplier, on_delete=models.CASCADE)
-    preco = models.DecimalField(max_digits=10, decimal_places=3, verbose_name='Preço', help_text='Preço do produto', blank=True, null=True,)
+    resposta_cotacao = models.ForeignKey(RespostaCotacao, related_name='itens_respostas', on_delete=models.CASCADE)
+    item_cotacao = models.ForeignKey('cotacao.ItemCotacao', on_delete=models.CASCADE)
+    fornecedor = models.ForeignKey('suppliers.Supplier', on_delete=models.CASCADE)
+    preco = models.DecimalField(max_digits=10, decimal_places=3, verbose_name='Preço', help_text='Preço do produto', blank=True, null=True)
     observacao = models.CharField(max_length=100, blank=True)
 
     def __str__(self):
