@@ -7,7 +7,6 @@ from products.models import Product, Departamento, Category, Subcategory
 from django.views.generic import View, RedirectView
 from django.urls import reverse, reverse_lazy
 from django.views.generic.edit import CreateView, UpdateView, DeleteView
-from .models import Cotacao, ItemRespostaCotacao
 from .forms import CotacaoForm
 from django.contrib import messages
 from .models import ItemCotacao
@@ -25,8 +24,7 @@ from suppliers.models import Supplier
 from django.views.generic import TemplateView
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.core.mail import send_mail
-from .models import Cotacao, RespostaCotacao
-from .forms import RespostaCotacaoForm
+from .models import Cotacao
 from django.db.transaction import atomic
 from django.db import transaction
 
@@ -151,21 +149,28 @@ class EnviarCotacaoView(FormView):
     def form_valid(self, form):
         cotacao = Cotacao.objects.get(pk=self.kwargs['pk'])
         fornecedores_selecionados = form.cleaned_data['fornecedores']
+        emails_enviados = 0
         for fornecedor in fornecedores_selecionados:
             try:
                 send_mail(
                     'Nova Cotação Disponível',
-                    f'Olá {fornecedor.name}, uma nova cotação está disponível. Por favor, acesse o link para responder: {self.request.build_absolute_uri(reverse("cotacao:responder_cotacao", kwargs={"pk": cotacao.id, "fornecedor_id": fornecedor.id}))}',
+                    f'Olá {fornecedor.name}, uma nova cotação está disponível. Por favor, acesse o link para responder: {self.request.build_absolute_uri(reverse("respostas:responder_cotacao", kwargs={"pk": cotacao.id, "fornecedor_id": fornecedor.id}))}',
                     'andrewsilva811@gmail.com',
                     [fornecedor.email],
                     fail_silently=False,
                 )
+                emails_enviados += 1
             except Exception as e:
                 messages.error(self.request, f'Erro ao enviar email para {fornecedor.email}: {str(e)}')
                 continue  # Continua tentando enviar para os próximos fornecedores mesmo se um falhar
+        if emails_enviados > 0:
+            messages.success(self.request, f'Cotação enviada com sucesso para {emails_enviados} fornecedores!')
+        else:
+            messages.error(self.request, 'Não foi possível enviar a cotação para nenhum fornecedor.')
 
-        
         return super().form_valid(form)
+        
+
 
 
 class PesquisaFornecedorAjaxView(View):
@@ -191,44 +196,44 @@ class PesquisaFornecedorAjaxView(View):
 
 
 
-class ResponderCotacaoView(UpdateView):
-    model = RespostaCotacao
-    form_class = RespostaCotacaoForm
-    template_name = 'cotacao/responder_cotacao.html'
+# class ResponderCotacaoView(UpdateView):
+#     model = RespostaCotacao
+#     form_class = RespostaCotacaoForm
+#     template_name = 'cotacao/responder_cotacao.html'
 
-    def get_success_url(self):
-        messages.success(self.request, "Resposta enviada com sucesso!")
-        return reverse('cotacao:cotacao_success')
+#     def get_success_url(self):
+#         messages.success(self.request, "Resposta enviada com sucesso!")
+#         return reverse('cotacao:cotacao_success')
 
-    def get_object(self, queryset=None):
-        cotacao_pk = self.kwargs.get('pk')
-        fornecedor_pk = self.kwargs.get('fornecedor_id')
-        # Utiliza get_or_create para assegurar que apenas uma instância é manipulada
-        obj, created = RespostaCotacao.objects.get_or_create(
-            cotacao_id=cotacao_pk, 
-            fornecedor_id=fornecedor_pk,
-            defaults={'cotacao_id': cotacao_pk, 'fornecedor_id': fornecedor_pk}
-        )
-        return obj
+#     def get_object(self, queryset=None):
+#         cotacao_pk = self.kwargs.get('pk')
+#         fornecedor_pk = self.kwargs.get('fornecedor_id')
+#         # Utiliza get_or_create para assegurar que apenas uma instância é manipulada
+#         obj, created = RespostaCotacao.objects.get_or_create(
+#             cotacao_id=cotacao_pk, 
+#             fornecedor_id=fornecedor_pk,
+#             defaults={'cotacao_id': cotacao_pk, 'fornecedor_id': fornecedor_pk}
+#         )
+#         return obj
 
-    def form_valid(self, form):
-        # Quando o formulário é válido
-        form.save()
-        return super().form_valid(form)
+#     def form_valid(self, form):
+#         # Quando o formulário é válido
+#         form.save()
+#         return super().form_valid(form)
 
-    def form_invalid(self, form):
-        messages.error(self.request, "Erro no formulário. Por favor, verifique os dados inseridos.")
-        return super().form_invalid(form)
+#     def form_invalid(self, form):
+#         messages.error(self.request, "Erro no formulário. Por favor, verifique os dados inseridos.")
+#         return super().form_invalid(form)
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['itens_cotacao'] = self.object.cotacao.itens_cotacao.all()
-        return context
+#     def get_context_data(self, **kwargs):
+#         context = super().get_context_data(**kwargs)
+#         context['itens_cotacao'] = self.object.cotacao.itens_cotacao.all()
+#         return context
     
 
 
-class SuccessView(TemplateView):
-    template_name = 'cotacao/success_page.html'
+# class SuccessView(TemplateView):
+#     template_name = 'cotacao/success_page.html'
 
 
 class ListProductsToAddView(TemplateView):

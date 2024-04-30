@@ -66,6 +66,14 @@
     </form>
 </div>
 <br>
+
+{% if messages %}
+<ul class="messages">
+    {% for message in messages %}
+    <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+    {% endfor %}
+</ul>
+{% endif %}
                 <!-- Paginação -->
                 <nav aria-label="Page navigation example">
                     <ul class="pagination justify-content-center">
@@ -94,7 +102,7 @@
                 </nav>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const searchField = document.getElementById('searchFornecedor');
+    const searchField = document.getElementById('busca');
     searchField.addEventListener('input', debounce(function() {
         fetch(`/sua-url-de-pesquisa-fornecedores?busca=${searchField.value}`)
             .then(response => response.json())
@@ -138,7 +146,7 @@ function debounce(func, wait, immediate) {
 document.getElementById('busca').addEventListener('input', function() {
     var searchTerm = this.value;
     var departamentoId = document.getElementById('departamentoFilter').value;
-    fetch(`/pesquisa-fornecedor/?termo=${searchTerm}&departamento=${departamentoId}`)
+    fetch('{% url 'cotacao:pesquisa-fornecedor-ajax' %}?busca=${searchField.value}')
         .then(response => {
             if (!response.ok) {
                 throw new Error('Falha na rede');
