@@ -1,6 +1,10 @@
 from django import forms
-from .models import RespostaCotacao, ItemRespostaCotacao, ItemCotacao
+from .models import RespostaCotacao, ItemRespostaCotacao
+from django.core.exceptions import ValidationError
+from decimal import Decimal, InvalidOperation
 import bleach
+import re
+
 
 
 class ItemRespostaForm(forms.ModelForm):
@@ -18,6 +22,8 @@ class ItemRespostaForm(forms.ModelForm):
         # Sanitize the observation field to prevent XSS
         clean_observacao = bleach.clean(observacao)
         return clean_observacao
+    
+
         
     @property
     def ean(self):
@@ -38,6 +44,27 @@ class ItemRespostaForm(forms.ModelForm):
     @property
     def observacao_item(self):
         return self.item_cotacao.observacao
+    
+    
+    def clean_preco(self):
+        preco = self.cleaned_data.get('preco')
+        if preco:
+            try:
+                preco_dec = Decimal(preco)
+                # Verifica se o valor é negativo
+                if preco_dec < 0:
+                    raise ValidationError('O preço não pode ser negativo.')
+                # Verifica se possui exatamente três casas decimais
+                if not re.match(r'^\d+\.\d{3}$', str(preco_dec)):
+                    raise ValidationError('O preço deve ter três casas decimais.')
+                return preco_dec
+            except InvalidOperation:
+                raise ValidationError('Formato de preço inválido.')
+        return preco
+    
+    
+
+    
 
     def get_item_data(self, field):
         # Esta função pode ser usada para acessar dados seguros do ItemCotacao associado
