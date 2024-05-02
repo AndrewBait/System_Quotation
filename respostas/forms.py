@@ -1,5 +1,7 @@
 from django import forms
 from .models import RespostaCotacao, ItemRespostaCotacao, ItemCotacao
+import bleach
+
 
 class ItemRespostaForm(forms.ModelForm):
     class Meta:
@@ -9,6 +11,13 @@ class ItemRespostaForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         self.item_cotacao = kwargs.pop('item_cotacao', None)
         super(ItemRespostaForm, self).__init__(*args, **kwargs)
+    
+    
+    def clean_observacao(self):
+        observacao = self.cleaned_data.get('observacao')
+        # Sanitize the observation field to prevent XSS
+        clean_observacao = bleach.clean(observacao)
+        return clean_observacao
         
     @property
     def ean(self):

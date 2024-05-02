@@ -13,7 +13,7 @@ class RespostaCotacao(models.Model):
 class ItemRespostaCotacao(models.Model):
     resposta_cotacao = models.ForeignKey(RespostaCotacao, on_delete=models.CASCADE)
     item_cotacao = models.ForeignKey(ItemCotacao, on_delete=models.CASCADE)
-    preco = models.DecimalField(max_digits=10, decimal_places=2)
+    preco = models.DecimalField(max_digits=10, decimal_places=3, null=True, blank=True)
     observacao = models.TextField(blank=True)
 
     class Meta:
