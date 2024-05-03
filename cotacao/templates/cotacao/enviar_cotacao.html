@@ -62,18 +62,19 @@
             <div class="col-md-4">
                 <a href="{% url 'cotacao:cotacao_list' %}" class="btn btn-secondary">Voltar para a lista de cotações</a>
             </div>
+            {% if messages %}
+                <ul class="messages">
+                    {% for message in messages %}
+                    <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
         </div>
     </form>
 </div>
 <br>
 
-{% if messages %}
-<ul class="messages">
-    {% for message in messages %}
-    <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
-    {% endfor %}
-</ul>
-{% endif %}
+
                 <!-- Paginação -->
                 <nav aria-label="Page navigation example">
                     <ul class="pagination justify-content-center">

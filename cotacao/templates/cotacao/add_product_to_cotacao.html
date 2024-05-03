@@ -3,6 +3,13 @@
 {% block content %}
 
 <div class="container mt-4">
+    {% if messages %}
+        <ul class="messages">
+            {% for message in messages %}
+                <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+            {% endfor %}
+        </ul>
+    {% endif %}
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2>Detalhes da Cotação: {{ cotacao.nome }}</h2>
         <!-- Botão para adicionar produtos à cotação -->

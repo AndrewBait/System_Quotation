@@ -25,7 +25,6 @@ import re
 
 
 
-
 def products_list(request):
     products = Product.objects.all()  # Inicialmente, obtém todos os produtos
     

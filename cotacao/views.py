@@ -281,12 +281,16 @@ class UpdateItemCotacaoView(UpdateView):
     model = ItemCotacao
     fields = ['quantidade', 'tipo_volume', 'observacao']
     template_name = 'cotacao/update_item_cotacao.html'
-    success_url = reverse_lazy('cotacao:cotacao_list')  
+     
 
     def form_valid(self, form):
         response = super().form_valid(form)
         messages.success(self.request, "Item atualizado com sucesso!")
         return response
+    
+    def get_success_url(self):
+        cotacao_id = self.object.cotacao.id  # Obtém o ID da cotação do item atualizado
+        return reverse('cotacao:add_product_to_cotacao', kwargs={'cotacao_id': cotacao_id})
 
 class DeleteItemCotacaoView(DeleteView):
     model = ItemCotacao
@@ -315,7 +319,8 @@ class AddProductToCotacaoView(CreateView):
         produto_id = form.cleaned_data['produto'].id
         # Verificar se o produto já está na cotação
         if ItemCotacao.objects.filter(cotacao_id=cotacao_id, produto_id=produto_id).exists():
-            return HttpResponseBadRequest("Este produto já foi adicionado à cotação.")
+            messages.error(self.request, "Este produto já foi adicionado à cotação.") # Mensagem de erro
+            return super().form_valid(form)
         form.instance.cotacao_id = cotacao_id
         form.save()
         messages.success(self.request, "Produto adicionado com sucesso!")
