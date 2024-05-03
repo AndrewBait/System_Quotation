@@ -5,13 +5,15 @@ from suppliers.models import Supplier
 from .models import RespostaCotacao, ItemRespostaCotacao
 from django.db.models import Avg
 
-def criar_item_form(item, resposta_existente, data):
+def criar_item_form(item, resposta_existente, post_data=None, file_data=None):
     item_resposta, created = ItemRespostaCotacao.objects.get_or_create(
         resposta_cotacao=resposta_existente, 
         item_cotacao=item,
         defaults={'item_cotacao': item}  # O 'defaults' é utilizado apenas se estiver criando um novo registro
     )
-    return ItemRespostaForm(data or None, prefix=f'item_{item.pk}', instance=item_resposta)
+    # Ajuste aqui para passar file_data junto com post_data
+    return ItemRespostaForm(post_data, file_data, prefix=f'item_{item.pk}', instance=item_resposta)
+
 
 def responder_cotacao(request, cotacao_uuid, fornecedor_id, token):
     cotacao = get_object_or_404(Cotacao, uuid=cotacao_uuid)
@@ -29,8 +31,8 @@ def responder_cotacao(request, cotacao_uuid, fornecedor_id, token):
         fornecedor=fornecedor
     )
     
-    resposta_form = RespostaCotacaoForm(request.POST or None, instance=resposta_existente, cotacao=cotacao)
-    item_forms = [criar_item_form(item, resposta_existente, request.POST or None) for item in cotacao.itens_cotacao.all()]
+    resposta_form = RespostaCotacaoForm(request.POST or None, request.FILES or None, instance=resposta_existente, cotacao=cotacao)
+    item_forms = [criar_item_form(item, resposta_existente, request.POST or None, request.FILES or None) for item in cotacao.itens_cotacao.all()]
 
     if request.method == 'POST' and resposta_form.is_valid() and all(item_form.is_valid() for item_form in item_forms):
         resposta = resposta_form.save(commit=False)
@@ -59,4 +61,4 @@ def cotacao_respondida_view(request):
 
 def visualizar_cotacoes(request, cotacao_uuid):
 
-    return render(request, 'respostas/visualizar_respostas.html', context)
+    return render(request, 'respostas/visualizar_respostas.html')
