@@ -9,7 +9,7 @@ from django.urls import reverse, reverse_lazy
 from django.views.generic.edit import CreateView, UpdateView, DeleteView
 from .forms import CotacaoForm
 from django.contrib import messages
-from .models import ItemCotacao
+from .models import ItemCotacao, FornecedorCotacaoToken
 from django.urls import get_resolver
 from .forms import ItemCotacaoForm
 from dal import autocomplete
@@ -151,13 +151,18 @@ class EnviarCotacaoView(FormView):
         fornecedores_selecionados = form.cleaned_data['fornecedores']
         emails_enviados = 0
         for fornecedor in fornecedores_selecionados:
+            token = FornecedorCotacaoToken.objects.create(
+                cotacao=cotacao,
+                fornecedor=fornecedor
+            )
+            link = self.request.build_absolute_uri(
+                reverse("respostas:responder_cotacao", kwargs={
+                    "cotacao_uuid": cotacao.uuid,
+                    "fornecedor_id": fornecedor.id,
+                    "token": token.token
+                })
+            )
             try:
-                link = self.request.build_absolute_uri(
-                    reverse("respostas:responder_cotacao", kwargs={
-                        "cotacao_uuid": cotacao.uuid, 
-                        "fornecedor_id": fornecedor.id
-                    })
-                )
                 send_mail(
                     'Nova Cotação Disponível',
                     f'Olá {fornecedor.name}, uma nova cotação está disponível. Por favor, acesse o link para responder: {link}',
@@ -168,7 +173,7 @@ class EnviarCotacaoView(FormView):
                 emails_enviados += 1
             except Exception as e:
                 messages.error(self.request, f'Erro ao enviar email para {fornecedor.email}: {str(e)}')
-                continue  # Continua tentando enviar para os próximos fornecedores mesmo se um falhar
+                continue
         if emails_enviados > 0:
             messages.success(self.request, f'Cotação enviada com sucesso para {emails_enviados} fornecedores!')
         else:

@@ -1,6 +1,6 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from .forms import RespostaCotacaoForm, ItemRespostaForm
-from cotacao.models import Cotacao
+from cotacao.models import Cotacao, FornecedorCotacaoToken
 from suppliers.models import Supplier
 from .models import RespostaCotacao, ItemRespostaCotacao
 
@@ -12,11 +12,16 @@ def criar_item_form(item, resposta_existente, data):
     )
     return ItemRespostaForm(data or None, prefix=f'item_{item.pk}', instance=item_resposta)
 
-def responder_cotacao(request, cotacao_uuid, fornecedor_id):
+def responder_cotacao(request, cotacao_uuid, fornecedor_id, token):
     cotacao = get_object_or_404(Cotacao, uuid=cotacao_uuid)
     fornecedor = get_object_or_404(Supplier, pk=fornecedor_id)
+    get_object_or_404(FornecedorCotacaoToken, cotacao=cotacao, fornecedor=fornecedor, token=token)
+
     if cotacao.status == 'inativo':
-        return redirect('cotacao:closed_cotacao_page')
+        # Aqui você pode redirecionar para uma página específica ou renderizar uma template com a mensagem
+        return render(request, 'respostas/cotacao_fechada.html', {
+            'message': 'Esta cotação está fechada no momento. Para mais informações, entre em contato pelo email: contato@empresa.com.'
+        })
 
     resposta_existente, _ = RespostaCotacao.objects.get_or_create(
         cotacao=cotacao, 
@@ -37,7 +42,7 @@ def responder_cotacao(request, cotacao_uuid, fornecedor_id):
             item_resposta.resposta_cotacao = resposta
             item_resposta.save()
 
-        return redirect('home')  # Substitua 'home' pelo nome da rota desejada configurada no urls.py
+        return redirect('respostas:cotacao_respondida')  # Substitua 'home' pelo nome da rota desejada configurada no urls.py
 
     context = {
         'cotacao': cotacao,
@@ -45,3 +50,7 @@ def responder_cotacao(request, cotacao_uuid, fornecedor_id):
         'item_forms': item_forms,
     }
     return render(request, 'respostas/responder_cotacao.html', context)
+
+
+def cotacao_respondida_view(request):
+    return render(request, 'respostas/cotacao_respondida.html')
