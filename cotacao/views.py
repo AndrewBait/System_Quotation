@@ -47,7 +47,7 @@ class CotacaoListView(ListView):
         queryset = super().get_queryset()
         data_inicio = self.request.GET.get('data_inicio', '')
         data_fim = self.request.GET.get('data_fim', '')
-        status = self.request.GET.get('status')
+        status = self.request.GET.get('status', 'ativo')
         usuario_id = self.request.GET.get('usuario')
         departamento_id = self.request.GET.get('departamento')
         prazo = self.request.GET.get('prazo')

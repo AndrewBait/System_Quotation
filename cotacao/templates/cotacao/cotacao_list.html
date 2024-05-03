@@ -118,7 +118,7 @@ div.card-footer a[href*="toggle_cotacao_status"].status-inativo {
 
         <div class="col">
             <div class="card h-100 shadow-sm">
-                <div class="card-header bg-secondary text-white">
+                <div class="card-header {% if cotacao.status == 'ativo' %}bg-success{% else %}bg-danger{% endif %} text-white">
                     <h5 class="card-title">{{ cotacao.nome }}</h5>
                 </div>
                 <div class="card-body">
