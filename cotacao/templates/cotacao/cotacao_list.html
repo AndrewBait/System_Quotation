@@ -148,7 +148,7 @@ div.card-footer a[href*="toggle_cotacao_status"].status-inativo {
                     <a href="{% url 'cotacao:enviar_cotacao' cotacao.id %}" class="btn btn-info btn-sm">
                         <i class="bi bi-send"></i> Enviar
                     </a>
-                    <a href="" class="btn btn-success">
+                    <a href="{% url 'respostas:visualizar_cotacoes' cotacao.uuid %}" class="btn btn-success">
                         <i class="bi bi-eye-fill"></i> Resp.
                     </a>
                 </div>

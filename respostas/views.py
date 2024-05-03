@@ -1,8 +1,9 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from .forms import RespostaCotacaoForm, ItemRespostaForm
-from cotacao.models import Cotacao, FornecedorCotacaoToken
+from cotacao.models import Cotacao, FornecedorCotacaoToken, ItemCotacao
 from suppliers.models import Supplier
 from .models import RespostaCotacao, ItemRespostaCotacao
+from django.db.models import Avg
 
 def criar_item_form(item, resposta_existente, data):
     item_resposta, created = ItemRespostaCotacao.objects.get_or_create(
@@ -54,3 +55,8 @@ def responder_cotacao(request, cotacao_uuid, fornecedor_id, token):
 
 def cotacao_respondida_view(request):
     return render(request, 'respostas/cotacao_respondida.html')
+
+
+def visualizar_cotacoes(request, cotacao_uuid):
+
+    return render(request, 'respostas/visualizar_respostas.html', context)
