@@ -70,10 +70,10 @@ div.card-footer a[href*="toggle_cotacao_status"].status-inativo {
             </div>
             <div class="col-md-4">
                 <label for="status" class="form-label">Status</label>
-                <select name="status" class="form-control" id="status">
-                    <option value="">Todos os Status</option>
-                    <option value="ativo" {% if request.GET.status == 'ativo' %}selected{% endif %}>Aberto</option>
+                <select name="status" class="form-control" id="status">                    
+                    <option value="ativo" {% if request.GET.status == 'ativo' or not request.GET.status %}selected{% endif %}>Aberto</option>
                     <option value="inativo" {% if request.GET.status == 'inativo' %}selected{% endif %}>Fechado</option>
+                    <option value="" {% if request.GET.status == '' %}selected{% endif %}>Todos os Status</option>
                 </select>
             </div>
             <div class="col-md-4">

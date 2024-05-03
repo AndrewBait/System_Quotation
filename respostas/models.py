@@ -15,6 +15,7 @@ class ItemRespostaCotacao(models.Model):
     item_cotacao = models.ForeignKey(ItemCotacao, on_delete=models.CASCADE)
     preco = models.DecimalField(max_digits=10, decimal_places=3, null=True, blank=True)
     observacao = models.TextField(blank=True)
+    imagem = models.ImageField(upload_to='respostas/', blank=True, null=True)
 
     class Meta:
         unique_together = ('resposta_cotacao', 'item_cotacao')

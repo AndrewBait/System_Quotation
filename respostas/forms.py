@@ -10,11 +10,12 @@ import re
 class ItemRespostaForm(forms.ModelForm):
     class Meta:
         model = ItemRespostaCotacao
-        fields = ['preco', 'observacao']
+        fields = ['preco', 'observacao', 'imagem']
     
     def __init__(self, *args, **kwargs):
         self.item_cotacao = kwargs.pop('item_cotacao', None)
         super(ItemRespostaForm, self).__init__(*args, **kwargs)
+        self.fields['imagem'].widget.attrs.update({'class': 'form-control'})
     
     
     def clean_observacao(self):

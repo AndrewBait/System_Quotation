@@ -30,7 +30,7 @@
 <body>
     <div class="container my-5">
         <h2 class="mb-4">Responder Cotação: {{ cotacao.nome }}</h2>
-        <form method="post">
+        <form method="post" enctype="multipart/form-data">
             {% csrf_token %}
             <div class="table-responsive">
                 <table class="table table-bordered table-dark">
@@ -43,6 +43,7 @@
                             <th>Observação</th>
                             <th>Preço</th>
                             <th>Observação do Fornecedor</th>
+                            <th>Imagem do Produto</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -55,6 +56,7 @@
                                 <td>{{ item_form.observacao_item }}</td>
                                 <td> <input  type="number" min="0" placeholder="Exemplo: 3.000" {{ item_form.preco }} </td>
                                 <td><input type="text" class="form-control" value={{ item_form.observacao }}</td>
+                                <td>{{ item_form.imagem }}
                             </tr>
                             {% endfor %}
                         </tbody>
