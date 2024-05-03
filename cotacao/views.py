@@ -119,7 +119,10 @@ class CotacaoUpdateView(UpdateView):
 class EnviarCotacaoView(FormView):
     template_name = 'cotacao/enviar_cotacao.html'
     form_class = EnviarCotacaoForm
-    success_url = reverse_lazy('cotacao:cotacao_list')
+    
+    def get_success_url(self):
+        return reverse('cotacao:enviar_cotacao', kwargs={'pk': self.kwargs['pk']})
+
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -175,11 +178,13 @@ class EnviarCotacaoView(FormView):
                 messages.error(self.request, f'Erro ao enviar email para {fornecedor.email}: {str(e)}')
                 continue
         if emails_enviados > 0:
-            messages.success(self.request, f'Cotação enviada com sucesso para {emails_enviados} fornecedores!')
+            messages.success(self.request, f'Cotação enviada com sucesso para {emails_enviados} fornecedore(s)!')
         else:
             messages.error(self.request, 'Não foi possível enviar a cotação para nenhum fornecedor.')
 
         return super().form_valid(form)
+    
+
         
 
 
