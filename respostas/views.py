@@ -12,9 +12,12 @@ def criar_item_form(item, resposta_existente, data):
     )
     return ItemRespostaForm(data or None, prefix=f'item_{item.pk}', instance=item_resposta)
 
-def responder_cotacao(request, pk, fornecedor_id):
-    cotacao = get_object_or_404(Cotacao, pk=pk)
+def responder_cotacao(request, cotacao_uuid, fornecedor_id):
+    cotacao = get_object_or_404(Cotacao, uuid=cotacao_uuid)
     fornecedor = get_object_or_404(Supplier, pk=fornecedor_id)
+    if cotacao.status == 'inativo':
+        return redirect('cotacao:closed_cotacao_page')
+
     resposta_existente, _ = RespostaCotacao.objects.get_or_create(
         cotacao=cotacao, 
         fornecedor=fornecedor

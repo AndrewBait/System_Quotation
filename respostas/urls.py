@@ -1,8 +1,8 @@
-from django.urls import path
+from django.urls import path, re_path
 from .views import responder_cotacao
 
 app_name = 'respostas'
 
 urlpatterns = [
-    path('responder/<int:pk>/<int:fornecedor_id>/', responder_cotacao, name='responder_cotacao'),
+    re_path(r'responder/(?P<cotacao_uuid>[0-9a-f-]+)/(?P<fornecedor_id>\d+)/', responder_cotacao, name='responder_cotacao'),
 ]

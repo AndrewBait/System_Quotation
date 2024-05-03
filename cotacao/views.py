@@ -152,9 +152,15 @@ class EnviarCotacaoView(FormView):
         emails_enviados = 0
         for fornecedor in fornecedores_selecionados:
             try:
+                link = self.request.build_absolute_uri(
+                    reverse("respostas:responder_cotacao", kwargs={
+                        "cotacao_uuid": cotacao.uuid, 
+                        "fornecedor_id": fornecedor.id
+                    })
+                )
                 send_mail(
                     'Nova Cotação Disponível',
-                    f'Olá {fornecedor.name}, uma nova cotação está disponível. Por favor, acesse o link para responder: {self.request.build_absolute_uri(reverse("respostas:responder_cotacao", kwargs={"pk": cotacao.id, "fornecedor_id": fornecedor.id}))}',
+                    f'Olá {fornecedor.name}, uma nova cotação está disponível. Por favor, acesse o link para responder: {link}',
                     'andrewsilva811@gmail.com',
                     [fornecedor.email],
                     fail_silently=False,
