@@ -33,14 +33,39 @@
                     <td>{{ item.tipo_volume }}</td>
                     <td>
                         <ul>
-                        {% for resposta in item.respostas %}
-                            {% if resposta.preco %}
-                                <li>R$ {{ resposta.preco }} - {{ resposta.fornecedor_nome }}</li>
-                            {% else %}
-                                <li>{{ resposta.fornecedor_nome }} não especificou</li>
-                            {% endif %}
-                        {% endfor %}
-                        </ul>
+                            {% for resposta in item.respostas %}
+                                {% if resposta.is_top3 %}
+                                    <li><strong>R$ {{ resposta.preco }} - {{ resposta.fornecedor_nome }}</strong></li>
+                                {% else %}
+                                    <li>R$ {{ resposta.preco }} - {{ resposta.fornecedor_nome }}</li>
+                                {% endif %}
+                            {% endfor %}
+                            </ul>
+                            {% if item.respostas|length > 3 %}
+                                <a href="#" data-bs-toggle="modal" data-bs-target="#moreOffersModal{{ forloop.counter }}">outras respostas</a>
+                                <!-- Modal -->
+                                <div class="modal fade" id="moreOffersModal{{ forloop.counter }}" tabindex="-1" aria-labelledby="moreOffersModalLabel{{ forloop.counter }}" aria-hidden="true">
+                                    <div class="modal-dialog">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title" id="moreOffersModalLabel{{ forloop.counter }}">Mais Ofertas de {{ item.produto_nome }}</h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                            </div>
+                                            <div class="modal-body">
+                                                <ul>
+                                                {% for resposta in item.respostas|slice:"3:" %}
+                                                    {% if resposta.preco %}
+                                                        <li>R$ {{ resposta.preco }} - {{ resposta.fornecedor_nome }}</li>
+                                                    {% else %}
+                                                        <li>{{ resposta.fornecedor_nome }} não especificou</li>
+                                                    {% endif %}
+                                                {% endfor %}
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endif %}
                     </td>
                     <td>
                         <ul>
@@ -61,6 +86,20 @@
                                     <a href="#" data-bs-toggle="modal" data-bs-target="#imagemModal{{ forloop.counter }}" class="imagem-link" onclick="document.getElementById('modalImage{{ forloop.counter }}').src='{{ resposta.imagem_url }}';">
                                         Imagem de {{ resposta.fornecedor_nome }}
                                     </a>
+                                     <!-- Modal -->
+                                    <div class="modal fade" id="imagemModal{{ forloop.counter }}" tabindex="-1" aria-labelledby="imagemModalLabel{{ forloop.counter }}" aria-hidden="true">
+                                        <div class="modal-dialog modal-xl">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title" id="imagemModalLabel{{ forloop.counter }}">Visualização da Imagem</h5>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                </div>
+                                                <div class="modal-body" style="text-align: center;">
+                                                    <img src="" alt="Imagem do Produto" id="modalImage{{ forloop.counter }}" style="max-width: 50%; height: auto;">
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </li>
                             {% else %}
                                 <li>---</li>
