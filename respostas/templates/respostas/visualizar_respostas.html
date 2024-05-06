@@ -1,10 +1,11 @@
-{% extends 'base.html' %}
+{% extends 'base_no.html' %}
 
 {% block content %}
 <div class="container-fluid mt-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2>Respostas para Cotação: {{ cotacao.nome }}</h2>
-        <div class="d-flex flex-wrap"> 
+        <a href="{% url 'cotacao:cotacao_list' %}" class="btn btn-secondary">Voltar</a>
+        <div class="d-flex flex-wrap">            
             <button class="btn btn-danger me-2"><i class="bi bi-x-circle"></i> Fechar Cotação</button>
             <button class="btn btn-success me-2"><i class="bi bi-file-earmark-excel"></i> Baixar em Excel</button>
             <button class="btn btn-primary me-2"><i class="bi bi-file-earmark-pdf"></i> Baixar em PDF</button>
@@ -20,8 +21,8 @@
                     <th>Quantidade</th>
                     <th>Tipo de Volume</th>
                     <th>Top 3 Ofertas</th>
-                    <th>Observações do Fornecedor</th>
-                    <th>Imagem do Produto</th>
+                    <th>Observações do Fornecedor (Top 3)</th>
+                    <th>Imagem do Produto (Top 3)</th>
                 </tr>
             </thead>
             <tbody>
@@ -33,34 +34,48 @@
                     <td>{{ item.tipo_volume }}</td>
                     <td>
                         <ul>
-                            {% for resposta in item.respostas %}
-                                {% if resposta.is_top3 %}
-                                    <li><strong>R$ {{ resposta.preco }} - {{ resposta.fornecedor_nome }}</strong></li>
-                                {% else %}
-                                    <li>R$ {{ resposta.preco }} - {{ resposta.fornecedor_nome }}</li>
-                                {% endif %}
+                            {% for resposta in item.respostas|slice:":3" %}
+                                <li><strong>R$ {{ resposta.preco }} - {{ resposta.fornecedor_nome }}</strong></li>
                             {% endfor %}
-                            </ul>
-                            {% if item.respostas|length > 3 %}
-                                <a href="#" data-bs-toggle="modal" data-bs-target="#moreOffersModal{{ forloop.counter }}">outras respostas</a>
-                                <!-- Modal -->
-                                <div class="modal fade" id="moreOffersModal{{ forloop.counter }}" tabindex="-1" aria-labelledby="moreOffersModalLabel{{ forloop.counter }}" aria-hidden="true">
-                                    <div class="modal-dialog">
-                                        <div class="modal-content">
-                                            <div class="modal-header">
-                                                <h5 class="modal-title" id="moreOffersModalLabel{{ forloop.counter }}">Mais Ofertas de {{ item.produto_nome }}</h5>
-                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                            </div>
-                                            <div class="modal-body">
-                                                <ul>
+                        </ul>
+                        {% if item.respostas|length > 3 %}
+                            <a href="#" data-bs-toggle="modal" data-bs-target="#moreOffersModal{{ forloop.counter }}">outras respostas</a>
+                            <!-- Modal -->
+                            <div class="modal fade" id="moreOffersModal{{ forloop.counter }}" tabindex="-1" aria-labelledby="moreOffersModalLabel{{ forloop.counter }}" aria-hidden="true">
+                                <div class="modal-dialog modal-lg">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title" id="moreOffersModalLabel{{ forloop.counter }}">Mais Ofertas de {{ item.produto_nome }}</h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            <div class="container">
                                                 {% for resposta in item.respostas|slice:"3:" %}
-                                                    {% if resposta.preco %}
-                                                        <li>R$ {{ resposta.preco }} - {{ resposta.fornecedor_nome }}</li>
-                                                    {% else %}
-                                                        <li>{{ resposta.fornecedor_nome }} não especificou</li>
-                                                    {% endif %}
+                                                    <div class="row align-items-center mb-2">
+                                                        <div class="col-4">
+                                                            <span>R$ {{ resposta.preco }} - {{ resposta.fornecedor_nome }}</span>
+                                                        </div>
+                                                        <div class="col-5">
+                                                            <span>{{ resposta.observacao|default:"Sem observações" }}</span>
+                                                        </div>
+                                                        <div class="col-3">
+                                                            {% if resposta.imagem_url %}
+                                                                <a href="#" onclick="closeAllModals();"
+                                                                data-bs-toggle="modal" 
+                                                                data-bs-target="#imagemModal{{ forloop.parentloop.counter }}{{ forloop.counter }}">Ver Imagem</a>
+                                                                <script>
+                                                                    // Função para fechar todos os modais abertos
+                                                                    function closeAllModals() {
+                                                                        $('.modal').each(function(){
+                                                                            $(this).modal('hide');
+                                                                        });
+                                                                    }
+                                                                    </script>
+                                                            {% endif %}
+                                                        </div>
+                                                    </div>                                                    
                                                 {% endfor %}
-                                            </ul>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -69,40 +84,34 @@
                     </td>
                     <td>
                         <ul>
-                        {% for resposta in item.respostas %}
-                            {% if resposta.observacao %}
-                                <li>{{ resposta.observacao }}</li>
-                            {% else %}
-                                <li>---</li>
-                            {% endif %}
+                        {% for resposta in item.respostas|slice:":3" %}
+                            <li>{{ resposta.observacao|default:"Sem observações" }}</li>
                         {% endfor %}
                         </ul>
                     </td>
                     <td>
                         <ul>
-                        {% for resposta in item.respostas %}
+                            {% for resposta in item.respostas|slice:":3" %}
                             {% if resposta.imagem_url %}
                                 <li>
-                                    <a href="#" data-bs-toggle="modal" data-bs-target="#imagemModal{{ forloop.counter }}" class="imagem-link" onclick="document.getElementById('modalImage{{ forloop.counter }}').src='{{ resposta.imagem_url }}';">
-                                        Imagem de {{ resposta.fornecedor_nome }}
-                                    </a>
-                                     <!-- Modal -->
-                                    <div class="modal fade" id="imagemModal{{ forloop.counter }}" tabindex="-1" aria-labelledby="imagemModalLabel{{ forloop.counter }}" aria-hidden="true">
+                                    <a href="#" data-bs-toggle="modal" data-bs-target="#imagemModal{{ forloop.parentloop.counter }}{{ forloop.counter }}">Imagem de {{ resposta.fornecedor_nome }}</a>
+                                    <!-- Modal -->
+                                    <div class="modal fade" id="imagemModal{{ forloop.parentloop.counter }}{{ forloop.counter }}" tabindex="-1" aria-labelledby="imagemModalLabel{{ forloop.parentloop.counter }}{{ forloop.counter }}" aria-hidden="true">
                                         <div class="modal-dialog modal-xl">
                                             <div class="modal-content">
                                                 <div class="modal-header">
-                                                    <h5 class="modal-title" id="imagemModalLabel{{ forloop.counter }}">Visualização da Imagem</h5>
+                                                    <h5 class="modal-title" id="imagemModalLabel{{ forloop.parentloop.counter }}{{ forloop.counter }}">Imagem de {{ resposta.fornecedor_nome }}</h5>
                                                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                                                 </div>
                                                 <div class="modal-body" style="text-align: center;">
-                                                    <img src="" alt="Imagem do Produto" id="modalImage{{ forloop.counter }}" style="max-width: 50%; height: auto;">
+                                                    <img src="{{ resposta.imagem_url }}" alt="Imagem do Produto" style="max-width: 100%; height: auto;">
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
                                 </li>
                             {% else %}
-                                <li>---</li>
+                                <li>Sem imagem</li>
                             {% endif %}
                         {% endfor %}
                         </ul>

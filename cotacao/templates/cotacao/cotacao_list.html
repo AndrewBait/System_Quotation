@@ -61,14 +61,6 @@ div.card-footer a[href*="toggle_cotacao_status"].status-inativo {
     <form method="get" class="mb-4">
         <div class="row g-3">
             <div class="col-md-4">
-                <label for="data_inicio" class="form-label">Data de Início</label>
-                <input type="date" name="data_inicio" class="form-control" id="data_inicio" value="{{ request.GET.data_inicio }}">
-            </div>
-            <div class="col-md-4">
-                <label for="data_fim" class="form-label">Data de Fim</label>
-                <input type="date" name="data_fim" class="form-control" id="data_fim" value="{{ request.GET.data_fim }}">
-            </div>
-            <div class="col-md-4">
                 <label for="status" class="form-label">Status</label>
                 <select name="status" class="form-control" id="status">                    
                     <option value="ativo" {% if request.GET.status == 'ativo' or not request.GET.status %}selected{% endif %}>Aberto</option>
@@ -76,6 +68,15 @@ div.card-footer a[href*="toggle_cotacao_status"].status-inativo {
                     <option value="" {% if request.GET.status == '' %}selected{% endif %}>Todos os Status</option>
                 </select>
             </div>
+            <div class="col-md-4">
+                <label for="data_inicio" class="form-label">Data de Início</label>
+                <input type="date" name="data_inicio" class="form-control" id="data_inicio" value="{{ request.GET.data_inicio }}">
+            </div>
+            <div class="col-md-4">
+                <label for="data_fim" class="form-label">Data de Fim</label>
+                <input type="date" name="data_fim" class="form-control" id="data_fim" value="{{ request.GET.data_fim }}">
+            </div>
+
             <div class="col-md-4">
                 <label for="departamento" class="form-label">Departamento</label>
                 <select name="departamento" class="form-control" id="departamento">
@@ -118,9 +119,17 @@ div.card-footer a[href*="toggle_cotacao_status"].status-inativo {
 
         <div class="col">
             <div class="card h-100 shadow-sm">
-                <div class="card-header {% if cotacao.status == 'ativo' %}bg-success{% else %}bg-danger{% endif %} text-white">
-                    <h5 class="card-title">{{ cotacao.nome }}</h5>
+                <div class="card-header d-flex justify-content-between align-items-center {% if cotacao.status == 'ativo' %}bg-success{% else %}bg-danger{% endif %} text-white">
+                    <h5 class="card-title mb-0">{{ cotacao.nome }}</h5>
+                    <a href="{% url 'cotacao:toggle_cotacao_status' cotacao.id %}"
+                       class="btn {% if cotacao.status == 'ativo' %}btn-danger{% else %}btn-success{% endif %} btn-sm">
+                        <i class="bi bi-toggle-on"></i> {% if cotacao.status == 'ativo' %}Fechar{% else %}Abrir{% endif %}
+                    </a>
+                    <a href="{% url 'cotacao:enviar_cotacao' cotacao.id %}" class="btn btn-info btn-sm">
+                        <i class="bi bi-send"></i> Enviar
+                    </a>
                 </div>
+                
                 <div class="card-body">
                     <h6 class="card-subtitle mb-2 text-muted">{{ cotacao.departamento.nome }}</h6>
                     <p class="card-text">
@@ -133,23 +142,22 @@ div.card-footer a[href*="toggle_cotacao_status"].status-inativo {
                 </div>
                 <div class="card-footer text-center">
                     <a href="{% url 'cotacao:edit_cotacao' cotacao.id %}" class="btn btn-warning btn-sm">
-                        <i class="bi bi-pencil-square"></i>
+                        <i class="bi bi-pencil-square"> Editar</i>
                     </a>
                     <a href="{% url 'cotacao:add_product_to_cotacao' cotacao.id %}" class="btn btn-primary btn-sm">
-                        <i class="bi bi-basket"></i>
+                        <i class="bi bi-basket"> Adicionar Produtos</i>
                     </a>
 
+
+                    {% comment %} <a href="{% url 'cotacao:toggle_cotacao_status' cotacao.id %}" class="btn btn-outline-success btn-sm status-{{ cotacao.status }}">
+                        <i class="bi bi-toggle-on">Status</i>
+                    </a> {% endcomment %}
+
+                    <a href="{% url 'respostas:visualizar_cotacoes' cotacao.uuid %}" class="btn btn-success btn-sm">
+                        <i class="bi bi-eyeglasses"> Respostas</i>
+                    </a>
                     <a href="{% url 'cotacao:delete_cotacao' cotacao.id %}" class="btn btn-danger btn-sm">
                         <i class="bi bi-trash"></i>
-                    </a>
-                    <a href="{% url 'cotacao:toggle_cotacao_status' cotacao.id %}" class="btn btn-outline-success btn-sm status-{{ cotacao.status }}">
-                        <i class="bi bi-toggle-on">Status</i>
-                    </a>
-                    <a href="{% url 'cotacao:enviar_cotacao' cotacao.id %}" class="btn btn-info btn-sm">
-                        <i class="bi bi-send"></i> Enviar
-                    </a>
-                    <a href="{% url 'respostas:visualizar_cotacoes' cotacao.uuid %}" class="btn btn-success">
-                        <i class="bi bi-eye-fill"></i> Resp.
                     </a>
                 </div>
             </div>

@@ -29,7 +29,7 @@
     <div class="row g-2 ">
       <div class="col-md-4">
         <select class="form-select" name="department" onchange="this.form.submit()">
-          <option value="">Departamentos</option>
+          <option value="">Departamentos/ Seção/ Setor</option>
           {% for department in departments %}
           <option value="{{ department.id }}" {% if current_department == department.id|stringformat:"s" %} selected {% endif %}>
               {{ department.nome }}
