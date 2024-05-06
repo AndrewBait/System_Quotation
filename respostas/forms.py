@@ -61,9 +61,7 @@ class ItemRespostaForm(forms.ModelForm):
                 return preco_dec
             except InvalidOperation:
                 raise ValidationError('Formato de preço inválido.')
-        return preco
-    
-    
+        return preco   
 
     
 

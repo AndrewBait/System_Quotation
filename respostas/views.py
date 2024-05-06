@@ -60,5 +60,26 @@ def cotacao_respondida_view(request):
 
 
 def visualizar_cotacoes(request, cotacao_uuid):
+    cotacao = get_object_or_404(Cotacao, uuid=cotacao_uuid)
+    itens_data = []
 
-    return render(request, 'respostas/visualizar_respostas.html')
+    for item in cotacao.itens_cotacao.all():
+        respostas = item.itemrespostacotacao_set.all().order_by('preco')[:3]
+        respostas_data = [{
+            'preco': resposta.preco,
+            'fornecedor_nome': resposta.resposta_cotacao.fornecedor.name, 
+            'observacao': resposta.observacao,
+            'imagem_url': resposta.imagem.url if resposta.imagem else None
+        } for resposta in respostas]
+
+        item_data = {
+            'produto_nome': item.produto.name,
+            'quantidade': item.quantidade,
+            'tipo_volume': item.get_tipo_volume_display(),
+            'respostas': respostas_data
+        }
+        itens_data.append(item_data)
+
+    return render(request, 'respostas/visualizar_respostas.html', {'cotacao': cotacao, 'itens_data': itens_data})
+
+
