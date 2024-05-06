@@ -1,9 +1,9 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from .forms import RespostaCotacaoForm, ItemRespostaForm
-from cotacao.models import Cotacao, FornecedorCotacaoToken, ItemCotacao
+from cotacao.models import Cotacao, FornecedorCotacaoToken
 from suppliers.models import Supplier
 from .models import RespostaCotacao, ItemRespostaCotacao
-from django.db.models import Avg
+
 
 def criar_item_form(item, resposta_existente, post_data=None, file_data=None):
     item_resposta, created = ItemRespostaCotacao.objects.get_or_create(

@@ -125,9 +125,7 @@ div.card-footer a[href*="toggle_cotacao_status"].status-inativo {
                        class="btn {% if cotacao.status == 'ativo' %}btn-danger{% else %}btn-success{% endif %} btn-sm">
                         <i class="bi bi-toggle-on"></i> {% if cotacao.status == 'ativo' %}Fechar{% else %}Abrir{% endif %}
                     </a>
-                    <a href="{% url 'cotacao:enviar_cotacao' cotacao.id %}" class="btn btn-info btn-sm">
-                        <i class="bi bi-send"></i> Enviar
-                    </a>
+
                 </div>
                 
                 <div class="card-body">
@@ -145,17 +143,15 @@ div.card-footer a[href*="toggle_cotacao_status"].status-inativo {
                         <i class="bi bi-pencil-square"> Editar</i>
                     </a>
                     <a href="{% url 'cotacao:add_product_to_cotacao' cotacao.id %}" class="btn btn-primary btn-sm">
-                        <i class="bi bi-basket"> Adicionar Produtos</i>
+                        <i class="bi bi-basket"> Adicionar </i>
                     </a>
-
-
-                    {% comment %} <a href="{% url 'cotacao:toggle_cotacao_status' cotacao.id %}" class="btn btn-outline-success btn-sm status-{{ cotacao.status }}">
-                        <i class="bi bi-toggle-on">Status</i>
-                    </a> {% endcomment %}
-
+                    <a href="{% url 'cotacao:enviar_cotacao' cotacao.id %}" class="btn btn-info btn-sm">
+                        <i class="bi bi-send"></i> Enviar
+                    </a>
                     <a href="{% url 'respostas:visualizar_cotacoes' cotacao.uuid %}" class="btn btn-success btn-sm">
                         <i class="bi bi-eyeglasses"> Respostas</i>
                     </a>
+
                     <a href="{% url 'cotacao:delete_cotacao' cotacao.id %}" class="btn btn-danger btn-sm">
                         <i class="bi bi-trash"></i>
                     </a>

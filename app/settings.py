@@ -52,6 +52,7 @@ INSTALLED_APPS = [
     'simple_history',
     'django_select2',
     'debug_toolbar',
+    'import_export',
     
     #minhas apps
     'products',
