@@ -17,6 +17,7 @@
         </thead>
         <tbody>
         {% for item in itens_data %}
+            {% if item.respostas %}
             <tr>
                 <td>{{ item.produto_nome }}</td>
                 <td>{{ item.quantidade }}</td>
@@ -24,45 +25,59 @@
                 <td>
                     <ul>
                     {% for resposta in item.respostas %}
-                        <li>R$ {{ resposta.preco }} - {{ resposta.fornecedor_nome }}</li>
+                        {% if resposta.preco %}
+                            <li>R$ {{ resposta.preco }} - {{ resposta.fornecedor_nome }}</li>
+                        {% else %}
+                            <li>{{ resposta.fornecedor_nome }} não especificou</li>
+                        {% endif %}
                     {% endfor %}
                     </ul>
                 </td>
                 <td>
                     <ul>
                     {% for resposta in item.respostas %}
-                        <li>{{ resposta.observacao }}</li>
+                        {% if resposta.observacao %}
+                            <li>{{ resposta.observacao }}</li>
+                        {% else %}
+                            <li>---</li>
+                        {% endif %}
                     {% endfor %}
                     </ul>
                 </td>
                 <td>
+                    <ul>
                     {% for resposta in item.respostas %}
                         {% if resposta.imagem_url %}
-                            <a href="#" data-bs-toggle="modal" data-bs-target="#imagemModal" class="imagem-link" onclick="document.getElementById('modalImage').src='{{ resposta.imagem_url }}';">
-                                Imagem de {{ resposta.fornecedor_nome }} <br>
-                            </a>
+                            <li>
+                                <a href="#" data-bs-toggle="modal" data-bs-target="#imagemModal{{ forloop.counter }}" class="imagem-link" onclick="document.getElementById('modalImage{{ forloop.counter }}').src='{{ resposta.imagem_url }}';">
+                                    Imagem de {{ resposta.fornecedor_nome }}
+                                </a>
+                                <!-- Modal -->
+                                <div class="modal fade" id="imagemModal{{ forloop.counter }}" tabindex="-1" aria-labelledby="imagemModalLabel{{ forloop.counter }}" aria-hidden="true">
+                                    <div class="modal-dialog modal-xl">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title" id="imagemModalLabel{{ forloop.counter }}">Visualização da Imagem</h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                            </div>
+                                            <div class="modal-body" style="text-align: center;">
+                                                <img src="" alt="Imagem do Produto" id="modalImage{{ forloop.counter }}" style="max-width: 50%; height: auto;">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </li>
+                        {% else %}
+                            <li>---</li>
                         {% endif %}
                     {% endfor %}
+                    </ul>
                 </td>
             </tr>
+            {% endif %}
         {% endfor %}
         </tbody>
     </table>
 </div>
 
-<!-- Modal -->
-<div class="modal fade" id="imagemModal" tabindex="-1" aria-labelledby="imagemModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-xl">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title" id="imagemModalLabel">Visualização da Imagem</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body" style="text-align: center;">  <!-- Centralizando a imagem no modal -->
-          <img src="" alt="Imagem do Produto" id="modalImage" style="max-width: 50%; height: auto;">  <!-- Ajuste de largura máxima e altura automática -->
-        </div>
-      </div>
-    </div>
-  </div>
-  
 {% endblock %}

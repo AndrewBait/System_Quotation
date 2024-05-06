@@ -2,6 +2,7 @@ from django import forms
 from .models import RespostaCotacao, ItemRespostaCotacao
 from django.core.exceptions import ValidationError
 from decimal import Decimal, InvalidOperation
+from django.forms import TextInput, NumberInput, FileInput
 import bleach
 import re
 
@@ -11,19 +12,48 @@ class ItemRespostaForm(forms.ModelForm):
     class Meta:
         model = ItemRespostaCotacao
         fields = ['preco', 'observacao', 'imagem']
+        widgets = {
+            'preco': NumberInput(attrs={'class': 'form-control', 'min': '0', 'step': '0.001'}),
+            'observacao': TextInput(attrs={'class': 'form-control', 'maxlength': '144'}),
+            'imagem': FileInput(attrs={'class': 'form-control', 'accept': 'image/*'})
+        }
     
     def __init__(self, *args, **kwargs):
         self.item_cotacao = kwargs.pop('item_cotacao', None)
         super(ItemRespostaForm, self).__init__(*args, **kwargs)
         self.fields['imagem'].widget.attrs.update({'class': 'form-control'})
+        
+        
+    def clean_preco(self):
+        preco = self.cleaned_data.get('preco')
+        if preco:
+            try:
+                preco_dec = Decimal(preco)
+                if preco_dec < 0:
+                    raise ValidationError('O preço não pode ser negativo.')
+                if not re.match(r'^\d+\.\d{3}$', str(preco_dec)):
+                    raise ValidationError('O preço deve ter três casas decimais.')
+                return preco_dec
+            except InvalidOperation:
+                raise ValidationError('Formato de preço inválido.')
+        return preco
     
     
     def clean_observacao(self):
         observacao = self.cleaned_data.get('observacao')
-        # Sanitize the observation field to prevent XSS
-        clean_observacao = bleach.clean(observacao)
-        return clean_observacao
+        if observacao:
+            clean_observacao = bleach.clean(observacao)
+            return clean_observacao
+        return observacao  # Retorna None se não houver observação
     
+
+    
+    def clean_imagem(self):
+        imagem = self.cleaned_data.get('imagem')
+        if imagem and hasattr(imagem, 'content_type'):
+            if not imagem.content_type.startswith('image/'):
+                raise ValidationError('Apenas arquivos de imagem são permitidos.')
+        return imagem
 
         
     @property
