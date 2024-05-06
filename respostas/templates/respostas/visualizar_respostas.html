@@ -18,9 +18,9 @@
         <table class="table table-striped">
             <thead>
                 <tr>
-                    <th>Produto</th>
                     <th>Quantidade</th>
                     <th>Tipo de Volume</th>
+                    <th>Produto</th>                   
                     <th>Último Preço</th>
                     <th>Top 3 Ofertas</th>
                     <th>Observações do Fornecedor (Top 3)</th>
@@ -31,9 +31,9 @@
             {% for item in itens_data %}
                 {% if item.respostas %}
                 <tr>
-                    <td>{{ item.produto_nome }}</td>
                     <td>{{ item.quantidade }}</td>
                     <td>{{ item.tipo_volume }}</td>
+                    <td>{{ item.produto_nome }}</td>                    
                     <td>
                         R$ {{ item.ultimo_preco }} em {{ item.data_ultimo_preco|date:"d/m/Y" }} <br>
                         <a href="#" data-bs-toggle="modal" data-bs-target="#priceHistoryModal{{ forloop.counter }}">Ver Histórico</a>
