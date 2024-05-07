@@ -6,6 +6,7 @@
 {% block content %}
 <form method="post" action="{% url 'respostas:gerar_pedidos' %}" id="gerar-pedidos-form">
     {% csrf_token %}
+    <input type="hidden" name="cotacao_uuid" value="{{ cotacao.uuid }}">  
 <div class="container-fluid mt-4">    
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2>Respostas para Cotação: {{ cotacao.nome }}</h2>
@@ -66,10 +67,9 @@
                             {% for resposta in item.respostas|slice:":3" %}
                             <li>
                                 <strong>R$ {{ resposta.preco }} - {{ resposta.fornecedor_nome }}</strong>
-                                <input type="checkbox" name="selecao_{{ item.pk }}" value="{{ resposta.fornecedor.pk }}" class="form-check-input">
-                                <input type="hidden" name="preco_{{ item.pk }}_{{ resposta.fornecedor.pk }}" value="{{ resposta.preco }}">
+                                <input type="radio" name="selecao_{{ item.id }}" value="{{ resposta.fornecedor_id }}_{{ resposta.preco }}" class="form-check-input">
                             </li>
-                            {% endfor %}                            
+                            {% endfor %}
                         </ul>
                         {% if item.respostas|length > 3 %}
                             <a href="#" data-bs-toggle="modal" data-bs-target="#moreOffersModal{{ forloop.counter }}">outras respostas</a>
@@ -162,6 +162,12 @@
 </form>
 <script type="text/javascript">
     document.getElementById('gerar-pedidos-form').onsubmit = function() {
+        const radios = document.querySelectorAll('input[type="radio"][name^="selecao_"]');
+        for (let radio of radios) {
+            if (radio.checked) {
+                console.log(radio.name + ': ' + radio.value);
+            }
+        }
         return confirm('Você tem certeza que deseja gerar os pedidos para as ofertas selecionadas?');
     };
     </script>

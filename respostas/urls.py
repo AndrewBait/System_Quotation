@@ -11,6 +11,4 @@ urlpatterns = [
     path('respostas/<uuid:cotacao_uuid>/', visualizar_cotacoes, name='visualizar_cotacoes'),
     path('cotacao_respondida/', cotacao_respondida_view, name='cotacao_respondida'),
     path('gerar-pedidos/', gerar_pedidos, name='gerar_pedidos'),
-
-
 ]

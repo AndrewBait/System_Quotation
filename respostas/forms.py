@@ -7,7 +7,6 @@ import bleach
 import re
 
 
-
 class ItemRespostaForm(forms.ModelForm):
     class Meta:
         model = ItemRespostaCotacao

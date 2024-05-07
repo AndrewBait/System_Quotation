@@ -1,10 +1,9 @@
 import decimal
 from django.shortcuts import render, get_object_or_404, redirect
 from django.views import View
-
 from products.models import Product
 from .forms import RespostaCotacaoForm, ItemRespostaForm
-from cotacao.models import Cotacao, FornecedorCotacaoToken
+from cotacao.models import Cotacao, FornecedorCotacaoToken, ItemCotacao
 from suppliers.models import Supplier
 from .models import Pedido, RespostaCotacao, ItemRespostaCotacao
 from django.core.exceptions import ValidationError
@@ -16,8 +15,6 @@ from decimal import Decimal, InvalidOperation
 import logging
 from django.db import transaction
 from django.contrib import messages
-
-
 
 
 def criar_item_form(item, resposta_existente, post_data=None, file_data=None):
@@ -79,16 +76,18 @@ def visualizar_cotacoes(request, cotacao_uuid):
     itens_data = []
 
     for item in cotacao.itens_cotacao.all():
-        respostas = item.itemrespostacotacao_set.all().order_by('preco')
+        respostas = item.itemrespostacotacao_set.all().select_related('resposta_cotacao__fornecedor').order_by('preco')
         respostas_data = [{
             'preco': resposta.preco,
-            'fornecedor_nome': resposta.resposta_cotacao.fornecedor.name, 
+            'fornecedor_nome': resposta.resposta_cotacao.fornecedor.name,
+            'fornecedor_id': resposta.resposta_cotacao.fornecedor.pk,
             'observacao': resposta.observacao,
             'imagem_url': resposta.imagem.url if resposta.imagem else None,
             'is_top3': idx < 3  # Marca as três primeiras respostas como parte do Top 3
         } for idx, resposta in enumerate(respostas)]
 
         item_data = {
+            'id': item.pk,
             'produto_nome': item.produto.name,
             'quantidade': item.quantidade,
             'tipo_volume': item.get_tipo_volume_display(),
@@ -100,40 +99,68 @@ def visualizar_cotacoes(request, cotacao_uuid):
 
 
 def gerar_pedidos(request):
-    if request.method == 'POST':
-        dados = request.POST
-        with transaction.atomic():
-            for key, value in dados.items():
-                if key.startswith('selecao_'):
-                    item_id = key.split('_')[1]
-                    fornecedor_id = value
-                    produto_id = dados[f'produto_{item_id}']
-                    quantidade = dados[f'quantidade_{item_id}']
-                    tipo_volume = dados[f'tipo_volume_{item_id}']
-                    preco = dados[f'preco_{item_id}_{fornecedor_id}']
+        if request.method != 'POST':
+            return redirect('cotacao:cotacao_list')
 
-                    produto = Product.objects.get(pk=produto_id)
-                    fornecedor = Supplier.objects.get(pk=fornecedor_id)
+        print(request.POST)
+        cotacao_uuid = request.POST.get('cotacao_uuid')
+        cotacao = get_object_or_404(Cotacao, uuid=cotacao_uuid)
+        has_errors = False
 
-                    Pedido.objects.create(
-                        produto=produto,
-                        quantidade=quantidade,
-                        tipo_volume=tipo_volume,
-                        fornecedor=fornecedor,
-                        preco=preco,
-                        data_requisicao=date.today(),
-                        status='pendente'
-                    )
-        return render(request, 'cotacao/cotacao_list.html') # Redirecione para uma página de confirmação
-    return render(request, 'cotacao/cotacao_list.html')
+        try:
+            with transaction.atomic():
+                selecao_keys = [key for key in request.POST if key.startswith('selecao_')]
+                for key in selecao_keys:
+                    valor = request.POST[key]
+                    print(f"key: {key}, valor: {valor}")
+                    # Extração e validação do item_id
+                    try:
+                        item_id = int(key.split('_', 1)[1])
+                    except ValueError:
+                        messages.error(request, 'ID do item deve ser um número válido.')
+                        has_errors = True
+                        continue
+                    
+                    parts = valor.split('_')
+                    if len(parts) != 2:
+                        messages.error(request, 'Fornecedor ID ou preço incompleto ou inválido.')
+                        continue
+                    
+                    fornecedor_id, preco = map(str.strip, parts)
+                    try:
+                        fornecedor_id = int(fornecedor_id)
+                        preco_decimal = Decimal(preco.replace(',', '.'))
+                        item_cotacao = ItemCotacao.objects.get(pk=item_id)
+                        fornecedor = Supplier.objects.get(pk=fornecedor_id)
+                        
+                        Pedido.objects.create(
+                            produto=item_cotacao.produto,
+                            quantidade=item_cotacao.quantidade,
+                            tipo_volume=item_cotacao.tipo_volume,
+                            fornecedor=fornecedor,
+                            preco=preco_decimal,
+                            data_requisicao=date.today(),
+                            status='pendente'
+                        )
+                    except Exception as e:
+                        messages.error(request, f'Erro ao processar pedido: {e}')
+                        has_errors = True
 
+        except Exception as e:
+            messages.error(request, f'Erro geral ao gerar pedidos: {e}')
+            has_errors = True
 
-def gerar_pedidos(request):
-    if request.method == 'POST':
-        # sua lógica de criação de pedidos...
-        messages.success(request, 'Pedidos gerados com sucesso!')
-        return render(request, 'cotacao/cotacao_list.html')
-    return render(request, 'cotacao/cotacao_list.html')
+        if not has_errors:
+            messages.success(request, 'Pedidos gerados com sucesso!')
+        return redirect('cotacao:cotacao_list')
+# {% url 'respostas:visualizar_cotacoes' cotacao.uuid %}
+
+# def gerar_pedidos(request):
+#     if request.method == 'POST':
+#         # sua lógica de criação de pedidos...
+#         messages.success(request, 'Pedidos gerados com sucesso!')
+#         return render(request, 'cotacao/cotacao_list.html')
+#     return render(request, 'cotacao/cotacao_list.html')
 
 
 # logger = logging.getLogger(__name__)
