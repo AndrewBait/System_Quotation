@@ -1,0 +1,9 @@
+{% extends 'base.html' %}
+{% block content %}
+<form method="post">
+    {% csrf_token %}
+    <p>Tem certeza que deseja deletar o pedido #{{ object.id }}?</p>
+    <button type="submit" class="btn btn-danger">Deletar</button>
+    <a href="{% url 'respostas:listar_pedidos' %}" class="btn btn-secondary">Cancelar</a>
+</form>
+{% endblock %}

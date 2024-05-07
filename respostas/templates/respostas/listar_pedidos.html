@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Pedidos Gerados</h2>
+<div class="row">
+    {% for pedido in pedidos %}
+    <div class="col-md-4 mb-4">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">{{ pedido.fornecedor.name }}</h5>
+                <p class="card-text">
+                    Quantidade de Itens: {{ pedido.itens.count }}<br>
+                    Data da Requisição: {{ pedido.data_requisicao }}<br>
+                    Status: {{ pedido.status }}
+                </p>
+                <a href="{% url 'respostas:detalhes_pedido' pedido.pk %}" class="btn btn-primary">Ver Detalhes</a>
+                <a href="{% url 'respostas:editar_pedido' pedido.pk %}" class="btn btn-secondary">Editar</a>
+                <a href="{% url 'respostas:deletar_pedido' pedido.pk %}" class="btn btn-danger">Deletar</a>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

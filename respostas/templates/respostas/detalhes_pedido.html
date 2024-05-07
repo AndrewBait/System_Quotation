@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        Pedido #{{ pedido.pk }} - {{ pedido.fornecedor.name }}
+    </div>
+    <div class="card-body">
+        {% if pedido.itens.all %}
+        <ul>
+            {% for item in pedido.itens.all %}
+            <li>{{ item.produto.name }} - Quantidade: {{ item.quantidade }}, Preço: {{ item.preco }}</li>
+            {% endfor %}
+        </ul>
+        {% else %}
+        <p>Não há itens neste pedido.</p>
+        {% endif %}
+        <a href="{% url 'respostas:listar_pedidos' %}" class="btn btn-primary">Voltar aos Pedidos</a>
+    </div>
+</div>
+{% endblock %}
