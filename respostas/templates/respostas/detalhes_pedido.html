@@ -2,11 +2,17 @@
 {% block content %}
 <div class="card">
     <div class="card-header">
-        Pedido #{{ pedido.pk }} - {{ pedido.fornecedor.name }}
+        Pedido #{{ pedido_agrupado.pk }} - {{ pedido_agrupado.fornecedor.name }} - {{ pedido_agrupado.cotacao.nome }}
     </div>
     <div class="card-body">
         <ul>
-            <li>Produto: {{ pedido.produto.name }} - Quantidade: {{ pedido.quantidade }}, Preço: {{ pedido.preco }}</li>
+            {% for pedido in pedido_agrupado.pedidos.all %}
+            <li>
+                {{ pedido.produto.name }} - Quantidade: {{ pedido.quantidade }} unidades, Preço: R$ {{ pedido.preco }}
+                <a href="{% url 'respostas:editar_pedido_individual' pedido.pk %}" class="btn btn-sm btn-secondary">Editar</a>
+                <a href="{% url 'respostas:deletar_pedido' pedido.pk %}" class="btn btn-sm btn-danger">Remover</a>
+            </li>
+            {% endfor %}
         </ul>
         <a href="{% url 'respostas:listar_pedidos' %}" class="btn btn-primary">Voltar aos Pedidos</a>
     </div>

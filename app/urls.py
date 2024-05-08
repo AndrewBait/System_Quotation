@@ -13,7 +13,7 @@ if settings.DEBUG:
         path('accounts/', include('accounts.urls', namespace='accounts')),
         path('suppliers/', include('suppliers.urls')),
         path('cotacoes/', include(('cotacao.urls', 'cotacao'), namespace='cotacao')),
-        path('respostas/', include(('respostas.urls', 'respostas'), namespace='respostas')),  # Inclusão da app "respostas"
+        path('respostas/', include(('respostas.urls', 'respostas'), namespace='respostas')),
         path('', RedirectView.as_view(url='/accounts/login/', permanent=True), name='home'),
         
         path('__debug__/', include(debug_toolbar.urls)),

@@ -1,3 +1,4 @@
+from django.forms import inlineformset_factory
 from django.shortcuts import render, get_object_or_404, redirect
 from django.views import View
 from products.models import Product
@@ -16,8 +17,9 @@ from django.db import transaction
 from django.contrib import messages
 from django.urls import reverse, reverse_lazy
 from django.views.generic import ListView, DetailView, UpdateView, DeleteView
-from .models import Pedido
+from .models import Pedido, PedidoAgrupado
 from collections import defaultdict
+
 
 def criar_item_form(item, resposta_existente, post_data=None, file_data=None):
     item_resposta, created = ItemRespostaCotacao.objects.get_or_create(
@@ -103,10 +105,11 @@ def visualizar_cotacoes(request, cotacao_uuid):
 def gerar_pedidos(request):
     cotacao_uuid = request.POST.get('cotacao_uuid', '')
     cotacao = get_object_or_404(Cotacao, uuid=cotacao_uuid)
+    usuario = request.user  # Assumindo que você está usando a autenticação padrão do Django
 
     if request.method == 'POST':
         has_errors = False
-        pedido_items = {}
+        pedido_agrupado_dict = {}
 
         try:
             with transaction.atomic():
@@ -120,21 +123,25 @@ def gerar_pedidos(request):
                     item_cotacao = ItemCotacao.objects.get(pk=item_id)
                     fornecedor = Supplier.objects.get(pk=fornecedor_id)
 
-                    if fornecedor not in pedido_items:
-                        pedido_items[fornecedor] = []
-                    pedido_items[fornecedor].append((item_cotacao, preco_decimal))
-
-                for fornecedor, items in pedido_items.items():
-                    for item_cotacao, preco in items:
-                        Pedido.objects.create(
-                            produto=item_cotacao.produto,
-                            quantidade=item_cotacao.quantidade,
-                            tipo_volume=item_cotacao.tipo_volume,
+                    if fornecedor not in pedido_agrupado_dict:
+                        pedido_agrupado = PedidoAgrupado.objects.create(
                             fornecedor=fornecedor,
-                            preco=preco,
+                            cotacao=cotacao,
                             data_requisicao=date.today(),
-                            status='pendente'
+                            status='pendente',
+                            usuario_criador=usuario
                         )
+                        pedido_agrupado_dict[fornecedor] = pedido_agrupado
+                    else:
+                        pedido_agrupado = pedido_agrupado_dict[fornecedor]
+
+                    Pedido.objects.create(
+                        produto=item_cotacao.produto,
+                        quantidade=item_cotacao.quantidade,
+                        tipo_volume=item_cotacao.tipo_volume,
+                        preco=preco_decimal,
+                        pedido_agrupado=pedido_agrupado
+                    )
         except Exception as e:
             messages.error(request, f'Erro geral ao gerar pedidos: {str(e)}')
             has_errors = True
@@ -146,30 +153,50 @@ def gerar_pedidos(request):
 
 
 class ListarPedidosView(ListView):
-    model = Pedido
+    model = PedidoAgrupado
     template_name = 'respostas/listar_pedidos.html'
-    context_object_name = 'pedidos'
+    context_object_name = 'pedidos_agrupados'
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        pedidos_por_fornecedor = defaultdict(list)
-        pedidos = Pedido.objects.select_related('fornecedor', 'produto').all()
-        for pedido in pedidos:
-            pedidos_por_fornecedor[pedido.fornecedor].append(pedido)
-        
-        context['pedidos_por_fornecedor'] = dict(pedidos_por_fornecedor)
-        return context
-
-class DetalhesPedidoView(DetailView):
-    model = Pedido
-    template_name = 'respostas/detalhes_pedido.html'
-    
 
 class EditarPedidoView(UpdateView):
     model = Pedido
-    fields = ['status']  # Ajuste conforme os campos que realmente existem no modelo Pedido
+    fields = ['quantidade', 'preco', 'produto']  # ajuste os campos conforme necessário
     template_name = 'respostas/editar_pedido.html'
     success_url = reverse_lazy('respostas:listar_pedidos')
+
+
+class DetalhesPedidoAgrupadoView(DetailView):
+    model = PedidoAgrupado
+    template_name = 'respostas/detalhes_pedido.html'
+    context_object_name = 'pedido_agrupado'
+    
+
+class EditarPedidoAgrupadoView(UpdateView):
+    model = PedidoAgrupado
+    fields = []
+    template_name = 'respostas/editar_pedido.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        PedidoFormSet = inlineformset_factory(PedidoAgrupado, Pedido, fields=('quantidade', 'preco', 'produto'), extra=0)
+        if self.request.POST:
+            context['formset'] = PedidoFormSet(self.request.POST, instance=self.object)
+        else:
+            context['formset'] = PedidoFormSet(instance=self.object)
+        return context
+
+    def form_valid(self, form):
+        context = self.get_context_data()
+        formset = context['formset']
+        if formset.is_valid():
+            formset.save()
+            return redirect('respostas:listar_pedidos')
+        else:
+            return self.render_to_response(self.get_context_data(form=form))
+
+    def post(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        return super().post(request, *args, **kwargs)
 
     
 
