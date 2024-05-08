@@ -19,6 +19,9 @@ from django.urls import reverse, reverse_lazy
 from django.views.generic import ListView, DetailView, UpdateView, DeleteView
 from .models import Pedido, PedidoAgrupado
 from collections import defaultdict
+from django.utils import timezone
+import datetime
+from django.db.models import Q
 
 
 def criar_item_form(item, resposta_existente, post_data=None, file_data=None):
@@ -157,6 +160,29 @@ class ListarPedidosView(ListView):
     template_name = 'respostas/listar_pedidos.html'
     context_object_name = 'pedidos_agrupados'
 
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        query = self.request.GET.get('q')
+        status = self.request.GET.get('status')
+        start_date = self.request.GET.get('start_date')
+        end_date = self.request.GET.get('end_date')
+
+        if query:
+            queryset = queryset.filter(
+                Q(cotacao__nome__icontains=query) |
+                Q(fornecedor__name__icontains=query) |
+                Q(fornecedor__company__name__icontains=query)
+            )
+        
+        if status:
+            queryset = queryset.filter(status=status)
+        
+        if start_date and end_date:
+            start_date = timezone.make_aware(datetime.datetime.strptime(start_date, '%Y-%m-%d'))
+            end_date = timezone.make_aware(datetime.datetime.strptime(end_date, '%Y-%m-%d'))
+            queryset = queryset.filter(data_requisicao__range=(start_date, end_date))
+
+        return queryset
 
 class EditarPedidoView(UpdateView):
     model = Pedido

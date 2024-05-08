@@ -1,6 +1,32 @@
 {% extends 'base.html' %}
 {% block content %}
 <h2>Pedidos Gerados</h2>
+
+<div class="container mb-4">
+    <form method="get" class="row g-3">
+        <div class="col-md-6">
+            <input type="text" name="q" class="form-control" placeholder="Buscar..." value="{{ request.GET.q }}">
+        </div>
+        <div class="col-md-6">
+            <select name="status" class="form-control">
+                <option value="">Todos os Status</option>
+                <option value="pendente" {% if request.GET.status == "pendente" %}selected{% endif %}>Pendente</option>
+                <option value="concluido" {% if request.GET.status == "concluido" %}selected{% endif %}>Concluído</option>
+                <option value="cancelado" {% if request.GET.status == "cancelado" %}selected{% endif %}>Cancelado</option>
+            </select>
+        </div>
+        <div class="col-md-3">
+            <input type="date" name="start_date" class="form-control" placeholder="Data Início" value="{{ request.GET.start_date }}">
+        </div>
+        <div class="col-md-3">
+            <input type="date" name="end_date" class="form-control" placeholder="Data Fim" value="{{ request.GET.end_date }}">
+        </div>
+        <div class="col-12">
+            <button type="submit" class="btn btn-primary">Filtrar</button>
+        </div>
+    </form>
+</div>
+
 <div class="row">
     {% for pedido_agrupado in pedidos_agrupados %}
     <div class="col-md-6 mb-4">
@@ -16,6 +42,10 @@
                 <a href="{% url 'respostas:deletar_pedido' pedido_agrupado.pk %}" class="btn btn-danger">Deletar Pedido</a>
             </div>
         </div>
+    </div>
+    {% empty %}
+    <div class="col-12">
+        <div class="alert alert-info">Nenhum pedido encontrado.</div>
     </div>
     {% endfor %}
 </div>
