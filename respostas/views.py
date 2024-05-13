@@ -101,6 +101,7 @@ def visualizar_cotacoes(request, cotacao_uuid):
     cotacao = get_object_or_404(Cotacao, uuid=cotacao_uuid)
     itens_data = []
 
+    
     for item in cotacao.itens_cotacao.all():
         respostas = item.itemrespostacotacao_set.all().select_related('resposta_cotacao__fornecedor').order_by('preco')
         respostas_data = [{
