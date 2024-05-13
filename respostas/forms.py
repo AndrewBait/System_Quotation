@@ -18,9 +18,9 @@ class ItemRespostaForm(forms.ModelForm):
         }
     
     def __init__(self, *args, **kwargs):
-        self.item_cotacao = kwargs.pop('item_cotacao', None)
-        super(ItemRespostaForm, self).__init__(*args, **kwargs)
-        self.fields['imagem'].widget.attrs.update({'class': 'form-control'})
+        self.item_cotacao = kwargs.pop('item_cotacao', None)  
+        super(ItemRespostaForm, self).__init__(*args, **kwargs)  
+        self.fields['imagem'].required = False  
         
         
     def clean_preco(self):
@@ -49,11 +49,12 @@ class ItemRespostaForm(forms.ModelForm):
     
     def clean_imagem(self):
         imagem = self.cleaned_data.get('imagem')
-        if imagem and hasattr(imagem, 'content_type'):
-            if not imagem.content_type.startswith('image/'):
-                raise ValidationError('Apenas arquivos de imagem são permitidos.')
-        return imagem
-
+        if imagem:
+            if hasattr(imagem, 'content_type'):
+                if not imagem.content_type.startswith('image/'):
+                    raise ValidationError('Apenas arquivos de imagem são permitidos.')
+            return imagem
+        return None
         
     @property
     def ean(self):

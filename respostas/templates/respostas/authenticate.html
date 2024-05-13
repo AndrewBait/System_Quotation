@@ -1,0 +1,12 @@
+{% extends "base_no_sidebar.html" %}
+
+{% block content %}
+<form method="post" action="{% url 'respostas:responder_cotacao' cotacao_uuid=cotacao_uuid fornecedor_id=fornecedor_id token=token %}">
+    {% csrf_token %}
+    <label for="auth_code">Digite os primeiros 4 dígitos do seu CNPJ:</label>
+    <input type="text" name="auth_code" id="auth_code" required>
+    <button type="submit">Confirmar</button>
+</form>
+
+
+{% endblock %}

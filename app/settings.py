@@ -35,7 +35,7 @@ ALLOWED_HOSTS = ['*']
 
 
 INSTALLED_APPS = [
-    
+    'jazzmin',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     
     #minhas libs
+    
     'crispy_forms',
     "crispy_bootstrap5",
     'widget_tweaks',
@@ -61,6 +62,10 @@ INSTALLED_APPS = [
     'cotacao',
     "respostas",
 ]
+
+# JAZZMIN_UI_TWEAKS = {
+#     "theme": "darkly",
+# }
 
 CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
 

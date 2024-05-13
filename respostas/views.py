@@ -22,7 +22,11 @@ from collections import defaultdict
 from django.utils import timezone
 import datetime
 from django.db.models import Q
+import re
 
+
+def apenas_digitos(cnpj):
+    return re.sub(r'\D', '', cnpj)  # Remove tudo que não é dígito
 
 def criar_item_form(item, resposta_existente, post_data=None, file_data=None):
     item_resposta, created = ItemRespostaCotacao.objects.get_or_create(
@@ -30,49 +34,64 @@ def criar_item_form(item, resposta_existente, post_data=None, file_data=None):
         item_cotacao=item,
         defaults={'item_cotacao': item}  # O 'defaults' é utilizado apenas se estiver criando um novo registro
     )
-    # Ajuste aqui para passar file_data junto com post_data
-    return ItemRespostaForm(post_data, file_data, prefix=f'item_{item.pk}', instance=item_resposta)
-
+    form_kwargs = {'instance': item_resposta, 'item_cotacao': item}
+    if post_data and file_data:
+        return ItemRespostaForm(post_data, file_data, prefix=f'item_{item.pk}', **form_kwargs)
+    else:
+        return ItemRespostaForm(prefix=f'item_{item.pk}', **form_kwargs)
 
 def responder_cotacao(request, cotacao_uuid, fornecedor_id, token):
     cotacao = get_object_or_404(Cotacao, uuid=cotacao_uuid)
     fornecedor = get_object_or_404(Supplier, pk=fornecedor_id)
-    get_object_or_404(FornecedorCotacaoToken, cotacao=cotacao, fornecedor=fornecedor, token=token)
+    token_obj = get_object_or_404(FornecedorCotacaoToken, cotacao=cotacao, fornecedor=fornecedor, token=token)
 
     if cotacao.status == 'inativo':
-        # Aqui você pode redirecionar para uma página específica ou renderizar uma template com a mensagem
-        return render(request, 'respostas/cotacao_fechada.html', {
-            'message': 'Esta cotação está fechada no momento. Para mais informações, entre em contato pelo email: contato@empresa.com.'
-        })
+        return render(request, 'respostas/cotacao_fechada.html', {'message': 'Esta cotação está fechada no momento.'})
 
-    resposta_existente, _ = RespostaCotacao.objects.get_or_create(
-        cotacao=cotacao, 
-        fornecedor=fornecedor
-    )
-    
-    resposta_form = RespostaCotacaoForm(request.POST or None, request.FILES or None, instance=resposta_existente, cotacao=cotacao)
-    item_forms = [criar_item_form(item, resposta_existente, request.POST or None, request.FILES or None) for item in cotacao.itens_cotacao.all()]
+    if 'authenticated' not in request.session or request.session['authenticated'] != fornecedor_id:
+        if request.method == 'POST' and 'auth_code' in request.POST:
+            auth_code = request.POST['auth_code']
+            cnpj_limpo = apenas_digitos(fornecedor.cnpj)
+            if auth_code == cnpj_limpo[:4]:
+                request.session['authenticated'] = fornecedor_id
+                return redirect(request.path)
+            else:
+                return render(request, 'respostas/authenticate.html', {
+                    'message': 'Código de autenticação inválido.',
+                    'cotacao_uuid': cotacao_uuid,
+                    'fornecedor_id': fornecedor_id,
+                    'token': token
+                })
+        else:
+            return render(request, 'respostas/authenticate.html', {
+                'cotacao_uuid': cotacao_uuid,
+                'fornecedor_id': fornecedor_id,
+                'token': token
+            })
 
-    if request.method == 'POST' and resposta_form.is_valid() and all(item_form.is_valid() for item_form in item_forms):
-        resposta = resposta_form.save(commit=False)
-        resposta.cotacao = cotacao
-        resposta.fornecedor = fornecedor
-        resposta.save()
+    resposta_existente, created = RespostaCotacao.objects.get_or_create(cotacao=cotacao, fornecedor=fornecedor)
+    resposta_form = RespostaCotacaoForm(request.POST, request.FILES or None, instance=resposta_existente)
+    item_forms = [criar_item_form(item, resposta_existente, request.POST, request.FILES or None) for item in cotacao.itens_cotacao.all()]
 
-        for item_form in item_forms:
-            item_resposta = item_form.save(commit=False)
-            item_resposta.resposta_cotacao = resposta
-            item_resposta.save()
-
-        return redirect('respostas:cotacao_respondida')  # Substitua 'home' pelo nome da rota desejada configurada no urls.py
+    if request.method == 'POST':
+        if resposta_form.is_valid() and all(item_form.is_valid() for item_form in item_forms):
+            resposta = resposta_form.save(commit=False)
+            resposta.cotacao = cotacao
+            resposta.fornecedor = fornecedor
+            resposta.save()
+            for item_form in item_forms:
+                item_resposta = item_form.save(commit=False)
+                item_resposta.resposta_cotacao = resposta
+                item_resposta.save()
+            return redirect('respostas:cotacao_respondida')
 
     context = {
+        'form': {'resposta_form': resposta_form, 'item_forms': item_forms},
         'cotacao': cotacao,
-        'form': resposta_form,
-        'item_forms': item_forms,
+        'fornecedor': fornecedor,
+        'token': token_obj
     }
     return render(request, 'respostas/responder_cotacao.html', context)
-
 
 def cotacao_respondida_view(request):
     return render(request, 'respostas/cotacao_respondida.html')

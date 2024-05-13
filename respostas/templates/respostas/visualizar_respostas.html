@@ -7,159 +7,180 @@
 <form method="post" action="{% url 'respostas:gerar_pedidos' %}" id="gerar-pedidos-form">
     {% csrf_token %}
     <input type="hidden" name="cotacao_uuid" value="{{ cotacao.uuid }}">  
-<div class="container-fluid mt-4">    
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2>Respostas para Cotação: {{ cotacao.nome }}</h2>
-        {% if messages %}
-        <div class="alert alert-success" role="alert">
-            {% for message in messages %}
-            {{ message }}
-            {% endfor %}
-        </div>
-        {% endif %}
-        
-        <div class="d-flex flex-wrap">
-            <a href="{% url 'cotacao:cotacao_list' %}" class="btn btn-secondary"><i class="bi bi-arrow-left"></i> Voltar</a>
-            <button class="btn btn-success">  Fechar Cotação</button>
-            <a href="{% url 'respostas:listar_pedidos' %}" class="btn btn-primary">Visualizar Pedidos</a>
-        </div>
-    </div>
-    <input class="form-control mb-4" id="myInput" type="text" placeholder="Pesquisar...">
-    <div class="table-responsive">
-        <table class="table table-striped">
-            <thead>
-                <tr>
-                    <th>Quantidade</th>
-                    <th>Tipo de Volume</th>
-                    <th>Produto</th>                   
-                    <th>Último Preço</th>
-                    <th>Top 3 Ofertas</th>
-                    <th>Observações do Fornecedor (Top 3)</th>
-                    <th>Imagem do Produto (Top 3)</th>
-                </tr>
-            </thead>
-            <tbody>
-            {% for item in itens_data %}
-                {% if item.respostas %}
-                <tr>
-                    <td>{{ item.quantidade }}</td>
-                    <td>{{ item.tipo_volume }}</td>
-                    <td>{{ item.produto_nome }}</td>                    
-                    <td>
-                        R$ {{ item.ultimo_preco }} em {{ item.data_ultimo_preco|date:"d/m/Y" }} <br>
-                        <a href="#" data-bs-toggle="modal" data-bs-target="#priceHistoryModal{{ forloop.counter }}">Ver Histórico</a>
-                    </td>
-                        <!-- Modal para histórico de preços -->
-                        <div class="modal fade" id="priceHistoryModal{{ forloop.counter }}" tabindex="-1" aria-hidden="true">
-                            <div class="modal-dialog modal-lg">
-                                <div class="modal-content">
-                                    <div class="modal-header">
-                                        <h5 class="modal-title">Histórico de Preços de {{ item.produto_nome }}</h5>
-                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                    </div>
-                                    <div class="modal-body">
-                                        <canvas id="priceChart{{ forloop.counter }}"></canvas>
-                                    </div>
-                                </div>
-                            </div>
+
+    <div class="container-fluid mt-4">    
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>Respostas para Cotação: {{ cotacao.nome }}</h2>
+
+            {# Mensagens de sucesso usando alert-dismissible para permitir o fechamento #}
+            {% if messages %}
+                {% for message in messages %}
+                    {% if message.tags == 'success' %}
+                        <div class="alert alert-success alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                         </div>
-                    <td>
-                        <ul>
-                            {% for resposta in item.respostas|slice:":3" %}
-                            <li>
-                                <strong>R$ {{ resposta.preco }} - {{ resposta.fornecedor_nome }}</strong>
-                                <input type="radio" name="selecao_{{ item.id }}" value="{{ resposta.fornecedor_id }}_{{ resposta.preco }}" class="form-check-input">
-                            </li>
-                            {% endfor %}
-                        </ul>
-                        {% if item.respostas|length > 3 %}
-                            <a href="#" data-bs-toggle="modal" data-bs-target="#moreOffersModal{{ forloop.counter }}">outras respostas</a>
-                            <!-- Modal -->
-                            <div class="modal fade" id="moreOffersModal{{ forloop.counter }}" tabindex="-1" aria-labelledby="moreOffersModalLabel{{ forloop.counter }}" aria-hidden="true">
+                    {% endif %}
+                {% endfor %}
+            {% endif %}
+            
+            <div class="d-flex flex-wrap">
+                <a href="{% url 'cotacao:cotacao_list' %}" class="btn btn-secondary me-2"><i class="bi bi-arrow-left"></i> Voltar</a>
+                <button type="button" class="btn btn-danger me-2" data-bs-toggle="modal" data-bs-target="#fecharCotacaoModal">Fechar Cotação</button> 
+                <a href="{% url 'respostas:listar_pedidos' %}" class="btn btn-primary">Visualizar Pedidos</a>
+            </div>
+        </div>
+
+        {# Filtros e Ordenação #}
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <input class="form-control" id="searchInput" type="text" placeholder="Pesquisar por nome do produto...">
+            </div>
+            <div class="col-md-3">
+                <select class="form-select" id="filterSelect">
+                    <option value="">Ordenar por Nome</option>
+                    <option value="asc">A - Z</option>
+                    <option value="desc">Z - A</option>
+                </select>
+            </div>
+            {# Espaço vazio para melhor organização #}
+            <div class="col-md-3"></div> 
+        </div>
+
+        {# Tabela de Respostas #}
+        <div class="table-responsive">
+            <table class="table table-striped table-hover" id="productsTable">
+                <thead>
+                    <tr>
+                        <th>Quantidade</th>
+                        <th>Tipo de Volume</th>
+                        <th>Produto</th>                   
+                        <th>Último Preço</th>
+                        <th>Top 3 Ofertas</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in itens_data %}
+                        {% if item.respostas %}
+                        <tr data-produto="{{ item.produto_nome }}"> 
+                            <td>{{ item.quantidade }}</td>
+                            <td>{{ item.tipo_volume }}</td>
+                            {# Usando text-truncate para nomes longos de produtos #}
+                            <td class="text-truncate" style="max-width: 200px;">{{ item.produto_nome }}</td>
+                            
+                            <td>
+                                R$ {{ item.ultimo_preco }} em {{ item.data_ultimo_preco|date:"d/m/Y" }} <br>
+                                <button type="button" class="btn btn-link" data-bs-toggle="modal" data-bs-target="#priceHistoryModal{{ forloop.counter }}">
+                                    Ver Histórico
+                                </button>
+                            </td>
+
+                            {# Modal Histórico de Preços (mantido como no original) #}
+                            <div class="modal fade" id="priceHistoryModal{{ forloop.counter }}" tabindex="-1" aria-hidden="true">
                                 <div class="modal-dialog modal-lg">
                                     <div class="modal-content">
                                         <div class="modal-header">
-                                            <h5 class="modal-title" id="moreOffersModalLabel{{ forloop.counter }}">Mais Ofertas de {{ item.produto_nome }}</h5>
+                                            <h5 class="modal-title">Histórico de Preços de {{ item.produto_nome }}</h5>
                                             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                                         </div>
                                         <div class="modal-body">
-                                            <div class="container">
-                                                {% for resposta in item.respostas|slice:"3:" %}
-                                                    <div class="row align-items-center mb-2">
-                                                        <div class="col-4">
-                                                            <span>R$ {{ resposta.preco }} - {{ resposta.fornecedor_nome }}</span>
-                                                        </div>
-                                                        <div class="col-5">
-                                                            <span>{{ resposta.observacao|default:"---" }}</span>
-                                                        </div>
-                                                        <div class="col-3">
-                                                            {% if resposta.imagem_url %}
-                                                                <a href="#" onclick="closeAllModals();"
-                                                                data-bs-toggle="modal" 
-                                                                data-bs-target="#imagemModal{{ forloop.parentloop.counter }}{{ forloop.counter }}">Ver Imagem</a>
-                                                                <script>
-                                                                    // Função para fechar todos os modais abertos
-                                                                    function closeAllModals() {
-                                                                        $('.modal').each(function(){
-                                                                            $(this).modal('hide');
-                                                                        });
-                                                                    }
-                                                                </script>
-                                                            {% endif %}                                                            
-                                                        </div>
-                                                    </div>                                                    
-                                                {% endfor %}
-                                            </div>
+                                            <canvas id="priceChart{{ forloop.counter }}"></canvas>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                        {% endif %}                        
-                    </td>
-                    <td>
-                        <ul>
-                            {% for resposta in item.respostas|slice:":3" %}
-                                <li>{{ resposta.observacao|default:"---" }}</li>
-                            {% endfor %}
-                        </ul>
-                    </td>
-                    <td>
-                        <ul>
-                            {% for resposta in item.respostas|slice:":3" %}
-                                {% if resposta.imagem_url %}
-                                    <li>
-                                        <a href="#" data-bs-toggle="modal" data-bs-target="#imagemModal{{ forloop.parentloop.counter }}{{ forloop.counter }}">Imagem de {{ resposta.fornecedor_nome }}</a>
-                                        <!-- Modal -->
-                                        <div class="modal fade" id="imagemModal{{ forloop.parentloop.counter }}{{ forloop.counter }}" tabindex="-1" aria-labelledby="imagemModalLabel{{ forloop.parentloop.counter }}{{ forloop.counter }}" aria-hidden="true">
-                                            <div class="modal-dialog modal-xl">
-                                                <div class="modal-content">
-                                                    <div class="modal-header">
-                                                        <h5 class="modal-title" id="imagemModalLabel{{ forloop.parentloop.counter }}{{ forloop.counter }}">Imagem de {{ resposta.fornecedor_nome }}</h5>
-                                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            
+                            <td>
+                                {# Exibindo as 3 melhores ofertas #}
+                                <ul class="list-unstyled">
+                                    {% for resposta in item.respostas|slice:":3" %}
+                                        <li class="mb-2">
+                                            <div class="form-check"> 
+                                                <input type="radio" name="selecao_{{ item.id }}" value="{{ resposta.fornecedor_id }}_{{ resposta.preco }}" class="form-check-input" id="selecao_{{ item.id }}_{{ resposta.fornecedor_id }}">
+                                                <label class="form-check-label" for="selecao_{{ item.id }}_{{ resposta.fornecedor_id }}"> 
+                                                    <button type="button" class="btn btn-link text-start" data-bs-toggle="modal" data-bs-target="#detailsModal{{ resposta.id }}">
+                                                        <strong>R$ {{ resposta.preco }} - {{ resposta.fornecedor_nome }}</strong>
+                                                    </button>
+                                                </label>
+                                            </div> 
+
+                                            {# Modal Detalhes da Oferta #}
+                                            <div class="modal fade" id="detailsModal{{ resposta.id }}" tabindex="-1" aria-labelledby="detailsModalLabel{{ resposta.id }}" aria-hidden="true">
+                                                <div class="modal-dialog">
+                                                    <div class="modal-content">
+                                                        <div class="modal-header">
+                                                            <h5 class="modal-title" id="detailsModalLabel{{ resposta.id }}">Detalhes da Oferta - {{ resposta.fornecedor_nome }}</h5>
+                                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                        </div>
+                                                        <div class="modal-body">
+                                                            <p><strong>Observações:</strong> {{ resposta.observacao|default:"---" }}</p>
+                                                            {% if resposta.imagem_url %}
+                                                                <img src="{{ resposta.imagem_url }}" alt="Imagem do Produto" class="img-fluid">
+                                                            {% endif %}
+                                                        </div>
                                                     </div>
-                                                    <div class="modal-body" style="text-align: center;">
-                                                        <img src="{{ resposta.imagem_url }}" alt="Imagem do Produto" style="max-width: 100%; height: auto;">
+                                                </div>
+                                            </div>
+                                        </li>
+                                    {% endfor %}
+                                </ul>
+
+                                {# Botão para ver mais ofertas (se houver) #}
+                                {% if item.respostas|length > 3 %}
+                                    <button type="button" class="btn btn-link" data-bs-toggle="modal" data-bs-target="#moreOffersModal{{ item.id }}">
+                                        Ver mais {{ item.respostas|length|add:"-3" }} ofertas
+                                    </button>
+
+                                    {# Modal com as ofertas adicionais #}
+                                    <div class="modal fade" id="moreOffersModal{{ item.id }}" tabindex="-1" aria-labelledby="moreOffersModalLabel{{ item.id }}" aria-hidden="true">
+                                        <div class="modal-dialog modal-lg">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title" id="moreOffersModalLabel{{ item.id }}">Mais Ofertas de {{ item.produto_nome }}</h5>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                </div>
+                                                <div class="modal-body">
+                                                    <div class="container">
+                                                        {% for resposta in item.respostas|slice:"3:" %}
+                                                            <div class="row align-items-center mb-2">
+                                                                <div class="col-6 text-truncate">
+                                                                    <div class="form-check">
+                                                                        <input type="radio" name="selecao_{{ item.id }}" value="{{ resposta.fornecedor_id }}_{{ resposta.preco }}" class="form-check-input" id="selecao_{{ item.id }}_{{ resposta.fornecedor_id }}">
+                                                                        <label class="form-check-label" for="selecao_{{ item.id }}_{{ resposta.fornecedor_id }}">
+                                                                            <button type="button" class="btn btn-link text-start" data-bs-toggle="modal" data-bs-target="#detailsModal{{ resposta.id }}">
+                                                                                <strong>R$ {{ resposta.preco }} - {{ resposta.fornecedor_nome }}</strong>
+                                                                            </button>
+                                                                        </label>
+                                                                    </div> 
+                                                                </div>
+                                                                <div class="col-6">
+                                                                    <button type="button" class="btn btn-link" data-bs-toggle="modal" data-bs-target="#detailsModal{{ resposta.id }}">
+                                                                        Ver Detalhes
+                                                                    </button>
+                                                                </div>
+                                                            </div>                                                    
+                                                        {% endfor %}
                                                     </div>
                                                 </div>
                                             </div>
                                         </div>
-                                    </li>
-                                {% else %}
-                                    <li>---</li>
-                                {% endif %}
-                            {% endfor %}
-                        </ul>
-                    </td>
-                </tr>
-                {% endif %}
-            {% endfor %}
-            </tbody>
-        </table>
+                                    </div>
+                                {% endif %}                        
+                            </td>
+                        </tr>
+                        {% endif %}
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
     </div>
-</div>
-<div class="text-center">
-    <button type="submit" class="btn btn-success">Gerar Pedidos</button>
-    <!-- Modal de Confirmação -->
+
+    {# Botão para Gerar Pedidos #}
+    <div class="text-center">
+        
+    </div>
+
+    {# Modal de Confirmação de Pedidos #}
     <div class="modal fade" id="successModal" tabindex="-1" aria-labelledby="successModalLabel" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
@@ -177,26 +198,75 @@
             </div>
         </div>
     </div>
-</div>
+
+    {# Modal de Confirmação para Fechar Cotação #}
+    <div class="modal fade" id="fecharCotacaoModal" tabindex="-1" aria-labelledby="fecharCotacaoModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="fecharCotacaoModalLabel">Confirmação</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    Tem certeza que deseja fechar esta cotação? Esta ação não poderá ser desfeita.
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    {% comment %} <a href="{% url 'cotacao:fechar_cotacao' cotacao.uuid %}" class="btn btn-danger">Fechar Cotação</a>  {% endcomment %}
+                    <button type="submit" class="btn btn-success">Gerar Pedidos</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
 </form>
 {% endblock %}
 
 {% block scripts %}
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
-<script type="text/javascript">
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script> <script type="text/javascript">
     $(document).ready(function() {
-        var showSuccessModal = false;
+        // Mostrar o modal de sucesso se houver mensagens de sucesso
         {% for message in messages %}
-        if ("{{ message.tags }}" === "success") {
-            showSuccessModal = true;
-        }
+            if ("{{ message.tags }}" === "success") {
+                $('#successModal').modal('show');
+            }
         {% endfor %}
-        if (showSuccessModal) {
-            $('#successModal').modal('show');
-        }
+
+        // Funcionalidade de pesquisa
+        $("#searchInput").on("keyup", function() {
+            var value = $(this).val().toLowerCase();
+            $("#productsTable tbody tr").filter(function() {
+                $(this).toggle($(this).data("produto").toLowerCase().indexOf(value) > -1)
+            });
+        });
+
+        // Funcionalidade de ordenação
+        $("#filterSelect").on("change", function() {
+            var order = $(this).val();
+            var rows = $('#productsTable tbody tr').get();
+
+            rows.sort(function(a, b) {
+                var A = $(a).data("produto").toUpperCase();
+                var B = $(b).data("produto").toUpperCase();
+
+                if (order === "asc") {
+                    return A < B ? -1 : A > B ? 1 : 0;
+                } else {
+                    return A > B ? -1 : A < B ? 1 : 0;
+                }
+            });
+
+            $.each(rows, function(index, row) {
+                $('#productsTable tbody').append(row);
+            });
+        });
+
     });
 </script>
+
 <script type="text/javascript">
+    // Confirmação antes de enviar o formulário
     document.getElementById('gerar-pedidos-form').onsubmit = function() {
         const radios = document.querySelectorAll('input[type="radio"][name^="selecao_"]');
         for (let radio of radios) {
@@ -207,4 +277,15 @@
         return confirm('Você tem certeza que deseja gerar os pedidos para as ofertas selecionadas?');
     };
 </script>
+
+{# Script para o gráfico de histórico de preços (adicionar lógica para gerar o gráfico) #}
+<script>
+// Exemplo de como gerar um gráfico com Chart.js
+// Substitua os dados de exemplo pelos dados reais do histórico de preços
+var ctx = document.getElementById('priceChart1').getContext('2d');
+var chart = new Chart(ctx, {
+    // ... configurações do gráfico ...
+});
+</script>
+
 {% endblock %}

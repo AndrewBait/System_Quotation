@@ -158,12 +158,13 @@ class EnviarCotacaoView(FormView):
                 cotacao=cotacao,
                 fornecedor=fornecedor
             )
+            cnpj_slice = str(fornecedor.cnpj)[:4] 
             link = self.request.build_absolute_uri(
                 reverse("respostas:responder_cotacao", kwargs={
                     "cotacao_uuid": cotacao.uuid,
                     "fornecedor_id": fornecedor.id,
                     "token": token.token
-                })
+                }) + f"?auth={cnpj_slice}"
             )
             try:
                 send_mail(
