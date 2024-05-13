@@ -1,12 +1,22 @@
 {% extends "base_no_sidebar.html" %}
-
 {% block content %}
-<form method="post" action="{% url 'respostas:responder_cotacao' cotacao_uuid=cotacao_uuid fornecedor_id=fornecedor_id token=token %}">
-    {% csrf_token %}
-    <label for="auth_code">Digite os primeiros 4 dígitos do seu CNPJ:</label>
-    <input type="text" name="auth_code" id="auth_code" required>
-    <button type="submit">Confirmar</button>
-</form>
-
-
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow">
+                <div class="card-body">
+                    <h5 class="card-title">Confirmação de Dados</h5>
+                    <form method="post" action="{% url 'respostas:responder_cotacao' cotacao_uuid=cotacao_uuid fornecedor_id=fornecedor_id token=token %}">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="auth_code" class="form-label">Digite os primeiros 4 dígitos do seu CNPJ:</label>
+                            <input type="text" class="form-control" name="auth_code" id="auth_code" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Confirmar</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}
