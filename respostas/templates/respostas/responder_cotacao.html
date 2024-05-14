@@ -29,7 +29,7 @@
 </head>
 <body>
     <div class="container my-5">
-        <h2 class="mb-4">Responder Cotação: {{ cotacao.nome }}</h2>
+        <h2 class="mb-4">Responder Cotação: {{ cotacao.nome }} </h2>
         <form method="post" enctype="multipart/form-data">
             {% csrf_token %}
             {{ form.as_p }} <!-- Renderiza o formulário -->
@@ -42,7 +42,7 @@
                             <th>Tipo Volume</th>
                             <th>Nome do Produto</th>
                             <th>Observação</th>
-                            <th>Preço</th>
+                            <th>Preço - Prazo {{ cotacao.prazo }} dias</th>
                             <th>Observação do Fornecedor</th>
                             <th>Imagem do Produto</th>
                         </tr>
