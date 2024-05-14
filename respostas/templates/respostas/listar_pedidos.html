@@ -1,14 +1,14 @@
 {% extends 'base.html' %}
 {% block content %}
-<h2>Pedidos Gerados</h2>
+<h2 class="my-4">Pedidos Gerados</h2>
 
 <div class="container mb-4">
     <form method="get" class="row g-3">
         <div class="col-md-6">
             <input type="text" name="q" class="form-control" placeholder="Buscar..." value="{{ request.GET.q }}">
         </div>
-        <div class="col-md-6">
-            <select name="status" class="form-control">
+        <div class="col-md-3">
+            <select name="status" class="form-select">
                 <option value="">Todos os Status</option>
                 <option value="pendente" {% if request.GET.status == "pendente" %}selected{% endif %}>Pendente</option>
                 <option value="concluido" {% if request.GET.status == "concluido" %}selected{% endif %}>Concluído</option>
@@ -27,19 +27,23 @@
     </form>
 </div>
 
-<div class="row">
+<div class="row row-cols-1 row-cols-md-2 g-4">
     {% for pedido_agrupado in pedidos_agrupados %}
-    <div class="col-md-6 mb-4">
-        <div class="card">
+    <div class="col">
+        <div class="card h-100">
             <div class="card-body">
                 <h5 class="card-title">{{ pedido_agrupado.cotacao.nome }} - {{ pedido_agrupado.fornecedor.name }}</h5>
-                <p>Data da Requisição: {{ pedido_agrupado.data_requisicao }}</p>
-                <p>Total de Itens: {{ pedido_agrupado.total_itens }}</p>
-                <p>Preço Total: R$ {{ pedido_agrupado.preco_total }}</p>
-                <p>Status: {{ pedido_agrupado.status }}</p>
-                <p>Usuário: {{ pedido_agrupado.usuario.get_full_name }}</p>
-                <a href="{% url 'respostas:detalhes_pedido_agrupado' pedido_agrupado.pk %}" class="btn btn-primary">Ver Detalhes</a>
-                <a href="{% url 'respostas:deletar_pedido' pedido_agrupado.pk %}" class="btn btn-danger">Deletar Pedido</a>
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item">Data da Requisição: {{ pedido_agrupado.data_requisicao }}</li>
+                    <li class="list-group-item">Total de Itens: {{ pedido_agrupado.total_itens }}</li>
+                    <li class="list-group-item">Preço Total: R$ {{ pedido_agrupado.preco_total }}</li>
+                    <li class="list-group-item">Status: {{ pedido_agrupado.status }}</li>
+                    <li class="list-group-item">Usuário: {{ pedido_agrupado.usuario_criador.get_full_name }}</li>
+                </ul>
+                <div class="d-grid gap-2 mt-3">
+                    <a href="{% url 'respostas:detalhes_pedido_agrupado' pedido_agrupado.pk %}" class="btn btn-primary">Ver Detalhes</a>
+                    <a href="{% url 'respostas:deletar_pedido_agrupado' pedido_agrupado.pk %}" class="btn btn-danger">Deletar Pedido</a>
+                </div>
             </div>
         </div>
     </div>

@@ -1,0 +1,36 @@
+<div class="modal fade" id="moreOffersModal{{ item.id }}" tabindex="-1" aria-labelledby="moreOffersModalLabel{{ item.id }}" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="moreOffersModalLabel{{ item.id }}">Mais Ofertas de {{ item.produto_nome }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="container">
+                    {% for resposta in item.respostas|slice:"3:" %}
+                        {% with modal_id=item.id|stringformat:"s_"|add:forloop.counter0 %}
+                        <div class="row align-items-center mb-2">
+                            <div class="col-6 text-truncate">
+                                <div class="form-check">
+                                    <input type="radio" name="selecao_{{ item.id }}" value="{{ resposta.fornecedor_id }}_{{ resposta.preco }}" class="form-check-input" id="selecao_{{ modal_id }}">
+                                    <label class="form-check-label" for="selecao_{{ modal_id }}">
+                                        <button type="button" class="btn btn-link text-start" data-bs-toggle="modal" data-bs-target="#detailsModal{{ modal_id }}">
+                                            <strong>R$ {{ resposta.preco }} - {{ resposta.fornecedor_nome }}</strong>
+                                        </button>
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <button type="button" class="btn btn-link" data-bs-toggle="modal" data-bs-target="#detailsModal{{ modal_id }}">
+                                    Ver Detalhes
+                                </button>
+                            </div>
+                        </div>
+                        {% endwith %}                                                    
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+

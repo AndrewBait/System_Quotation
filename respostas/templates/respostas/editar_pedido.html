@@ -1,9 +1,48 @@
 {% extends 'base.html' %}
 {% block content %}
-<form method="post">
-    {% csrf_token %}
-    {{ form.as_p }}
-    {{ formset }}
-    <button type="submit" class="btn btn-success">Salvar Alterações</button>
-</form>
+<div class="container my-4">
+    <div class="card">
+        <div class="card-header">
+            <h4 class="card-title">Editar Pedido</h4>
+        </div>
+        <div class="card-body">
+            <form method="post">
+                {% csrf_token %}
+                {{ formset.management_form }}
+                <div class="table-responsive">
+                    <table class="table table-bordered">
+                        <thead>
+                            <tr>
+                                <th>Quantidade</th>
+                                <th>Preço</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for form in formset %}
+                            <tr>
+                                <td>
+                                    <div class="form-group">
+                                        {{ form.quantidade.errors }}
+                                        {{ form.quantidade }}
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="form-group">
+                                        {{ form.preco.errors }}
+                                        {{ form.preco }}
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                <div class="d-grid gap-2 mt-3">
+                    <button type="submit" class="btn btn-success">Salvar Alterações</button>
+                    <a href="{% url 'respostas:listar_pedidos' %}" class="btn btn-secondary">Voltar aos Pedidos</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 {% endblock %}

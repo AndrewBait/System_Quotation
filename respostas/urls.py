@@ -8,7 +8,8 @@ from .views import (
     cotacao_respondida_view,
     visualizar_cotacoes,
     gerar_pedidos,
-    EditarPedidoView
+    EditarPedidoView,
+    DeletarPedidoAgrupadoView
 )
 
 app_name = 'respostas'
@@ -21,6 +22,7 @@ urlpatterns = [
     path('pedidos/', ListarPedidosView.as_view(), name='listar_pedidos'),
     path('pedidos/detalhes/<int:pk>/', DetalhesPedidoAgrupadoView.as_view(), name='detalhes_pedido_agrupado'),
     path('pedidos/editar/<int:pk>/', EditarPedidoAgrupadoView.as_view(), name='editar_pedido_agrupado'),
-    path('pedidos/deletar/<int:pk>/', DeletarPedidoView.as_view(), name='deletar_pedido'),
-    path('pedido/editar/<int:pk>/', EditarPedidoView.as_view(), name='editar_pedido_individual'),  # Adicionando uma rota para editar um pedido individual
+    path('pedidos/deletar/<int:pk>/', DeletarPedidoAgrupadoView.as_view(), name='deletar_pedido_agrupado'),
+    path('pedido/editar/<int:pk>/', EditarPedidoView.as_view(), name='editar_pedido_individual'),
+    path('pedido/deletar/<int:pk>/', DeletarPedidoView.as_view(), name='deletar_pedido_individual'),
 ]

@@ -243,10 +243,26 @@ class EditarPedidoAgrupadoView(UpdateView):
     def post(self, request, *args, **kwargs):
         self.object = self.get_object()
         return super().post(request, *args, **kwargs)
-
     
+    
+logger = logging.getLogger(__name__)
 
+class DeletarPedidoAgrupadoView(DeleteView):
+    model = PedidoAgrupado
+    template_name = 'respostas/deletar_pedido_agrupado.html'
+    success_url = reverse_lazy('respostas:listar_pedidos')
+
+    def get_object(self):
+        pk = self.kwargs.get('pk')
+        logger.debug(f"Tentando deletar PedidoAgrupado com pk={pk}")
+        return get_object_or_404(PedidoAgrupado, pk=pk)
+    
 class DeletarPedidoView(DeleteView):
     model = Pedido
     template_name = 'respostas/deletar_pedido.html'
     success_url = reverse_lazy('respostas:listar_pedidos')
+    
+    def get_object(self):
+        pk = self.kwargs.get('pk')
+        logger.debug(f"Tentando deletar Pedido com pk={pk}")
+        return get_object_or_404(Pedido, pk=pk)

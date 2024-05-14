@@ -1,0 +1,28 @@
+<li class="mb-2">
+    <div class="form-check">
+        <input type="radio" name="selecao_{{ item.id }}" value="{{ resposta.fornecedor_id }}_{{ resposta.preco }}" class="form-check-input" id="selecao_{{ item.id }}_{{ resposta.fornecedor_id }}">
+        <label class="form-check-label" for="selecao_{{ item.id }}_{{ resposta.fornecedor_id }}">
+            <button type="button" class="btn btn-link text-start" data-bs-toggle="modal" data-bs-target="#detailsModal{{ item.id }}_{{ forloop.counter }}">
+                <strong>R$ {{ resposta.preco }} - {{ resposta.fornecedor_nome }}</strong>
+            </button>
+        </label>
+    </div>
+    <div class="modal fade" id="detailsModal{{ item.id }}_{{ forloop.counter }}" tabindex="-1" aria-labelledby="detailsModalLabel{{ item.id }}_{{ forloop.counter }}" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="detailsModalLabel{{ item.id }}_{{ forloop.counter }}">Detalhes da Oferta - {{ resposta.fornecedor_nome }}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p><strong>Observações:</strong> {{ resposta.observacao|default:"Nenhuma observação disponível." }}</p>
+                    {% if resposta.imagem_url %}
+                        <img src="{{ resposta.imagem_url }}" alt="Imagem do Produto" class="img-fluid">
+                    {% else %}
+                        <p>Sem imagem disponível.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</li>

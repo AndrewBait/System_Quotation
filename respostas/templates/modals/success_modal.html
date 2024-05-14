@@ -1,0 +1,18 @@
+<div class="modal fade" id="successModal" tabindex="-1" aria-labelledby="successModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="successModalLabel">Pedidos Gerados</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                Os pedidos foram gerados com sucesso! O que você gostaria de fazer a seguir?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Ficar nesta página</button>
+                <a href="{% url 'respostas:listar_pedidos' %}" class="btn btn-primary">Visualizar Pedidos</a>
+            </div>
+        </div>
+    </div>
+</div>
+
