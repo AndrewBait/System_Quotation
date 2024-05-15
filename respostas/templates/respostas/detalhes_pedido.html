@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load static %}
 {% block content %}
 <div class="container my-4">
     <div class="card">
@@ -22,13 +23,13 @@
                             <tr>
                                 <td>
                                     <div class="form-group">
-                                        {{ form.errors }}
+                                        {{ form.quantidade.errors }}
                                         {{ form.quantidade }}
                                     </div>
                                 </td>
                                 <td>
                                     <div class="form-group">
-                                        {{ form.errors }}
+                                        {{ form.preco.errors }}
                                         {{ form.preco }}
                                     </div>
                                 </td>

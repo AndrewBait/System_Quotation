@@ -3,6 +3,8 @@ from .models import RespostaCotacao, ItemRespostaCotacao
 from django.core.exceptions import ValidationError
 from decimal import Decimal, InvalidOperation
 from django.forms import TextInput, NumberInput, FileInput
+from django.forms import inlineformset_factory
+from .models import PedidoAgrupado, Pedido
 import bleach
 import re
 
@@ -122,3 +124,11 @@ class RespostaCotacaoForm(forms.ModelForm):
                 item_resposta.resposta_cotacao = resposta
                 item_resposta.save()
         return resposta
+
+
+class PedidoForm(forms.ModelForm):
+    class Meta:
+        model = Pedido
+        fields = ['quantidade', 'preco', 'produto']
+
+PedidoFormSet = inlineformset_factory(PedidoAgrupado, Pedido, form=PedidoForm, extra=0)

@@ -25,4 +25,5 @@ urlpatterns = [
     path('pedidos/deletar/<int:pk>/', DeletarPedidoAgrupadoView.as_view(), name='deletar_pedido_agrupado'),
     path('pedido/editar/<int:pk>/', EditarPedidoView.as_view(), name='editar_pedido_individual'),
     path('pedido/deletar/<int:pk>/', DeletarPedidoView.as_view(), name='deletar_pedido_individual'),
+    
 ]

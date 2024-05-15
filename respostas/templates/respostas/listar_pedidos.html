@@ -4,53 +4,78 @@
 
 <div class="container mb-4">
     <form method="get" class="row g-3">
-        <div class="col-md-6">
-            <input type="text" name="q" class="form-control" placeholder="Buscar..." value="{{ request.GET.q }}">
-        </div>
-        <div class="col-md-3">
-            <select name="status" class="form-select">
-                <option value="">Todos os Status</option>
-                <option value="pendente" {% if request.GET.status == "pendente" %}selected{% endif %}>Pendente</option>
-                <option value="concluido" {% if request.GET.status == "concluido" %}selected{% endif %}>Concluído</option>
-                <option value="cancelado" {% if request.GET.status == "cancelado" %}selected{% endif %}>Cancelado</option>
-            </select>
-        </div>
-        <div class="col-md-3">
-            <input type="date" name="start_date" class="form-control" placeholder="Data Início" value="{{ request.GET.start_date }}">
-        </div>
-        <div class="col-md-3">
-            <input type="date" name="end_date" class="form-control" placeholder="Data Fim" value="{{ request.GET.end_date }}">
-        </div>
-        <div class="col-12">
-            <button type="submit" class="btn btn-primary">Filtrar</button>
-        </div>
+      <div class="col-md-6">
+        <input type="text" name="q" class="form-control" placeholder="Buscar..." value="{{ request.GET.q }}">
+      </div>
+      <div class="col-md-6">
+        <select name="status" class="form-select">
+          <option value="">Todos os Status</option>
+          <option value="pendente" {% if request.GET.status == "pendente" %}selected{% endif %}>Pendente</option>
+          <option value="concluido" {% if request.GET.status == "concluido" %}selected{% endif %}>Concluído</option>
+          <option value="cancelado" {% if request.GET.status == "cancelado" %}selected{% endif %}>Cancelado</option>
+        </select>
+      </div>  
+      <div class="col-md-6">
+        <input type="date" name="start_date" class="form-control" placeholder="Data Início" value="{{ request.GET.start_date }}">
+      </div>
+      <div class="col-md-6">
+        <input type="date" name="end_date" class="form-control" placeholder="Data Fim" value="{{ request.GET.end_date }}">
+      </div>
+      <div class="col-md-1">
+        <button type="submit" class="btn btn-primary w-100">Filtrar</button>
+      </div>
+  
+      
     </form>
-</div>
+  </div>
 
-<div class="row row-cols-1 row-cols-md-2 g-4">
-    {% for pedido_agrupado in pedidos_agrupados %}
-    <div class="col">
-        <div class="card h-100">
-            <div class="card-body">
-                <h5 class="card-title">{{ pedido_agrupado.cotacao.nome }} - {{ pedido_agrupado.fornecedor.name }}</h5>
-                <ul class="list-group list-group-flush">
-                    <li class="list-group-item">Data da Requisição: {{ pedido_agrupado.data_requisicao }}</li>
-                    <li class="list-group-item">Total de Itens: {{ pedido_agrupado.total_itens }}</li>
-                    <li class="list-group-item">Preço Total: R$ {{ pedido_agrupado.preco_total }}</li>
-                    <li class="list-group-item">Status: {{ pedido_agrupado.status }}</li>
-                    <li class="list-group-item">Usuário: {{ pedido_agrupado.usuario_criador.get_full_name }}</li>
-                </ul>
-                <div class="d-grid gap-2 mt-3">
-                    <a href="{% url 'respostas:detalhes_pedido_agrupado' pedido_agrupado.pk %}" class="btn btn-primary">Ver Detalhes</a>
-                    <a href="{% url 'respostas:deletar_pedido_agrupado' pedido_agrupado.pk %}" class="btn btn-danger">Deletar Pedido</a>
-                </div>
+<div class="container">
+    <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 g-4"> 
+      {% for pedido_agrupado in pedidos_agrupados %}
+      <div class="col">
+        <div class="card shadow-sm" style="height: 100%;"> 
+            <div class="card-header 
+            {% if pedido_agrupado.status == 'Concluído' %}bg-success text-white
+            {% elif pedido_agrupado.status == 'Cancelado' %}bg-danger text-white
+            {% else %}bg-warning text-dark
+            {% endif %}
+          ">
+            <h5 class="card-title mb-0">Cotação: {{ pedido_agrupado.cotacao.nome }} - Fornecedor: {{ pedido_agrupado.fornecedor.name }}</h5>
+          </div>
+          <div class="card-body d-flex flex-column"> 
+            <ul class="list-group list-group-flush flex-grow-1"> 
+              <li class="list-group-item">Data da Requisição: {{ pedido_agrupado.data_requisicao }}</li>
+              <li class="list-group-item">Total de Itens: {{ pedido_agrupado.total_itens }}</li>
+              <li class="list-group-item">Preço Total: R$ {{ pedido_agrupado.preco_total }}</li>
+              <li class="list-group-item">Prazo: {{ pedido_agrupado.cotacao.prazo }} dias</li>
+              <li class="list-group-item">
+                Status: 
+                <span class="badge rounded-pill 
+                  {% if pedido_agrupado.status == 'Pendente' %}bg-warning text-dark 
+                  {% elif pedido_agrupado.status == 'Aprovado' %}bg-success
+                  {% elif pedido_agrupado.status == 'Rejeitado' %}bg-danger
+                  {% endif %}
+                ">
+                  {{ pedido_agrupado.status }}
+                </span>
+              </li>
+              <li class="list-group-item">Usuário: {{ pedido_agrupado.usuario_criador.get_full_name }}</li>
+            </ul>
+            <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-auto"> 
+              <a href="{% url 'respostas:detalhes_pedido_agrupado' pedido_agrupado.pk %}" class="btn btn-primary">Ver Detalhes</a>
+              <a href="{% url 'respostas:deletar_pedido_agrupado' pedido_agrupado.pk %}" class="btn btn-outline-danger">Deletar Pedido</a> 
             </div>
+          </div>
         </div>
-    </div>
-    {% empty %}
-    <div class="col-12">
+      </div>
+      {% empty %}
+      <div class="col-12">
         <div class="alert alert-info">Nenhum pedido encontrado.</div>
+      </div>
+      {% endfor %}
     </div>
-    {% endfor %}
-</div>
+  </div>
+  
+
+  
 {% endblock %}

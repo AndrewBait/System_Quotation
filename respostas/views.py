@@ -22,7 +22,9 @@ from collections import defaultdict
 from django.utils import timezone
 import datetime
 from django.db.models import Q
+from .forms import PedidoFormSet
 import re
+
 
 
 def apenas_digitos(cnpj):
@@ -203,6 +205,8 @@ class ListarPedidosView(ListView):
             queryset = queryset.filter(data_requisicao__range=(start_date, end_date))
 
         return queryset
+    
+    
 
 class EditarPedidoView(UpdateView):
     model = Pedido
@@ -215,7 +219,28 @@ class DetalhesPedidoAgrupadoView(DetailView):
     model = PedidoAgrupado
     template_name = 'respostas/detalhes_pedido.html'
     context_object_name = 'pedido_agrupado'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        PedidoFormSet = inlineformset_factory(PedidoAgrupado, Pedido, fields=('quantidade', 'preco'), extra=0)
+        if self.request.method == 'POST':
+            context['formset'] = PedidoFormSet(self.request.POST, instance=self.object)
+        else:
+            context['formset'] = PedidoFormSet(instance=self.object)
+        return context
+
+    def post(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        context = self.get_context_data()
+        formset = context['formset']
+        if formset.is_valid():
+            formset.save()
+            return redirect('respostas:listar_pedidos')
+        else:
+            return self.render_to_response(self.get_context_data(form=formset))
     
+
+logger = logging.getLogger(__name__)
 
 class EditarPedidoAgrupadoView(UpdateView):
     model = PedidoAgrupado
@@ -223,27 +248,40 @@ class EditarPedidoAgrupadoView(UpdateView):
     template_name = 'respostas/editar_pedido.html'
 
     def get_context_data(self, **kwargs):
+        logger.debug('Entrando em get_context_data')
         context = super().get_context_data(**kwargs)
-        PedidoFormSet = inlineformset_factory(PedidoAgrupado, Pedido, fields=('quantidade', 'preco', 'produto'), extra=0)
         if self.request.POST:
             context['formset'] = PedidoFormSet(self.request.POST, instance=self.object)
         else:
             context['formset'] = PedidoFormSet(instance=self.object)
+        logger.debug('Contexto preparado: %s', context)
         return context
 
     def form_valid(self, form):
+        logger.debug('Formulário principal válido')
         context = self.get_context_data()
         formset = context['formset']
         if formset.is_valid():
+            logger.debug('Formset válido')
             formset.save()
+            logger.debug('Formset salvo com sucesso')
             return redirect('respostas:listar_pedidos')
         else:
+            logger.debug('Formset inválido: %s', formset.errors)
             return self.render_to_response(self.get_context_data(form=form))
+
+    def form_invalid(self, form):
+        logger.debug('Formulário principal inválido')
+        return self.render_to_response(self.get_context_data(form=form))
 
     def post(self, request, *args, **kwargs):
         self.object = self.get_object()
-        return super().post(request, *args, **kwargs)
-    
+        form = self.get_form()
+        if form.is_valid():
+            return self.form_valid(form)
+        else:
+            return self.form_invalid(form)
+        
     
 logger = logging.getLogger(__name__)
 
