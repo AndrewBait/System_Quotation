@@ -1,0 +1,20 @@
+/* ... (outros estilos) ... */
+
+.top-offer { /* Estilizando cada oferta do Top 3 */
+    width: 30%; /* Ajuste a largura conforme necessário */
+    margin-bottom: 15px;
+  }
+  
+  /* Responsividade para telas menores */
+  @media (max-width: 768px) {
+    .top-offer {
+      width: 48%; /* Ajuste para telas menores */
+    }
+  }
+  
+  @media (max-width: 576px) {
+    .top-offer {
+      width: 100%; /* Em telas muito pequenas, ocupa a largura total */
+    }
+  }
+  

@@ -42,8 +42,8 @@
             <form method="post" action="{% url 'cotacao:update_item_cotacao' item.id %}">
                 {% csrf_token %}
                 <tr>
-                    <td>{{ item.produto.ean }}</td>
-                    <td>{{ item.produto.sku }}</td>
+                    <td>{{ item.produto.ean|default_if_none:"N/E" }}</td>
+                    <td>{{ item.produto.sku|default_if_none:"N/E" }}</td>
                     <td>{{ item.produto.name }}</td>
                     <td><input type="number" name="quantidade" value="{{ item.quantidade }}" class="form-control" min="1"></td>
                     <td>
