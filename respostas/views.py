@@ -1,3 +1,4 @@
+import hashlib
 from django.forms import inlineformset_factory
 from django.shortcuts import render, get_object_or_404, redirect
 from django.views import View
@@ -46,9 +47,25 @@ def responder_cotacao(request, cotacao_uuid, fornecedor_id, token):
     cotacao = get_object_or_404(Cotacao, uuid=cotacao_uuid)
     fornecedor = get_object_or_404(Supplier, pk=fornecedor_id)
     token_obj = get_object_or_404(FornecedorCotacaoToken, cotacao=cotacao, fornecedor=fornecedor, token=token)
-
+    
     if cotacao.status == 'inativo':
         return render(request, 'respostas/cotacao_fechada.html', {'message': 'Esta cotação está fechada no momento.'})
+
+    auth_param = request.GET.get('auth')
+    if auth_param:
+        # Gerar hash do CNPJ truncado
+        cnpj_limpo = apenas_digitos(fornecedor.cnpj)
+        cnpj_slice = cnpj_limpo[:4]
+        hash_object = hashlib.sha256(cnpj_slice.encode())
+        cnpj_hash = hash_object.hexdigest()
+        
+        if auth_param != cnpj_hash:
+            return render(request, 'respostas/authenticate.html', {
+                'error_message': 'Código de autenticação inválido.',
+                'cotacao_uuid': cotacao_uuid,
+                'fornecedor_id': fornecedor_id,
+                'token': token
+            })
 
     if 'authenticated' not in request.session or request.session['authenticated'] != fornecedor_id:
         if request.method == 'POST' and 'auth_code' in request.POST:
@@ -59,7 +76,7 @@ def responder_cotacao(request, cotacao_uuid, fornecedor_id, token):
                 return redirect(request.path)
             else:
                 return render(request, 'respostas/authenticate.html', {
-                    'message': 'Código de autenticação inválido.',
+                    'error_message': 'Código de autenticação inválido.',
                     'cotacao_uuid': cotacao_uuid,
                     'fornecedor_id': fornecedor_id,
                     'token': token
@@ -94,6 +111,7 @@ def responder_cotacao(request, cotacao_uuid, fornecedor_id, token):
         'token': token_obj
     }
     return render(request, 'respostas/responder_cotacao.html', context)
+
 
 def cotacao_respondida_view(request):
     return render(request, 'respostas/cotacao_respondida.html')

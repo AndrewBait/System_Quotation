@@ -1,3 +1,4 @@
+import hashlib
 from django import forms
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views import View
@@ -123,7 +124,6 @@ class EnviarCotacaoView(FormView):
     def get_success_url(self):
         return reverse('cotacao:enviar_cotacao', kwargs={'pk': self.kwargs['pk']})
 
-
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         cotacao_id = self.kwargs['pk']
@@ -158,13 +158,16 @@ class EnviarCotacaoView(FormView):
                 cotacao=cotacao,
                 fornecedor=fornecedor
             )
-            cnpj_slice = str(fornecedor.cnpj)[:4] 
+            cnpj_slice = str(fornecedor.cnpj)[:4]
+            # Gerar hash do CNPJ truncado
+            hash_object = hashlib.sha256(cnpj_slice.encode())
+            cnpj_hash = hash_object.hexdigest()
             link = self.request.build_absolute_uri(
                 reverse("respostas:responder_cotacao", kwargs={
                     "cotacao_uuid": cotacao.uuid,
                     "fornecedor_id": fornecedor.id,
                     "token": token.token
-                }) + f"?auth={cnpj_slice}"
+                }) + f"?auth={cnpj_hash}"
             )
             try:
                 send_mail(
