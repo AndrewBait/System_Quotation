@@ -150,14 +150,16 @@
 
     $(document).ready(function () {
         $('#productsTable').DataTable({
-          "language": { 
-            "url": "//cdn.datatables.net/plug-ins/1.10.25/i18n/Portuguese-Brasil.json" 
-          },
-          pagingType: 'simple_numbers',
-          "searching": true,
-          "ordering": true
+            "language": { 
+                "url": "//cdn.datatables.net/plug-ins/1.10.25/i18n/Portuguese-Brasil.json" 
+            },
+            "pagingType": "full_numbers", // Mostra todos os botões de paginação (Primeiro, Anterior, números, Próximo, Último)
+            "pageLength": 10,             // Define o número de linhas por página
+            "lengthMenu": [[10, 25, 50, -1], [10, 25, 50, "Todos"]], // Permite ao usuário escolher o número de linhas por página
+            "searching": true,
+            "ordering": true
         });
-      });
+    });
     // Configurações da paginação
     const rowsPerPage = 10;
     let currentPage = 1;
