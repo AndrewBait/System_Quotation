@@ -222,7 +222,7 @@ class ListarPedidosView(ListView):
             end_date = timezone.make_aware(datetime.datetime.strptime(end_date, '%Y-%m-%d'))
             queryset = queryset.filter(data_requisicao__range=(start_date, end_date))
 
-        return queryset
+        return queryset  
     
     
 
