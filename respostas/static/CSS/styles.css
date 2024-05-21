@@ -1,4 +1,3 @@
-/* ... (outros estilos) ... */
 
 .top-offer { /* Estilizando cada oferta do Top 3 */
     width: 30%; /* Ajuste a largura conforme necessário */
@@ -18,3 +17,18 @@
     }
   }
   
+  .offer-item {
+    font-weight: bold; /* Opcional: Negrito para destacar */
+}
+
+.text-success {
+    color: #28a745 !important; /* Verde */
+}
+
+.text-warning {
+    color: #ffc107 !important; /* Amarelo */
+}
+
+.text-danger {
+    color: #dc3545 !important; /* Vermelho */
+}

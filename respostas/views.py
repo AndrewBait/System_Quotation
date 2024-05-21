@@ -119,10 +119,7 @@ def cotacao_respondida_view(request):
 
 def visualizar_cotacoes(request, cotacao_uuid):
     cotacao = get_object_or_404(Cotacao, uuid=cotacao_uuid)
-    itens_data = []
-    
-    
-    
+    itens_data = []   
     
         
     for item in cotacao.itens_cotacao.all():
@@ -133,7 +130,7 @@ def visualizar_cotacoes(request, cotacao_uuid):
             'fornecedor_id': resposta.resposta_cotacao.fornecedor.pk,
             'observacao': resposta.observacao,
             'imagem_url': resposta.imagem.url if resposta.imagem else None,
-            'is_top3': idx < 3  # Marca as três primeiras respostas como parte do Top 3
+            'is_top3': idx < 3  
         } for idx, resposta in enumerate(respostas)]
 
         item_data = {
