@@ -6,6 +6,16 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
+                <label for="daysSelect{{ modal_id }}">Selecionar intervalo de dias:</label>
+                <select id="daysSelect{{ modal_id }}" class="form-select mb-3">
+                    <option value="7">Últimos 7 dias</option>
+                    <option value="14">Últimos 14 dias</option>
+                    <option value="28">Últimos 28 dias</option>
+                    <option value="60">Últimos 60 dias</option>
+                    <option value="90">Últimos 90 dias</option>
+                    <option value="180">Últimos 180 dias</option>
+                    <option value="360">Últimos 360 dias</option>
+                </select>
                 <canvas id="priceChart{{ modal_id }}"></canvas>
             </div>
         </div>

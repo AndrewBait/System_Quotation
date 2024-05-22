@@ -325,10 +325,15 @@ class DeletarPedidoView(DeleteView):
         logger.debug(f"Tentando deletar Pedido com pk={pk}")
         return get_object_or_404(Pedido, pk=pk)
     
+    
+    
+from django.core.serializers.json import DjangoJSONEncoder
+import json
+
 
 def visualizar_cotacoes(request, cotacao_uuid):
     cotacao = get_object_or_404(Cotacao, uuid=cotacao_uuid)
-    itens_data = []   
+    itens_data = []
 
     for item in cotacao.itens_cotacao.all():
         respostas = item.itemrespostacotacao_set.all().select_related('resposta_cotacao__fornecedor').order_by('preco')
@@ -338,12 +343,19 @@ def visualizar_cotacoes(request, cotacao_uuid):
             'fornecedor_id': resposta.resposta_cotacao.fornecedor.pk,
             'observacao': resposta.observacao,
             'imagem_url': resposta.imagem.url if resposta.imagem else None,
-            'is_top3': idx < 3  
+            'is_top3': idx < 3
         } for idx, resposta in enumerate(respostas)]
 
         produto = item.produto
         ultimo_preco = produto.price_history.order_by('-date').first()
         price_history = list(produto.price_history.order_by('date').values('price', 'date'))
+
+        # Formatar as datas para strings no formato ISO 8601
+        for entry in price_history:
+            entry['date'] = entry['date'].strftime('%Y-%m-%d')
+
+        # Serializar o histórico de preços para JSON
+        price_history_json = json.dumps(price_history, cls=DjangoJSONEncoder)
 
         item_data = {
             'id': item.pk,
@@ -352,7 +364,7 @@ def visualizar_cotacoes(request, cotacao_uuid):
             'tipo_volume': item.get_tipo_volume_display(),
             'ultimo_preco': ultimo_preco.price if ultimo_preco else None,
             'data_ultimo_preco': ultimo_preco.date if ultimo_preco else None,
-            'price_history': price_history,
+            'price_history': price_history_json,  # Passar o JSON para o template
             'respostas': respostas_data
         }
         itens_data.append(item_data)

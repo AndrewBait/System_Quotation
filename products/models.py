@@ -152,7 +152,7 @@ class Product(models.Model):
 class ProductPriceHistory(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='price_history')
     price = models.DecimalField(_("Preço de Custo"), max_digits=10, decimal_places=3)
-    date = models.DateField(_("Data da Atualização"))
+    date = models.DateField(_("Data da Atualização"))#, auto_now_add=True(vou adiconar mais tarde))
 
     class Meta:
         ordering = ['-date']

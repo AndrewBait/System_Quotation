@@ -71,8 +71,10 @@
                                 <td class="d-none d-md-table-cell"> 
                                     <div>
                                         R$ {{ item.ultimo_preco }} em {{ item.data_ultimo_preco|date:"d/m/Y" }}
-                                        <button type="button" class="btn btn-link btn-sm text-decoration-none" data-bs-toggle="modal" data-bs-target="#priceHistoryModal{{ forloop.counter }}">
-                                            Ver Histórico
+                                        <button type="button" class="btn btn-link btn-sm text-decoration-none" 
+                                        data-bs-toggle="modal" data-bs-target="#priceHistoryModal{{ forloop.counter }}"
+                                        data-price-history="{{ item.price_history|safe }}">
+                                    Ver Histórico
                                         </button>
                                     </div>
                                     {% include 'modals/price_history_modal.html' with modal_id=forloop.counter item=item %}
@@ -154,6 +156,7 @@
 <script src="{% static 'js/bootstrap.bundle.min.js' %}"></script>
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@1.0.0/dist/chartjs-plugin-zoom.min.js"></script>
 <script src="{% static 'js/cotacao.js' %}"></script>
 <script>
     $(document).ready(function () {
@@ -171,7 +174,7 @@
         {% for item in itens_data %}
         $('#priceHistoryModal{{ forloop.counter }}').on('shown.bs.modal', function () {
             const priceHistory = {{ item.price_history|safe }};
-            const labels = priceHistory.map(entry => entry.date);
+            const labels = priceHistory.map(entry => new Date(entry.date));
             const data = priceHistory.map(entry => entry.price);
 
             const ctx = document.getElementById('priceChart{{ forloop.counter }}').getContext('2d');
@@ -183,23 +186,80 @@
                         label: 'Preço',
                         data: data,
                         borderColor: 'rgba(75, 192, 192, 1)',
-                        borderWidth: 1
+                        borderWidth: 1,
+                        fill: false
                     }]
                 },
                 options: {
+                    responsive: true,
                     scales: {
                         x: {
                             type: 'time',
                             time: {
-                                unit: 'day'
+                                unit: 'day',
+                                tooltipFormat: 'DD/MM/YYYY',
+                                displayFormats: {
+                                    day: 'DD/MM/YYYY'
+                                }
+                            },
+                            title: {
+                                display: true,
+                                text: 'Data'
                             }
                         },
                         y: {
-                            beginAtZero: true
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Preço (R$)'
+                            }
+                        }
+                    },
+                    plugins: {
+                        zoom: {
+                            pan: {
+                                enabled: true,
+                                mode: 'x'
+                            },
+                            zoom: {
+                                enabled: true,
+                                mode: 'x',
+                                drag: false
+                            }
+                        },
+                        legend: {
+                            display: true,
+                            position: 'top'
+                        },
+                        tooltip: {
+                            enabled: true
                         }
                     }
                 }
             });
+
+            // Função para atualizar o gráfico com o intervalo de dias selecionado
+            function updateChart(days) {
+                const cutoffDate = new Date();
+                cutoffDate.setDate(cutoffDate.getDate() - days);
+
+                const filteredData = priceHistory.filter(entry => new Date(entry.date) >= cutoffDate);
+                const updatedLabels = filteredData.map(entry => new Date(entry.date));
+                const updatedData = filteredData.map(entry => entry.price);
+
+                chart.data.labels = updatedLabels;
+                chart.data.datasets[0].data = updatedData;
+                chart.update();
+            }
+
+            // Evento de mudança para o seletor de intervalo de dias
+            $('#daysSelect{{ forloop.counter }}').on('change', function () {
+                const days = $(this).val();
+                updateChart(days);
+            });
+
+            // Inicializa o gráfico com os últimos 7 dias
+            updateChart(7);
         });
         {% endfor %}
     });
