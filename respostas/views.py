@@ -24,6 +24,8 @@ from django.utils import timezone
 import datetime
 from django.db.models import Q
 from .forms import PedidoFormSet
+from cotacao.models import Cotacao 
+from products.models import ProductPriceHistory
 import re
 
 
@@ -322,3 +324,37 @@ class DeletarPedidoView(DeleteView):
         pk = self.kwargs.get('pk')
         logger.debug(f"Tentando deletar Pedido com pk={pk}")
         return get_object_or_404(Pedido, pk=pk)
+    
+
+def visualizar_cotacoes(request, cotacao_uuid):
+    cotacao = get_object_or_404(Cotacao, uuid=cotacao_uuid)
+    itens_data = []   
+
+    for item in cotacao.itens_cotacao.all():
+        respostas = item.itemrespostacotacao_set.all().select_related('resposta_cotacao__fornecedor').order_by('preco')
+        respostas_data = [{
+            'preco': resposta.preco,
+            'fornecedor_nome': resposta.resposta_cotacao.fornecedor.name,
+            'fornecedor_id': resposta.resposta_cotacao.fornecedor.pk,
+            'observacao': resposta.observacao,
+            'imagem_url': resposta.imagem.url if resposta.imagem else None,
+            'is_top3': idx < 3  
+        } for idx, resposta in enumerate(respostas)]
+
+        produto = item.produto
+        ultimo_preco = produto.price_history.order_by('-date').first()
+        price_history = list(produto.price_history.order_by('date').values('price', 'date'))
+
+        item_data = {
+            'id': item.pk,
+            'produto_nome': produto.name,
+            'quantidade': item.quantidade,
+            'tipo_volume': item.get_tipo_volume_display(),
+            'ultimo_preco': ultimo_preco.price if ultimo_preco else None,
+            'data_ultimo_preco': ultimo_preco.date if ultimo_preco else None,
+            'price_history': price_history,
+            'respostas': respostas_data
+        }
+        itens_data.append(item_data)
+
+    return render(request, 'respostas/visualizar_respostas.html', {'cotacao': cotacao, 'itens_data': itens_data})

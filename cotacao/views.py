@@ -186,10 +186,7 @@ class EnviarCotacaoView(FormView):
         else:
             messages.error(self.request, 'Não foi possível enviar a cotação para nenhum fornecedor.')
 
-        return super().form_valid(form)
-    
-
-        
+        return super().form_valid(form)       
 
 
 
@@ -308,8 +305,7 @@ class DeleteItemCotacaoView(DeleteView):
     def delete(self, request, *args, **kwargs):
         response = super().delete(request, *args, **kwargs)
         messages.success(request, "Item removido com sucesso!")
-        return response
-    
+        return response    
     
   
 class AddProductToCotacaoView(CreateView):
