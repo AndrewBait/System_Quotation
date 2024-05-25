@@ -3,9 +3,9 @@
 {% block content %}
 <form method="post" action="{% url 'respostas:gerar_pedidos' %}" id="gerar-pedidos-form">
     {% csrf_token %}
-    <input type="hidden" name="cotacao_uuid" value="{{ cotacao.uuid }}">  
+    <input type="hidden" name="cotacao_uuid" value="{{ cotacao.uuid }}">
 
-    <div class="container-fluid mt-4">    
+    <div class="container-fluid mt-4">
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h2>Respostas para Cotação: {{ cotacao.nome }}</h2>
 
@@ -19,14 +19,14 @@
                     {% endif %}
                 {% endfor %}
             {% endif %}
-            
+
             <div class="d-flex flex-wrap">
                 <a href="{% url 'cotacao:cotacao_list' %}" class="btn btn-secondary me-2">
                     <i class="bi bi-arrow-left"></i> Voltar
                 </a>
                 <button type="button" class="btn btn-danger me-2" data-bs-toggle="modal" data-bs-target="#fecharCotacaoModal">
                     Fechar Cotação
-                </button> 
+                </button>
                 <a href="{% url 'respostas:listar_pedidos' %}" class="btn btn-primary">Visualizar Pedidos</a>
             </div>
         </div>
@@ -42,7 +42,7 @@
                     <option value="desc">Z - A</option>
                 </select>
             </div>
-            <div class="col-md-3"></div> 
+            <div class="col-md-3"></div>
         </div>
 
         <div class="table-responsive">
@@ -52,7 +52,7 @@
                         <th scope="col">Quantidade</th>
                         <th scope="col">Tipo de Volume</th>
                         <th scope="col">Produto</th>
-                        <th scope="col" class="d-none d-md-table-cell">Último Preço</th> 
+                        <th scope="col" class="d-none d-md-table-cell">Último Preço</th>
                         <th scope="col">Top 3 Ofertas</th>
                     </tr>
                 </thead>
@@ -63,29 +63,66 @@
                                 <td>{{ item.quantidade }}</td>
                                 <td>{{ item.tipo_volume }}</td>
                                 <td>
-                                    <span class="d-inline d-md-none">{{ item.produto_nome }}</span> 
+                                    <span class="d-inline d-md-none">{{ item.produto_nome }}</span>
                                     <span class="d-none d-md-inline" data-bs-toggle="tooltip" data-bs-placement="top" title="{{ item.produto_nome }}">
-                                        {{ item.produto_nome|truncatechars:25 }} 
+                                        {{ item.produto_nome|truncatechars:25 }}
                                     </span>
                                 </td>
-                                <td class="d-none d-md-table-cell"> 
+                                <td class="d-none d-md-table-cell">
                                     <div>
-                                        R$ {{ item.ultimo_preco }} em {{ item.data_ultimo_preco|date:"d/m/Y" }}
-                                        <button type="button" class="btn btn-link btn-sm text-decoration-none" 
-                                        data-bs-toggle="modal" data-bs-target="#priceHistoryModal{{ forloop.counter }}"
-                                        data-price-history="{{ item.price_history|safe }}">
-                                    Ver Histórico
+                                        R$ {{ item.ultimo_preco }} em {% if item.data_ultimo_preco %}{{ item.data_ultimo_preco|date:"d/m/Y" }}{% else %}N/A{% endif %}
+                                        <button type="button" class="btn btn-link btn-sm text-decoration-none"
+                                                data-bs-toggle="modal" data-bs-target="#priceHistoryModal{{ forloop.counter }}"
+                                                data-product-id="{{ item.id }}">
+                                            Ver Histórico
                                         </button>
                                     </div>
-                                    {% include 'modals/price_history_modal.html' with modal_id=forloop.counter item=item %}
+                                    <div class="modal fade" id="priceHistoryModal{{ forloop.counter }}" tabindex="-1" aria-hidden="true">
+                                        <div class="modal-dialog modal-lg">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title">Histórico de Preços de {{ item.produto_nome }}</h5>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                </div>
+                                                <div class="modal-body">
+                                                    <label for="daysSelect{{ forloop.counter }}">Selecionar intervalo de dias:</label>
+                                                    <select id="daysSelect{{ forloop.counter }}" class="form-select mb-3" onchange="filterPriceHistory({{ item.id }}, this.value)">
+                                                        <option value="7">Últimos 7 dias</option>
+                                                        <option value="14">Últimos 14 dias</option>
+                                                        <option value="28">Últimos 28 dias</option>
+                                                        <option value="60">Últimos 60 dias</option>
+                                                        <option value="90">Últimos 90 dias</option>
+                                                        <option value="180">Últimos 180 dias</option>
+                                                        <option value="360">Últimos 360 dias</option>
+                                                    </select>
+                                                    <table class="table table-striped">
+                                                        <thead>
+                                                            <tr>
+                                                                <th>Data</th>
+                                                                <th>Preço</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody id="priceHistoryBody{{ item.id }}">
+                                                            {% for entry in item.price_history %}
+                                                                <tr>
+                                                                    <td>{{ entry.date }}</td>
+                                                                    <td>R$ {{ entry.price }}</td>
+                                                                </tr>
+                                                            {% endfor %}
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </td>
                                 <td>
                                     <div class="d-flex flex-wrap align-items-center">
                                         {% for resposta in item.respostas|slice:":3" %}
-                                            <div class="offer-item me-2 mb-2 {% if forloop.counter == 1 %}text-success{% elif forloop.counter == 2 %}text-warning{% elif forloop.counter == 3 %}text-danger{% endif %}"> 
+                                            <div class="offer-item me-2 mb-2 {% if forloop.counter == 1 %}text-success{% elif forloop.counter == 2 %}text-warning{% elif forloop.counter == 3 %}text-danger{% endif %}">
                                                 {% include 'modals/offer_details_modal.html' with modal_id=forloop.counter resposta=resposta item=item %}
                                             </div>
-                                            {% if not forloop.last %}<br>{% endif %} 
+                                            {% if not forloop.last %}<br>{% endif %}
                                         {% endfor %}
                                         {% if item.respostas|length > 3 %}
                                             <button type="button" class="btn btn-link btn-sm text-decoration-none" data-bs-toggle="modal" data-bs-target="#moreOffersModal{{ item.id }}">
@@ -103,8 +140,118 @@
         </div>
 
         <script>
-            const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]')
-            const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl))
+            const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+            const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl));
+
+            // Armazenar o histórico de preços de todos os produtos
+            const priceHistoryData = {};
+
+            {% for item in itens_data %}
+                priceHistoryData[{{ item.id }}] = {{ item.price_history|safe }};
+            {% endfor %}
+
+            function filterPriceHistory(productId, days) {
+                console.log(`Filtering price history for product ${productId} for the last ${days} days.`);
+                const tableBody = document.getElementById('priceHistoryBody' + productId);
+                const rows = tableBody.getElementsByTagName('tr');
+                const cutoffDate = new Date();
+                cutoffDate.setDate(cutoffDate.getDate() - days);
+
+                // Limpar o corpo da tabela
+                tableBody.innerHTML = '';
+
+                // Filtrar e adicionar novas linhas
+                const filteredData = priceHistoryData[productId].filter(entry => {
+                    const entryDate = new Date(entry.date);
+                    console.log(`Checking date ${entry.date}, cutoff date is ${cutoffDate}.`);
+                    return entryDate >= cutoffDate;
+                });
+
+                filteredData.forEach(entry => {
+                    console.log(`Adding entry: ${entry.date} - R$ ${entry.price}`);
+                    const row = document.createElement('tr');
+                    const dateCell = document.createElement('td');
+                    dateCell.innerText = entry.date;
+                    const priceCell = document.createElement('td');
+                    priceCell.innerText = `R$ ${entry.price}`;
+                    row.appendChild(dateCell);
+                    row.appendChild(priceCell);
+                    tableBody.appendChild(row);
+
+                // Atualizar a tabela
+                $('#productsTable').DataTable().draw();
+            }
+
+            $(document).ready(function () {
+                $('#productsTable').DataTable({
+                    "language": {
+                        "url": "//cdn.datatables.net/plug-ins/1.10.25/i18n/Portuguese-Brasil.json"
+                    },
+                    "pagingType": "full_numbers",
+                    "pageLength": 10,
+                    "lengthMenu": [[10, 25, 50, -1], [10, 25, 50, "Todos"]],
+                    "searching": true,
+                    "ordering": true
+                });
+
+                // Configurações da paginação
+                const rowsPerPage = 10;
+                let currentPage = 1;
+                const rows = document.querySelectorAll('#productsTable tbody tr');
+                const rowsCount = rows.length;
+                const pageCount = Math.ceil(rowsCount / rowsPerPage);
+                const pagination = document.getElementById('pagination');
+
+                function displayPage(page) {
+                    const start = (page - 1) * rowsPerPage;
+                    const end = start + rowsPerPage;
+
+                    rows.forEach((row, index) => {
+                        row.style.display = index >= start && index < end ? '' : 'none';
+                    });
+
+                    currentPage = page;
+
+                    document.querySelectorAll('.page-item').forEach(item => {
+                        item.classList.remove('active');
+                    });
+
+                    const pageItem = document.querySelector(`#page${page}`);
+                    if (pageItem) {
+                        pageItem.classList.add('active');
+                    }
+
+                    document.getElementById('prevPage').parentNode.classList.toggle('disabled', currentPage === 1);
+                    document.getElementById('nextPage').parentNode.classList.toggle('disabled', currentPage === pageCount);
+                }
+
+                for (let i = 1; i <= pageCount; i++) {
+                    const li = document.createElement('li');
+                    li.className = 'page-item';
+                    li.innerHTML = `<a class="page-link" href="#" id="page${i}">${i}</a>`;
+                    li.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        displayPage(i);
+                    });
+                    pagination.insertBefore(li, document.getElementById('nextPage').parentNode);
+                }
+
+                document.getElementById('prevPage').addEventListener('click', (e) => {
+                    e.preventDefault();
+                    if (currentPage > 1) {
+                        displayPage(currentPage - 1);
+                    }
+                });
+
+                document.getElementById('nextPage').addEventListener('click', (e) => {
+                    e.preventDefault();
+                    if (currentPage < pageCount) {
+                        displayPage(currentPage + 1);
+                    }
+                });
+
+                displayPage(1);
+            });
         </script>
 
         <style>
@@ -118,15 +265,15 @@
             .offer-item {
                 font-weight: bold; /* Opcional: Negrito para destacar */
             }
-            
+
             .text-success {
                 color: #28a745 !important; /* Verde */
             }
-            
+
             .text-warning {
                 color: #ffc107 !important; /* Amarelo */
             }
-            
+
             .text-danger {
                 color: #dc3545 !important; /* Vermelho */
             }
@@ -155,171 +302,4 @@
 <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 <script src="{% static 'js/bootstrap.bundle.min.js' %}"></script>
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@1.0.0/dist/chartjs-plugin-zoom.min.js"></script>
-<script src="{% static 'js/cotacao.js' %}"></script>
-<script>
-    $(document).ready(function () {
-        $('#productsTable').DataTable({
-            "language": { 
-                "url": "//cdn.datatables.net/plug-ins/1.10.25/i18n/Portuguese-Brasil.json" 
-            },
-            "pagingType": "full_numbers",
-            "pageLength": 10,
-            "lengthMenu": [[10, 25, 50, -1], [10, 25, 50, "Todos"]],
-            "searching": true,
-            "ordering": true
-        });
-
-        {% for item in itens_data %}
-        $('#priceHistoryModal{{ forloop.counter }}').on('shown.bs.modal', function () {
-            const priceHistory = {{ item.price_history|safe }};
-            const labels = priceHistory.map(entry => new Date(entry.date));
-            const data = priceHistory.map(entry => entry.price);
-
-            const ctx = document.getElementById('priceChart{{ forloop.counter }}').getContext('2d');
-            const chart = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        label: 'Preço',
-                        data: data,
-                        borderColor: 'rgba(75, 192, 192, 1)',
-                        borderWidth: 1,
-                        fill: false
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    scales: {
-                        x: {
-                            type: 'time',
-                            time: {
-                                unit: 'day',
-                                tooltipFormat: 'DD/MM/YYYY',
-                                displayFormats: {
-                                    day: 'DD/MM/YYYY'
-                                }
-                            },
-                            title: {
-                                display: true,
-                                text: 'Data'
-                            }
-                        },
-                        y: {
-                            beginAtZero: true,
-                            title: {
-                                display: true,
-                                text: 'Preço (R$)'
-                            }
-                        }
-                    },
-                    plugins: {
-                        zoom: {
-                            pan: {
-                                enabled: true,
-                                mode: 'x'
-                            },
-                            zoom: {
-                                enabled: true,
-                                mode: 'x',
-                                drag: false
-                            }
-                        },
-                        legend: {
-                            display: true,
-                            position: 'top'
-                        },
-                        tooltip: {
-                            enabled: true
-                        }
-                    }
-                }
-            });
-
-            // Função para atualizar o gráfico com o intervalo de dias selecionado
-            function updateChart(days) {
-                const cutoffDate = new Date();
-                cutoffDate.setDate(cutoffDate.getDate() - days);
-
-                const filteredData = priceHistory.filter(entry => new Date(entry.date) >= cutoffDate);
-                const updatedLabels = filteredData.map(entry => new Date(entry.date));
-                const updatedData = filteredData.map(entry => entry.price);
-
-                chart.data.labels = updatedLabels;
-                chart.data.datasets[0].data = updatedData;
-                chart.update();
-            }
-
-            // Evento de mudança para o seletor de intervalo de dias
-            $('#daysSelect{{ forloop.counter }}').on('change', function () {
-                const days = $(this).val();
-                updateChart(days);
-            });
-
-            // Inicializa o gráfico com os últimos 7 dias
-            updateChart(7);
-        });
-        {% endfor %}
-    });
-    
-    // Configurações da paginação
-    const rowsPerPage = 10;
-    let currentPage = 1;
-    const rows = document.querySelectorAll('#productsTable tbody tr');
-    const rowsCount = rows.length;
-    const pageCount = Math.ceil(rowsCount / rowsPerPage);
-    const pagination = document.getElementById('pagination');
-
-    function displayPage(page) {
-        const start = (page - 1) * rowsPerPage;
-        const end = start + rowsPerPage;
-
-        rows.forEach((row, index) => {
-            row.style.display = index >= start && index < end ? '' : 'none';
-        });
-
-        currentPage = page;
-
-        document.querySelectorAll('.page-item').forEach(item => {
-            item.classList.remove('active');
-        });
-
-        const pageItem = document.querySelector(`#page${page}`);
-        if (pageItem) {
-            pageItem.classList.add('active');
-        }
-
-        document.getElementById('prevPage').parentNode.classList.toggle('disabled', currentPage === 1);
-        document.getElementById('nextPage').parentNode.classList.toggle('disabled', currentPage === pageCount);
-    }
-
-    for (let i = 1; i <= pageCount; i++) {
-        const li = document.createElement('li');
-        li.className = 'page-item';
-        li.innerHTML = `<a class="page-link" href="#" id="page${i}">${i}</a>`;
-        li.addEventListener('click', (e) => {
-            e.preventDefault();
-            displayPage(i);
-        });
-        pagination.insertBefore(li, document.getElementById('nextPage').parentNode);
-    }
-
-    document.getElementById('prevPage').addEventListener('click', (e) => {
-        e.preventDefault();
-        if (currentPage > 1) {
-            displayPage(currentPage - 1);
-        }
-    });
-
-    document.getElementById('nextPage').addEventListener('click', (e) => {
-        e.preventDefault();
-        if (currentPage < pageCount) {
-            displayPage(currentPage + 1);
-        }
-    });
-
-    displayPage(1);
-</script>
 {% endblock %}

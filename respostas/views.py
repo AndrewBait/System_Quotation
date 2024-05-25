@@ -324,10 +324,12 @@ class DeletarPedidoView(DeleteView):
         pk = self.kwargs.get('pk')
         logger.debug(f"Tentando deletar Pedido com pk={pk}")
         return get_object_or_404(Pedido, pk=pk)
-    
-    
+
+
     
 from django.core.serializers.json import DjangoJSONEncoder
+from django.db.models.functions import TruncMonth
+from django.db.models import Min
 import json
 
 
@@ -348,14 +350,14 @@ def visualizar_cotacoes(request, cotacao_uuid):
 
         produto = item.produto
         ultimo_preco = produto.price_history.order_by('-date').first()
-        price_history = list(produto.price_history.order_by('date').values('price', 'date'))
 
-        # Formatar as datas para strings no formato ISO 8601
-        for entry in price_history:
-            entry['date'] = entry['date'].strftime('%Y-%m-%d')
+        price_history = (produto.price_history
+                         .annotate(month=TruncMonth('date'))
+                         .values('month')
+                         .annotate(min_price=Min('price'))
+                         .order_by('month'))
 
-        # Serializar o histórico de preços para JSON
-        price_history_json = json.dumps(price_history, cls=DjangoJSONEncoder)
+        price_history_formatted = [{'date': entry['month'].strftime('%Y-%m-%d'), 'price': entry['min_price']} for entry in price_history]
 
         item_data = {
             'id': item.pk,
@@ -364,9 +366,24 @@ def visualizar_cotacoes(request, cotacao_uuid):
             'tipo_volume': item.get_tipo_volume_display(),
             'ultimo_preco': ultimo_preco.price if ultimo_preco else None,
             'data_ultimo_preco': ultimo_preco.date if ultimo_preco else None,
-            'price_history': price_history_json,  # Passar o JSON para o template
+            'price_history': price_history_formatted,  # Passar a lista diretamente para o template
             'respostas': respostas_data
         }
         itens_data.append(item_data)
 
     return render(request, 'respostas/visualizar_respostas.html', {'cotacao': cotacao, 'itens_data': itens_data})
+
+from django.db.models.functions import TruncMonth
+from django.http import JsonResponse
+
+def get_price_history(request, product_id):
+    product = get_object_or_404(Product, id=product_id)
+    price_history = (product.price_history
+                     .annotate(month=TruncMonth('date'))
+                     .values('month')
+                     .annotate(min_price=Min('price'))
+                     .order_by('month'))
+
+    price_history_formatted = [{'date': entry['month'].strftime('%Y-%m-%d'), 'price': entry['min_price']} for entry in price_history]
+
+    return JsonResponse(price_history_formatted, safe=False)
