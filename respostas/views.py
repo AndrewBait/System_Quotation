@@ -329,9 +329,10 @@ class DeletarPedidoView(DeleteView):
     
 from django.core.serializers.json import DjangoJSONEncoder
 from django.db.models.functions import TruncMonth
-from django.db.models import Min
+from django.db.models.functions import TruncDay
+from django.db.models import Min, Max
 import json
-
+from django.db.models import Subquery, OuterRef, F
 
 def visualizar_cotacoes(request, cotacao_uuid):
     cotacao = get_object_or_404(Cotacao, uuid=cotacao_uuid)
@@ -340,7 +341,7 @@ def visualizar_cotacoes(request, cotacao_uuid):
     for item in cotacao.itens_cotacao.all():
         respostas = item.itemrespostacotacao_set.all().select_related('resposta_cotacao__fornecedor').order_by('preco')
         respostas_data = [{
-            'preco': resposta.preco,
+            'preco': round(resposta.preco, 3) if resposta.preco is not None else None,
             'fornecedor_nome': resposta.resposta_cotacao.fornecedor.name,
             'fornecedor_id': resposta.resposta_cotacao.fornecedor.pk,
             'observacao': resposta.observacao,
@@ -351,22 +352,37 @@ def visualizar_cotacoes(request, cotacao_uuid):
         produto = item.produto
         ultimo_preco = produto.price_history.order_by('-date').first()
 
+        # Subqueries to get the dates of min and max prices
+        min_price_subquery = produto.price_history.filter(date__month=OuterRef('date__month')).order_by('price', 'date').values('date')[:1]
+        max_price_subquery = produto.price_history.filter(date__month=OuterRef('date__month')).order_by('-price', 'date').values('date')[:1]
+
         price_history = (produto.price_history
                          .annotate(month=TruncMonth('date'))
                          .values('month')
-                         .annotate(min_price=Min('price'))
+                         .annotate(
+                             min_price=Min('price'),
+                             min_price_date=Subquery(min_price_subquery),
+                             max_price=Max('price'),
+                             max_price_date=Subquery(max_price_subquery)
+                         )
                          .order_by('month'))
 
-        price_history_formatted = [{'date': entry['month'].strftime('%Y-%m-%d'), 'price': entry['min_price']} for entry in price_history]
+        price_history_formatted = [{
+            'month': entry['month'].strftime('%Y-%m'),
+            'min_price': round(entry['min_price'], 3) if entry['min_price'] is not None else None,
+            'min_price_date': entry['min_price_date'].strftime('%d-%m-%Y') if entry['min_price_date'] else None, 
+            'max_price': round(entry['max_price'], 3) if entry['max_price'] is not None else None,
+            'max_price_date': entry['max_price_date'].strftime('%d-%m-%Y') if entry['max_price_date'] else None
+        } for entry in price_history]
 
         item_data = {
             'id': item.pk,
             'produto_nome': produto.name,
             'quantidade': item.quantidade,
             'tipo_volume': item.get_tipo_volume_display(),
-            'ultimo_preco': ultimo_preco.price if ultimo_preco else None,
+            'ultimo_preco': round(ultimo_preco.price, 3) if ultimo_preco and ultimo_preco.price is not None else None,
             'data_ultimo_preco': ultimo_preco.date if ultimo_preco else None,
-            'price_history': price_history_formatted,  # Passar a lista diretamente para o template
+            'price_history': price_history_formatted,
             'respostas': respostas_data
         }
         itens_data.append(item_data)

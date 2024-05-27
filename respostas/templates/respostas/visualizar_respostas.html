@@ -77,44 +77,7 @@
                                             Ver Histórico
                                         </button>
                                     </div>
-                                    <div class="modal fade" id="priceHistoryModal{{ forloop.counter }}" tabindex="-1" aria-hidden="true">
-                                        <div class="modal-dialog modal-lg">
-                                            <div class="modal-content">
-                                                <div class="modal-header">
-                                                    <h5 class="modal-title">Histórico de Preços de {{ item.produto_nome }}</h5>
-                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                                </div>
-                                                <div class="modal-body">
-                                                    <label for="daysSelect{{ forloop.counter }}">Selecionar intervalo de dias:</label>
-                                                    <select id="daysSelect{{ forloop.counter }}" class="form-select mb-3" onchange="filterPriceHistory({{ item.id }}, this.value)">
-                                                        <option value="7">Últimos 7 dias</option>
-                                                        <option value="14">Últimos 14 dias</option>
-                                                        <option value="28">Últimos 28 dias</option>
-                                                        <option value="60">Últimos 60 dias</option>
-                                                        <option value="90">Últimos 90 dias</option>
-                                                        <option value="180">Últimos 180 dias</option>
-                                                        <option value="360">Últimos 360 dias</option>
-                                                    </select>
-                                                    <table class="table table-striped">
-                                                        <thead>
-                                                            <tr>
-                                                                <th>Data</th>
-                                                                <th>Preço</th>
-                                                            </tr>
-                                                        </thead>
-                                                        <tbody id="priceHistoryBody{{ item.id }}">
-                                                            {% for entry in item.price_history %}
-                                                                <tr>
-                                                                    <td>{{ entry.date }}</td>
-                                                                    <td>R$ {{ entry.price }}</td>
-                                                                </tr>
-                                                            {% endfor %}
-                                                        </tbody>
-                                                    </table>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
+                                    {% include 'modals/price_history_modal.html' %}
                                 </td>
                                 <td>
                                     <div class="d-flex flex-wrap align-items-center">
@@ -162,21 +125,32 @@
 
                 // Filtrar e adicionar novas linhas
                 const filteredData = priceHistoryData[productId].filter(entry => {
-                    const entryDate = new Date(entry.date);
-                    console.log(`Checking date ${entry.date}, cutoff date is ${cutoffDate}.`);
+                    const entryDate = new Date(entry.month + '-01');
+                    console.log(`Checking date ${entry.month}, cutoff date is ${cutoffDate}.`);
                     return entryDate >= cutoffDate;
                 });
+            
 
                 filteredData.forEach(entry => {
-                    console.log(`Adding entry: ${entry.date} - R$ ${entry.price}`);
+                    console.log(`Adding entry: ${entry.month} - Min: ${entry.min_price_date} R$ ${entry.min_price !== null ? entry.min_price.toFixed(3) : 'N/A'} - Max: ${entry.max_price_date} R$ ${entry.max_price !== null ? entry.max_price.toFixed(3) : 'N/A'}`);
                     const row = document.createElement('tr');
-                    const dateCell = document.createElement('td');
-                    dateCell.innerText = entry.date;
-                    const priceCell = document.createElement('td');
-                    priceCell.innerText = `R$ ${entry.price}`;
-                    row.appendChild(dateCell);
-                    row.appendChild(priceCell);
+                    const monthCell = document.createElement('td');
+                    monthCell.innerText = entry.month;
+                    const minDateCell = document.createElement('td');
+                    minDateCell.innerText = entry.min_price_date !== null ? entry.min_price_date : 'N/A';
+                    const minPriceCell = document.createElement('td');
+                    minPriceCell.innerText = entry.min_price !== null ? `R$ ${entry.min_price.toFixed(3)}` : 'N/A';
+                    const maxDateCell = document.createElement('td');
+                    maxDateCell.innerText = entry.max_price_date !== null ? entry.max_price_date : 'N/A';
+                    const maxPriceCell = document.createElement('td');
+                    maxPriceCell.innerText = entry.max_price !== null ? `R$ ${entry.max_price.toFixed(3)}` : 'N/A';
+                    row.appendChild(monthCell);
+                    row.appendChild(minDateCell);
+                    row.appendChild(minPriceCell);
+                    row.appendChild(maxDateCell);
+                    row.appendChild(maxPriceCell);
                     tableBody.appendChild(row);
+                });
 
                 // Atualizar a tabela
                 $('#productsTable').DataTable().draw();

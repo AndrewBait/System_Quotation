@@ -1,4 +1,5 @@
-<div class="modal fade" id="priceHistoryModal{{ modal_id }}" tabindex="-1" aria-hidden="true" data-price-history="{{ item.price_history|escapejs }}">
+<!-- price_history_modal.html -->
+<div class="modal fade" id="priceHistoryModal{{ forloop.counter }}" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
@@ -6,8 +7,8 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <label for="daysSelect{{ modal_id }}">Selecionar intervalo de dias:</label>
-                <select id="daysSelect{{ modal_id }}" class="form-select mb-3">
+                <label for="daysSelect{{ forloop.counter }}">Selecionar intervalo de dias:</label>
+                <select id="daysSelect{{ forloop.counter }}" class="form-select mb-3" onchange="filterPriceHistory({{ item.id }}, this.value)">
                     <option value="7">Últimos 7 dias</option>
                     <option value="14">Últimos 14 dias</option>
                     <option value="28">Últimos 28 dias</option>
@@ -16,7 +17,28 @@
                     <option value="180">Últimos 180 dias</option>
                     <option value="360">Últimos 360 dias</option>
                 </select>
-                <canvas id="priceChart{{ modal_id }}"></canvas>
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Mês</th>
+                            <th>Data do Preço Mínimo</th>
+                            <th>Preço Mínimo</th>
+                            <th>Data do Preço Máximo</th>
+                            <th>Preço Máximo</th>
+                        </tr>
+                    </thead>
+                    <tbody id="priceHistoryBody{{ item.id }}">
+                        {% for entry in item.price_history %}
+                            <tr>
+                                <td>{{ entry.month }}</td>
+                                <td>{% if entry.min_price_date %}{{ entry.min_price_date }}{% else %}N/A{% endif %}</td>
+                                <td>{% if entry.min_price is not None %}R$ {{ entry.min_price|floatformat:3 }}{% else %}N/A{% endif %}</td>
+                                <td>{% if entry.max_price_date %}{{ entry.max_price_date }}{% else %}N/A{% endif %}</td>
+                                <td>{% if entry.max_price is not None %}R$ {{ entry.max_price|floatformat:3 }}{% else %}N/A{% endif %}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>
