@@ -409,7 +409,11 @@ def visualizar_cotacoes(request, cotacao_uuid):
         }
         itens_data.append(item_data)
 
-    return render(request, 'respostas/visualizar_respostas.html', {'cotacao': cotacao, 'itens_data': itens_data})
+    return render(request, 'respostas/visualizar_respostas.html', {
+        'cotacao': cotacao,
+        'itens_data': itens_data,
+        'prazo': cotacao.prazo  # Incluindo o prazo no contexto
+    })
 
 
 
