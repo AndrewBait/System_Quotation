@@ -384,10 +384,10 @@ def visualizar_cotacoes(request, cotacao_uuid):
         price_history_formatted = [{
             'month': month,
             'min_price': round(data['min_price'], 3) if data['min_price'] != float('inf') else None,
-            'min_price_date': data['min_price_date'].strftime('%Y-%m-%d') if data['min_price_date'] else None,
+            'min_price_date': data['min_price_date'].strftime('%d/%m/%Y') if data['min_price_date'] else None,
             'min_supplier': data['min_supplier'].name if data['min_supplier'] else None,
             'max_price': round(data['max_price'], 3) if data['max_price'] != float('-inf') else None,
-            'max_price_date': data['max_price_date'].strftime('%Y-%m-%d') if data['max_price_date'] else None,
+            'max_price_date': data['max_price_date'].strftime('%d/%m/%Y') if data['max_price_date'] else None,
             'max_supplier': data['max_supplier'].name if data['max_supplier'] else None
         } for month, data in price_history.items()]
 
@@ -404,6 +404,7 @@ def visualizar_cotacoes(request, cotacao_uuid):
         itens_data.append(item_data)
 
     return render(request, 'respostas/visualizar_respostas.html', {'cotacao': cotacao, 'itens_data': itens_data})
+
 
 from django.shortcuts import get_object_or_404
 from django.http import JsonResponse
@@ -436,10 +437,10 @@ def get_price_history(request, product_id):
         {
             'month': entry['month'].strftime('%Y-%m'),
             'min_price': entry['min_price'],
-            'min_price_date': entry['min_price_date'].strftime('%Y-%m-%d') if entry['min_price_date'] else None,
+            'min_price_date': entry['min_price_date'].strftime('%d-%m-%Y') if entry['min_price_date'] else None, 
             'min_supplier': supplier_map.get(entry['min_supplier']),
             'max_price': entry['max_price'],
-            'max_price_date': entry['max_price_date'].strftime('%Y-%m-%d') if entry['max_price_date'] else None,
+            'max_price_date': entry['max_price_date'].strftime('%d-%m-%Y') if entry['max_price_date'] else None,
             'max_supplier': supplier_map.get(entry['max_supplier'])
         } for entry in price_history
     ]

@@ -1,6 +1,6 @@
 <!-- price_history_modal.html -->
 <div class="modal fade" id="priceHistoryModal{{ forloop.counter }}" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
+    <div class="modal-dialog modal-xl">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title">Histórico de Preços de {{ item.produto_nome }}</h5>
@@ -17,32 +17,34 @@
                     <option value="180">Últimos 180 dias</option>
                     <option value="360">Últimos 360 dias</option>
                 </select>
-                <table class="table table-striped">
-                    <thead>
-                        <tr>
-                            <th>Mês</th>
-                            <th>Data do Preço Mínimo</th>
-                            <th>Preço Mínimo</th>
-                            <th>Fornecedor do Preço Mínimo</th>
-                            <th>Data do Preço Máximo</th>
-                            <th>Preço Máximo</th>
-                            <th>Fornecedor do Preço Máximo</th>
-                        </tr>
-                    </thead>
-                    <tbody id="priceHistoryBody{{ item.id }}">
-                        {% for entry in item.price_history %}
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover">
+                        <thead>
                             <tr>
-                                <td>{{ entry.month }}</td>
-                                <td>{% if entry.min_price_date %}{{ entry.min_price_date }}{% else %}N/A{% endif %}</td>
-                                <td>{% if entry.min_price is not None %}R$ {{ entry.min_price|floatformat:3 }}{% else %}N/A{% endif %}</td>
-                                <td>{% if entry.min_supplier %}{{ entry.min_supplier }}{% else %}N/A{% endif %}</td>
-                                <td>{% if entry.max_price_date %}{{ entry.max_price_date }}{% else %}N/A{% endif %}</td>
-                                <td>{% if entry.max_price is not None %}R$ {{ entry.max_price|floatformat:3 }}{% else %}N/A{% endif %}</td>
-                                <td>{% if entry.max_supplier %}{{ entry.max_supplier }}{% else %}N/A{% endif %}</td>
+                                <th class="text-nowrap">Mês</th>
+                                <th class="text-nowrap">Data do Preço Mínimo</th>
+                                <th class="text-nowrap">Preço Mínimo</th>
+                                <th class="text-nowrap">Fornecedor do Preço Mínimo</th>
+                                <th class="text-nowrap">Data do Preço Máximo</th>
+                                <th class="text-nowrap">Preço Máximo</th>
+                                <th class="text-nowrap">Fornecedor do Preço Máximo</th>
                             </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody id="priceHistoryBody{{ item.id }}">
+                            {% for entry in item.price_history %}
+                                <tr>
+                                    <td class="text-nowrap">{{ entry.month }}</td>
+                                    <td class="text-center text-nowrap">{% if entry.min_price_date %}{{ entry.min_price_date }}{% else %}N/A{% endif %}</td>
+                                    <td class="text-end text-nowrap">{% if entry.min_price is not None %}R$ {{ entry.min_price|floatformat:3 }}{% else %}N/A{% endif %}</td>
+                                    <td class="text-center text-nowrap">{% if entry.min_supplier %}{{ entry.min_supplier }}{% else %}N/A{% endif %}</td>
+                                    <td class="text-center text-nowrap">{% if entry.max_price_date %}{{ entry.max_price_date }}{% else %}N/A{% endif %}</td>
+                                    <td class="text-end text-nowrap">{% if entry.max_price is not None %}R$ {{ entry.max_price|floatformat:3 }}{% else %}N/A{% endif %}</td>
+                                    <td class="text-center text-nowrap">{% if entry.max_supplier %}{{ entry.max_supplier }}{% else %}N/A{% endif %}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>
