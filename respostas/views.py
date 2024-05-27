@@ -352,28 +352,28 @@ def visualizar_cotacoes(request, cotacao_uuid):
         produto = item.produto
         ultimo_preco = produto.price_history.order_by('-date').first()
 
-        # Subqueries to get the dates of min and max prices
-        min_price_subquery = produto.price_history.filter(date__month=OuterRef('date__month')).order_by('price', 'date').values('date')[:1]
-        max_price_subquery = produto.price_history.filter(date__month=OuterRef('date__month')).order_by('-price', 'date').values('date')[:1]
+        # Obter todos os registros de histórico de preços
+        price_history_records = produto.price_history.all().annotate(month=TruncMonth('date')).order_by('date')
 
-        price_history = (produto.price_history
-                         .annotate(month=TruncMonth('date'))
-                         .values('month')
-                         .annotate(
-                             min_price=Min('price'),
-                             min_price_date=Subquery(min_price_subquery),
-                             max_price=Max('price'),
-                             max_price_date=Subquery(max_price_subquery)
-                         )
-                         .order_by('month'))
+        # Processar os registros em Python para encontrar min/max preços e suas datas
+        price_history = defaultdict(lambda: {'min_price': float('inf'), 'min_price_date': None, 'max_price': float('-inf'), 'max_price_date': None})
+
+        for record in price_history_records:
+            month = record.date.strftime('%Y-%m')
+            if record.price < price_history[month]['min_price']:
+                price_history[month]['min_price'] = record.price
+                price_history[month]['min_price_date'] = record.date
+            if record.price > price_history[month]['max_price']:
+                price_history[month]['max_price'] = record.price
+                price_history[month]['max_price_date'] = record.date
 
         price_history_formatted = [{
-            'month': entry['month'].strftime('%Y-%m'),
-            'min_price': round(entry['min_price'], 3) if entry['min_price'] is not None else None,
-            'min_price_date': entry['min_price_date'].strftime('%d-%m-%Y') if entry['min_price_date'] else None, 
-            'max_price': round(entry['max_price'], 3) if entry['max_price'] is not None else None,
-            'max_price_date': entry['max_price_date'].strftime('%d-%m-%Y') if entry['max_price_date'] else None
-        } for entry in price_history]
+            'month': month,
+            'min_price': round(data['min_price'], 3) if data['min_price'] != float('inf') else None,
+            'min_price_date': data['min_price_date'].strftime('%Y-%m-%d') if data['min_price_date'] else None,
+            'max_price': round(data['max_price'], 3) if data['max_price'] != float('-inf') else None,
+            'max_price_date': data['max_price_date'].strftime('%Y-%m-%d') if data['max_price_date'] else None
+        } for month, data in price_history.items()]
 
         item_data = {
             'id': item.pk,
