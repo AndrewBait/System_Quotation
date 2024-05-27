@@ -5,33 +5,30 @@
 
 {% block extrahead %}
   {{ block.super }}
-  <!-- CSS do Bootstrap -->
   {% include 'autocomplete_light/static.html' %}
   <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
-  <!-- Scripts -->
   <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
   <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.bundle.min.js"></script>
   <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" rel="stylesheet" />
   <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
-  <!-- Estilos para dimensionamento dos campos -->
   <style>
     .form-control {
-      width: 100%; /* Ajusta o tamanho dos campos de acordo com o container */
+      width: 100%;
     }
-    @media (max-width: 768px) { /* Ajustes para telas menores */
+    @media (max-width: 768px) {
       .form-control {
-        font-size: smaller; /* Diminui o tamanho da fonte */
+        font-size: smaller;
       }
     }
     .required-field label::after {
-        content: " *";
-        color: red;
+      content: " *";
+      color: red;
     }
   </style>
 {% endblock %}
 
 {% block content %}
-<div class="container-fluid ">
+<div class="container-fluid">
   <form action="" method="post" enctype="multipart/form-data" class="needs-validation" novalidate>
     {% csrf_token %}
     <h1 style="font-size: 2rem; margin-bottom: 20px;">Cadastrar Produto</h1>
@@ -55,10 +52,10 @@
           {{ form.sku.errors }}
         </div>
         <div class="mb-3">
-            <label for="id_status" class="form-label">Status:<span style="color: red;">*</span></label>
-            {{ form.status|add_class:'form-control' }}
-            {{ form.status.errors }}
-          </div>
+          <label for="id_status" class="form-label">Status:<span style="color: red;">*</span></label>
+          {{ form.status|add_class:'form-control' }}
+          {{ form.status.errors }}
+        </div>
         <div class="mb-3">
           <label for="id_department" class="form-label">Departamento:</label>
           {{ form.department|add_class:'form-control' }}
@@ -74,7 +71,6 @@
           {{ form.subcategory|add_class:'form-control' }}
           {{ form.subcategory.errors }}
         </div>
-        
       </div>
       <!-- Segunda Coluna -->
       <div class="col-md-4">
@@ -107,9 +103,9 @@
       <!-- Terceira Coluna -->
       <div class="col-md-4">
         <div class="mb-3">
-            <label for="id_unidade_dimensao" class="form-label">Und. de Medida Embalagem:</label>
-            {{ form.unidade_dimensao|add_class:'form-control' }}
-            {{ form.unidade_dimensao.errors }}
+          <label for="id_unidade_dimensao" class="form-label">Und. de Medida Embalagem:</label>
+          {{ form.unidade_dimensao|add_class:'form-control' }}
+          {{ form.unidade_dimensao.errors }}
         </div>
         <div class="mb-3">
           <label for="id_altura_embalagem" class="form-label">Altura da Embalagem:</label>
@@ -134,26 +130,45 @@
         <div class="mb-3">
           <label for="id_raio_embalagem" class="form-label">Raio da Embalagem:</label>
           {{ form.raio_embalagem|add_class:'form-control' }}
-          {{ form.raio_embalagem.errors }} 
+          {{ form.raio_embalagem.errors }}
         </div>
-        
-
+        <div class="mb-3">
+          <label for="id_unidade_de_medida" class="form-label">Unidade de Medida:</label>
+          {{ form.unidade_de_medida|add_class:'form-control' }}
+          {{ form.unidade_de_medida.errors }}
+        </div>
+        <div class="mb-3" id="quantidadePorVolumeContainer" style="display: none;">
+          <label for="id_quantidade_por_volume" class="form-label">Quantidade por Volume:</label>
+          {{ form.quantidade_por_volume|add_class:'form-control' }}
+          {{ form.quantidade_por_volume.errors }}
+        </div>
         <div class="text-end mt-5">
-            <a href="{% url 'products:import_products' %}" class="btn btn-outline-success me-2">Importar</a>
-            <input type="submit" value="Cadastrar" class="btn btn-primary me-2">
-            <a href="{% url 'products:products_list' %}" class="btn btn-secondary me-2">Voltar</a>
-          </div>
+          <a href="{% url 'products:import_products' %}" class="btn btn-outline-success me-2">Importar</a>
+          <input type="submit" value="Cadastrar" class="btn btn-primary me-2">
+          <a href="{% url 'products:products_list' %}" class="btn btn-secondary me-2">Voltar</a>
+        </div>
       </div>
     </div>
-
-
- 
   </form>
 </div>
 
 
 
 <script>
+
+
+  function toggleQuantidadePorVolume() {
+    var unidadeDeMedida = document.getElementById('id_unidade_de_medida').value;
+    var quantidadePorVolumeContainer = document.getElementById('quantidadePorVolumeContainer');
+    if (['Dp', 'Cx', 'Fd', 'Pct', 'Tp'].includes(unidadeDeMedida)) {
+      quantidadePorVolumeContainer.style.display = 'block';
+    } else {
+      quantidadePorVolumeContainer.style.display = 'none';
+    }
+  }
+
+  document.getElementById('id_unidade_de_medida').addEventListener('change', toggleQuantidadePorVolume);
+  toggleQuantidadePorVolume();  // Initial call
 
 
 

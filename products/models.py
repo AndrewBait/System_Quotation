@@ -72,38 +72,13 @@ class ProductLine(models.Model):
       
 
 class Product(models.Model):
-
-    id = models.AutoField(primary_key=True)
-    ean = models.CharField(max_length=13, unique=True, blank=True, null=True)  # EAN não é mais obrigatório
-    sku = models.CharField("SKU", max_length=255, unique=True, blank=True, null=True)
-    name = models.CharField(max_length=255)
-    brand = models.ForeignKey(Brand, on_delete=models.PROTECT, related_name='products', blank=True, null=True)
-    product_line = models.ForeignKey(ProductLine, on_delete=models.PROTECT, related_name='products', blank=True, null=True)
-    department = models.ForeignKey(Departamento, on_delete=models.PROTECT, related_name='products', blank=True, null=True)
-    category = models.ForeignKey(Category, on_delete=models.PROTECT, related_name='products', blank=True, null=True)
-    subcategory = models.ForeignKey(Subcategory, on_delete=models.PROTECT, related_name='products', blank=True, null=True)
-    status = models.BooleanField(default=True)  # True para ativo, False para inativo
-    photo = models.ImageField(upload_to='products/', blank=True, null=True)
-    notas = models.TextField("Notas", blank=True, null=True)
-    # fornecedores = models.ManyToManyField(Supplier, related_name='produtos', blank=True, null=True)
-    descricao = models.TextField(_("Descrição"), max_length=50, blank=True)
-    preco_de_custo = models.DecimalField(_("Preço de Custo"), max_digits=10, decimal_places=3, blank=True, null=True)
-    altura_embalagem = models.DecimalField(max_digits=10, decimal_places=3, blank=True, null=True, verbose_name='Altura da Embalagem')
-    largura_embalagem = models.DecimalField(max_digits=10, decimal_places=3, blank=True, null=True, verbose_name='Largura da Embalagem')
-    comprimento_embalagem = models.DecimalField(max_digits=10, decimal_places=3, blank=True, null=True, verbose_name='Comprimento da Embalagem')
-    espessura_embalagem = models.DecimalField(max_digits=10, decimal_places=3, blank=True, null=True, verbose_name='Espessura da Embalagem')
-    raio_embalagem = models.DecimalField(max_digits=10, decimal_places=3, blank=True, null=True, verbose_name='Raio da Embalagem')
     UNIDADE_CHOICES = (
         ('mm', 'Milímetro'),
         ('cm', 'Centímetro'),
         ('m', 'Metro'),       
     )
-    unidade_altura = models.CharField(max_length=2, choices=UNIDADE_CHOICES, blank=True, null=True, verbose_name='Unidade de Medida Altura')
-    unidade_largura = models.CharField(max_length=2, choices=UNIDADE_CHOICES, blank=True, null=True, verbose_name='Unidade de Medida Largura')
-    unidade_comprimento = models.CharField(max_length=2, choices=UNIDADE_CHOICES, blank=True, null=True, verbose_name='Unidade de Medida Comprimento')
-    unidade_espessura = models.CharField(max_length=2, choices=UNIDADE_CHOICES, blank=True, null=True, verbose_name='Unidade de Medida Espessura')
-    unidade_raio = models.CharField(max_length=2, choices=UNIDADE_CHOICES, blank=True, null=True, verbose_name='Unidade de Medida Raio')
-    unidade_de_medida = models.CharField(_("Unidade de Medida"), max_length=50, blank=True, null=True, choices=[
+
+    UNIDADE_DE_MEDIDA_CHOICES = [
         ('Kg', 'Quilo'),
         ('L', 'Litro'),
         ('Dp', 'Display'),
@@ -114,9 +89,34 @@ class Product(models.Model):
         ('Pct', 'Pacote'),
         ('Sch', 'Sache'),
         ('Tp', 'Take Profit'),
-        
-        
-    ])
+    ]
+    
+    id = models.AutoField(primary_key=True)
+    ean = models.CharField(max_length=13, unique=True, blank=True, null=True)
+    sku = models.CharField("SKU", max_length=255, unique=True, blank=True, null=True)
+    name = models.CharField(max_length=255)
+    brand = models.ForeignKey(Brand, on_delete=models.PROTECT, related_name='products', blank=True, null=True)
+    product_line = models.ForeignKey(ProductLine, on_delete=models.PROTECT, related_name='products', blank=True, null=True)
+    department = models.ForeignKey(Departamento, on_delete=models.PROTECT, related_name='products', blank=True, null=True)
+    category = models.ForeignKey(Category, on_delete=models.PROTECT, related_name='products', blank=True, null=True)
+    subcategory = models.ForeignKey(Subcategory, on_delete=models.PROTECT, related_name='products', blank=True, null=True)
+    status = models.BooleanField(default=True)
+    photo = models.ImageField(upload_to='products/', blank=True, null=True)
+    notas = models.TextField("Notas", blank=True, null=True)
+    descricao = models.TextField(_("Descrição"), max_length=50, blank=True)
+    preco_de_custo = models.DecimalField(_("Preço de Custo"), max_digits=10, decimal_places=3, blank=True, null=True)
+    altura_embalagem = models.DecimalField(max_digits=10, decimal_places=3, blank=True, null=True, verbose_name='Altura da Embalagem')
+    largura_embalagem = models.DecimalField(max_digits=10, decimal_places=3, blank=True, null=True, verbose_name='Largura da Embalagem')
+    comprimento_embalagem = models.DecimalField(max_digits=10, decimal_places=3, blank=True, null=True, verbose_name='Comprimento da Embalagem')
+    espessura_embalagem = models.DecimalField(max_digits=10, decimal_places=3, blank=True, null=True, verbose_name='Espessura da Embalagem')
+    raio_embalagem = models.DecimalField(max_digits=10, decimal_places=3, blank=True, null=True, verbose_name='Raio da Embalagem')
+    unidade_altura = models.CharField(max_length=2, choices=UNIDADE_CHOICES, blank=True, null=True, verbose_name='Unidade de Medida Altura')
+    unidade_largura = models.CharField(max_length=2, choices=UNIDADE_CHOICES, blank=True, null=True, verbose_name='Unidade de Medida Largura')
+    unidade_comprimento = models.CharField(max_length=2, choices=UNIDADE_CHOICES, blank=True, null=True, verbose_name='Unidade de Medida Comprimento')
+    unidade_espessura = models.CharField(max_length=2, choices=UNIDADE_CHOICES, blank=True, null=True, verbose_name='Unidade de Medida Espessura')
+    unidade_raio = models.CharField(max_length=2, choices=UNIDADE_CHOICES, blank=True, null=True, verbose_name='Unidade de Medida Raio')
+    unidade_de_medida = models.CharField(_("Unidade de Medida"), max_length=50, blank=True, null=True, choices=UNIDADE_DE_MEDIDA_CHOICES)
+    quantidade_por_volume = models.PositiveIntegerField(blank=True, null=True, verbose_name='Quantidade por Volume')
     data_de_validade = models.DateField(_("Data de Validade"), blank=True, null=True)
     history = HistoricalRecords()
 
@@ -124,25 +124,21 @@ class Product(models.Model):
         if self.ean and len(self.ean) != 13:
             raise ValidationError({'ean': "O EAN deve conter no máximo 13 dígitos."})
         
-        # Verifica se o produto com este nome, categoria e subcategoria já existe (excluindo o próprio objeto no caso de uma atualização).
+        if self.unidade_de_medida in ['Dp', 'Cx', 'Fd', 'Pct', 'Tp'] and not self.quantidade_por_volume:
+            raise ValidationError("Para as unidades de medida Display, Caixa, Fardo, Pacote, e Take Profit, a quantidade por volume é obrigatória.")
+        
+        if self.unidade_de_medida not in ['Dp', 'Cx', 'Fd', 'Pct', 'Tp'] and self.quantidade_por_volume:
+            raise ValidationError("A quantidade por volume só deve ser preenchida para as unidades de medida Display, Caixa, Fardo, Pacote, e Take Profit.")
+        
         query = Product.objects.filter(name=self.name, category=self.category, subcategory=self.subcategory)
-        if self.pk:  # Verifica se o objeto já tem um ID, indicando que é uma atualização.
+        if self.pk:
             query = query.exclude(pk=self.pk)
         
         if query.exists():
-            # Essa mudança permite que a validação de unicidade considere o caso de atualização, 
-            # evitando considerar o próprio objeto como duplicata.
             raise ValidationError("Um produto com este nome, categoria e subcategoria já existe.")
-
-        # Note: Não é necessário retornar nada, pois o método clean modifica o estado do objeto ou levanta uma exceção se houver erro.
 
     def save(self, *args, **kwargs):
         self.full_clean()
-        if any([self.altura_embalagem, self.largura_embalagem, self.comprimento_embalagem]):
-            if not all([self.altura_embalagem, self.largura_embalagem, self.comprimento_embalagem]):
-                raise ValidationError("Se uma dimensão da embalagem for preenchida, todas devem ser preenchidas.")
-        
-        # Salve o produto
         super(Product, self).save(*args, **kwargs)
 
     def __str__(self):
