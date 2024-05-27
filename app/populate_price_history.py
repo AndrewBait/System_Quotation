@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 from decimal import Decimal
 
 # Adiciona a raiz do projeto ao PYTHONPATH
-sys.path.append('C:/Users/cj3014916/System_Quotation/System_Quotation')
+sys.path.append('C:/Users/Administrador/Downloads/System_Quotation')
 
 # Ajuste o DJANGO_SETTINGS_MODULE para 'app.settings'
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'app.settings')
@@ -16,8 +16,8 @@ from products.models import Product, ProductPriceHistory
 
 def generate_random_date_within_last_year():
     today = datetime.today()
-    one_year_ago = today - timedelta(days=365) 
-    random_date = one_year_ago + timedelta(days=random.randint(0, 365))  
+    one_year_ago = today - timedelta(days=365)
+    random_date = one_year_ago + timedelta(days=random.randint(0, 365))
     return random_date.date()  # Retorna apenas a data (sem hora)
 
 def generate_price_history():
@@ -32,10 +32,10 @@ def generate_price_history():
             dates.add(new_date)
 
         for date in dates:
-            price = Decimal(random.uniform(0.001, 59.999)).quantize(Decimal("0.001"))
+            price = Decimal(random.uniform(0.001, 9.999)).quantize(Decimal("0.001"))
             ProductPriceHistory.objects.create(
                 product=product,
-                price=price, 
+                price=price,
                 date=date
             )
 
