@@ -1,0 +1,1443 @@
+models.py:
+
+from django.db import models
+from django.core.exceptions import ValidationError
+from django.utils.translation import gettext as _
+from django.contrib import messages
+# from suppliers.models import Supplier
+from simple_history.models import HistoricalRecords
+
+
+class Embalagem(models.Model):
+    altura = models.DecimalField(max_digits=10, decimal_places=2)
+    largura = models.DecimalField(max_digits=10, decimal_places=2)
+    comprimento = models.DecimalField(max_digits=10, decimal_places=2)
+    espessura = models.DecimalField(max_digits=10, decimal_places=2)
+    raio = models.DecimalField(max_digits=10, decimal_places=2)
+
+    UNIDADE_CHOICES = (
+        ('mm', 'Milímetro'),
+        ('cm', 'Centímetro'),
+        ('m', 'Metro'),
+    )
+    unidade = models.CharField(max_length=2, choices=UNIDADE_CHOICES) 
+
+
+class Departamento(models.Model):
+    nome = models.CharField(max_length=100, unique=True)  
+
+    def delete(self, *args, **kwargs):
+        if self.cotacoes.exists():
+            raise ValidationError("Não é possível excluir um departamento que possui cotações vinculadas.")
+        super().delete(*args, **kwargs)
+
+    def __str__(self):
+        return self.nome
+
+    class Meta:
+        verbose_name = _('Departamento')
+        verbose_name_plural = _('Departamentos')
+        ordering = ['nome']  
+
+
+class Brand(models.Model):
+
+    id = models.AutoField(primary_key=True)
+    name = models.CharField(max_length=200)
+
+    def __str__(self):
+        return self.name   
+    
+    
+class Category(models.Model):
+    department = models.ForeignKey(Departamento, on_delete=models.CASCADE, related_name='categories')
+    name = models.CharField(max_length=200)
+
+    def __str__(self):
+        return self.name
+
+
+class Subcategory(models.Model):
+    category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name='subcategories')
+    name = models.CharField(max_length=200)
+
+    def __str__(self):
+        return self.name
+    
+
+class ProductLine(models.Model):
+    name = models.CharField(max_length=200)
+
+    def __str__(self):
+        return self.name
+
+      
+
+class Product(models.Model):
+
+    id = models.AutoField(primary_key=True)
+    ean = models.CharField(max_length=13, unique=True, blank=True, null=True)  # EAN não é mais obrigatório
+    sku = models.CharField("SKU", max_length=255, unique=True, blank=True, null=True)
+    name = models.CharField(max_length=255)
+    brand = models.ForeignKey(Brand, on_delete=models.PROTECT, related_name='products', blank=True, null=True)
+    product_line = models.ForeignKey(ProductLine, on_delete=models.PROTECT, related_name='products', blank=True, null=True)
+    department = models.ForeignKey(Departamento, on_delete=models.PROTECT, related_name='products', blank=True, null=True)
+    category = models.ForeignKey(Category, on_delete=models.PROTECT, related_name='products', blank=True, null=True)
+    subcategory = models.ForeignKey(Subcategory, on_delete=models.PROTECT, related_name='products', blank=True, null=True)
+    status = models.BooleanField(default=True)  # True para ativo, False para inativo
+    photo = models.ImageField(upload_to='products/', blank=True, null=True)
+    notas = models.TextField("Notas", blank=True, null=True)
+    # fornecedores = models.ManyToManyField(Supplier, related_name='produtos', blank=True, null=True)
+    descricao = models.TextField(_("Descrição"), max_length=50, blank=True)
+    preco_de_custo = models.DecimalField(_("Preço de Custo"), max_digits=10, decimal_places=3, blank=True, null=True)
+    altura_embalagem = models.DecimalField(max_digits=10, decimal_places=3, blank=True, null=True, verbose_name='Altura da Embalagem')
+    largura_embalagem = models.DecimalField(max_digits=10, decimal_places=3, blank=True, null=True, verbose_name='Largura da Embalagem')
+    comprimento_embalagem = models.DecimalField(max_digits=10, decimal_places=3, blank=True, null=True, verbose_name='Comprimento da Embalagem')
+    espessura_embalagem = models.DecimalField(max_digits=10, decimal_places=3, blank=True, null=True, verbose_name='Espessura da Embalagem')
+    raio_embalagem = models.DecimalField(max_digits=10, decimal_places=3, blank=True, null=True, verbose_name='Raio da Embalagem')
+    UNIDADE_CHOICES = (
+        ('mm', 'Milímetro'),
+        ('cm', 'Centímetro'),
+        ('m', 'Metro'),       
+    )
+    unidade_altura = models.CharField(max_length=2, choices=UNIDADE_CHOICES, blank=True, null=True, verbose_name='Unidade de Medida Altura')
+    unidade_largura = models.CharField(max_length=2, choices=UNIDADE_CHOICES, blank=True, null=True, verbose_name='Unidade de Medida Largura')
+    unidade_comprimento = models.CharField(max_length=2, choices=UNIDADE_CHOICES, blank=True, null=True, verbose_name='Unidade de Medida Comprimento')
+    unidade_espessura = models.CharField(max_length=2, choices=UNIDADE_CHOICES, blank=True, null=True, verbose_name='Unidade de Medida Espessura')
+    unidade_raio = models.CharField(max_length=2, choices=UNIDADE_CHOICES, blank=True, null=True, verbose_name='Unidade de Medida Raio')
+    unidade_de_medida = models.CharField(_("Unidade de Medida"), max_length=50, blank=True, null=True, choices=[
+        ('Kg', 'Quilo'),
+        ('L', 'Litro'),
+        ('Dp', 'Display'),
+        ('Un', 'Unidade'),
+        ('Cx', 'Caixa'),
+        ('Fd', 'Fardo'),
+        ('Bdj', 'Bandeija'),
+        ('Pct', 'Pacote'),
+        ('Sch', 'Sache'),
+        ('Tp', 'Take Profit'),
+        
+        
+    ])
+    data_de_validade = models.DateField(_("Data de Validade"), blank=True, null=True)
+    history = HistoricalRecords()
+
+    def clean(self):
+        if self.ean and len(self.ean) != 13:
+            raise ValidationError({'ean': "O EAN deve conter no máximo 13 dígitos."})
+        
+        # Verifica se o produto com este nome, categoria e subcategoria já existe (excluindo o próprio objeto no caso de uma atualização).
+        query = Product.objects.filter(name=self.name, category=self.category, subcategory=self.subcategory)
+        if self.pk:  # Verifica se o objeto já tem um ID, indicando que é uma atualização.
+            query = query.exclude(pk=self.pk)
+        
+        if query.exists():
+            # Essa mudança permite que a validação de unicidade considere o caso de atualização, 
+            # evitando considerar o próprio objeto como duplicata.
+            raise ValidationError("Um produto com este nome, categoria e subcategoria já existe.")
+
+        # Note: Não é necessário retornar nada, pois o método clean modifica o estado do objeto ou levanta uma exceção se houver erro.
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        if any([self.altura_embalagem, self.largura_embalagem, self.comprimento_embalagem]):
+            if not all([self.altura_embalagem, self.largura_embalagem, self.comprimento_embalagem]):
+                raise ValidationError("Se uma dimensão da embalagem for preenchida, todas devem ser preenchidas.")
+        
+        # Salve o produto
+        super(Product, self).save(*args, **kwargs)
+
+    def __str__(self):
+        return self.name
+
+
+from django.db import models
+from django.utils.translation import gettext_lazy as _
+from suppliers.models import Supplier  # Importar o modelo Supplier
+
+class ProductPriceHistory(models.Model):
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='price_history')
+    price = models.DecimalField(_("Preço de Custo"), max_digits=10, decimal_places=3)
+    date = models.DateField(_("Data da Atualização"))
+    supplier = models.ForeignKey('suppliers.Supplier', on_delete=models.SET_NULL, null=True, blank=True, related_name='price_history')
+
+    class Meta:
+        ordering = ['-date']
+        get_latest_by = 'date'
+
+    def __str__(self):
+        return f"{self.product.name} - {self.price} em {self.date}"
+
+
+form.py:
+
+from django import forms
+from products.models import Product, Category, Subcategory, Brand, Embalagem
+from cotacao.models import Departamento  
+from dal import autocomplete
+from django_select2.forms import ModelSelect2Widget
+
+
+class ProductModelForm(forms.ModelForm):
+    altura_embalagem = forms.FloatField(label='Altura', required=False)
+    largura_embalagem = forms.FloatField(label='Largura', required=False)
+    comprimento_embalagem = forms.FloatField(label='Comprimento', required=False)
+    espessura_embalagem = forms.FloatField(label='Espessura', required=False)
+    raio_embalagem = forms.FloatField(label='Raio', required=False)
+    UNIDADE_CHOICES = (
+        ('mm', 'Milímetro'),
+        ('cm', 'Centímetro'),
+        ('m', 'Metro'),
+    )
+    unidade_dimensao = forms.ChoiceField(label='Unidade de Medida', choices=UNIDADE_CHOICES, required=False)
+    department = forms.ModelChoiceField(queryset=Departamento.objects.all().order_by('nome'), required=True, label="Departamento")
+    widget=autocomplete.ModelSelect2(url='products:department-autocomplete')
+    brand = forms.ModelChoiceField(
+        queryset=Brand.objects.all(),
+        required=False,
+        label='Marca',
+        # widget=ModelSelect2Widget(
+        #     url='products:brands-autocomplete',
+        #     model=Brand,
+        #     search_fields=['name__icontains'],
+        #     attrs={'data-minimum-input-length': 2},  # O usuário deve digitar pelo menos 3 caracteres antes de iniciar a busca
+        #     # Aqui você define a URL configurada para a busca autocomplete
+        #     data_url='/products/list-brands/'
+
+        )
+    
+    class Meta:
+        model = Product
+        fields = '__all__'
+        widgets = {
+            'brand': autocomplete.ModelSelect2(url='products:brands-autocomplete'),
+            'descricao': forms.Textarea(attrs={'rows': 5, 'cols': 40}),
+            'notas': forms.Textarea(attrs={'rows': 4, 'cols': 40}),
+            'status': forms.Select(choices=[(True, 'Ativo'), (False, 'Inativo')]),
+            'category': autocomplete.ModelSelect2(url='products:category-autocomplete', forward=['department']),
+            'subcategory': autocomplete.ModelSelect2(url='products:subcategory-autocomplete', forward=['category']),
+            'subcategory': autocomplete.ModelSelect2(url='products:subcategory-autocomplete', forward=['category']),
+        }
+
+    def save(self, commit=True):
+        product = super().save(commit=False)
+        altura_embalagem = self.cleaned_data.get('altura_embalagem')
+        largura_embalagem = self.cleaned_data.get('largura_embalagem')
+        comprimento_embalagem = self.cleaned_data.get('comprimento_embalagem')
+        espessura_embalagem = self.cleaned_data.get('espessura_embalagem')
+        raio_embalagem = self.cleaned_data.get('raio_embalagem')
+        unidade_dimensao = self.cleaned_data.get('unidade_dimensao')
+
+        if altura_embalagem and largura_embalagem and comprimento_embalagem and espessura_embalagem and unidade_dimensao:
+            embalagem = Embalagem.objects.create(
+                altura=altura_embalagem,
+                largura=largura_embalagem,
+                comprimento=comprimento_embalagem,
+                espessura=espessura_embalagem,
+                raio=raio_embalagem,
+                unidade=unidade_dimensao
+            )
+            embalagem.save()
+            product.embalagem = embalagem
+
+        if commit:
+            product.save()
+        return product        
+
+    def __init__(self, *args, **kwargs):
+        super(ProductModelForm, self).__init__(*args, **kwargs)
+        self.fields['product_line'].widget.attrs['class'] = 'form-control'  # Adicione classes CSS ao campo se desejar
+        # Inicializa as querysets para edição
+        if self.instance.pk:
+            self.fields['category'].queryset = Category.objects.filter(department=self.instance.department)
+            self.fields['subcategory'].queryset = Subcategory.objects.filter(category=self.instance.category)
+        else:
+            # Inicializa vazias se for um novo produto
+            self.fields['category'].queryset = Category.objects.none()
+            self.fields['subcategory'].queryset = Subcategory.objects.none()
+
+        # Manipulação dinâmica com base no input do usuário
+        if 'department' in self.data:
+            try:
+                department_id = int(self.data.get('department'))
+                self.fields['category'].queryset = Category.objects.filter(department_id=department_id).order_by('name')
+                if 'category' in self.data:
+                    category_id = int(self.data.get('category'))
+                    self.fields['subcategory'].queryset = Subcategory.objects.filter(category_id=category_id).order_by('name')
+            except (ValueError, TypeError):
+                pass  # Caso inválido, não atualiza as querysets
+
+
+class ProductImportForm(forms.Form):
+    file = forms.FileField(label='Selecione um arquivo CSV/XML')
+
+urls.py:
+
+from django.urls import path
+from .views import (ProductListView, NewProductCreateView, ProductDetailView, ProductUpdatView,
+                     ProductDeleteView, BrandCreateView, import_products, CategoryAutocomplete, SubcategoryAutocomplete, BrandAutocomplete,                    
+                      get_categories, get_subcategories , add_brand, download_xml_template, download_csv_template, )
+from . import views
+
+
+
+app_name = 'products'
+
+urlpatterns = [
+    path('', ProductListView.as_view(), name='products_list'),
+    path('<int:pk>/', ProductDetailView.as_view(), name='product_detail'), 
+    path('new/', NewProductCreateView.as_view(), name='new_product'),
+    path('<int:pk>/update/', ProductUpdatView.as_view(), name='product_update'),
+    path('<int:pk>/delete/', ProductDeleteView.as_view(), name='product_delete'),
+    path('brands/new/', BrandCreateView.as_view(), name='brand_new'),
+    path('import/', import_products, name='import_products'),
+    path('category-autocomplete/', CategoryAutocomplete.as_view(), name='category-autocomplete'),
+    path('subcategory-autocomplete/', SubcategoryAutocomplete.as_view(), name='subcategory-autocomplete'),  
+    path('get-categories/', views.get_categories, name='get-categories'),
+    path('get-subcategories/', views.get_subcategories, name='get-subcategories'),
+    path('brands/autocomplete/', BrandAutocomplete.as_view(), name='brands-autocomplete'),
+    path('add-brand/', add_brand, name='add_brand'),
+    path('list-brands/', views.list_brands, name='list_brands'),
+    path('products/get-categories/', views.get_categories, name='get-categories'),
+    path('products/get-subcategories/', views.get_subcategories, name='get-subcategories'),
+    path('download/csv/', views.download_csv_template, name='download_csv_template'),
+    path('download/xml/', views.download_xml_template, name='download_xml_template'),
+
+
+]
+views.py:
+
+from pyexpat.errors import messages
+from products.models import Product
+from products.forms import ProductModelForm
+from django.urls import reverse_lazy
+from django.contrib.auth.decorators import login_required
+from django.utils.decorators import method_decorator
+from django.views.generic import ListView, CreateView, DetailView, UpdateView, DeleteView
+from django.views.generic.edit import CreateView
+from .models import Brand, Product, Departamento, Category, Subcategory, ProductLine
+import csv
+import xml.etree.ElementTree as ET
+from .forms import ProductImportForm
+from django.shortcuts import render, redirect, get_object_or_404
+from django.http import JsonResponse
+from django.core import serializers
+from dal import autocomplete
+from .models import Category, Subcategory
+from django.http import JsonResponse
+from django.views.decorators.http import require_http_methods
+from .models import Brand
+from django.core.paginator import Paginator
+from django.http import HttpResponse
+from django.db.models import Q
+import re
+
+
+
+def products_list(request):
+    products = Product.objects.all()  # Inicialmente, obtém todos os produtos
+    
+    search_query = request.GET.get('search_query', '')
+    if search_query:
+        products = products.filter(
+            Q(name__icontains=search_query) |
+            Q(sku__icontains=search_query) |
+            Q(ean__icontains=search_query)
+        )
+        return render(request, 'products.html', {
+            'products': products,
+            'search_query': search_query
+            
+
+    })
+
+
+# Para download do modelo CSV
+def download_csv_template(request):
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = 'attachment; filename="template.csv"'
+    response.write(u'\ufeff'.encode('utf8'))  # BOM (Byte Order Mark) para indicar UTF-8
+    csv_template = (
+        "ean,sku,name\n"  # Cabeçalho CSV com os campos mencionados
+        "1234567890123,SKU123,Exemplo de produto 1\n"  # Exemplo de linha de dados
+        "9876543210987,SKU456,Exemplo de produto 2\n"  # Outro exemplo de linha de dados
+    )
+    response.write(csv_template)
+    return response
+
+# Para download do modelo XML
+def download_xml_template(request):
+    response = HttpResponse(content_type='application/xml')
+    response['Content-Disposition'] = 'attachment; filename="template.xml"'
+    xml_template = (
+        "<?xml version='1.0' encoding='utf-8'?>\n"
+        "<products>\n"
+        "    <product>\n"
+        "        <ean>1234567890123</ean>\n"
+        "        <sku>SKU123</sku>\n"
+        "        <name>Exemplo de produto 1</name>\n"
+        "    </product>\n"
+        "    <product>\n"
+        "        <ean>9876543210987</ean>\n"
+        "        <sku>SKU456</sku>\n"
+        "        <name>Exemplo de produto 2</name>\n"
+        "    </product>\n"
+        "</products>\n"
+    )
+    response.write(xml_template)
+    return response
+
+
+def list_brands(request):
+    brands = list(Brand.objects.all().values('id', 'name'))
+    return JsonResponse(brands, safe=False)
+
+
+
+@require_http_methods(["POST"])
+def add_brand(request):
+    brand_name = request.POST.get('name')
+    if not brand_name:
+        return JsonResponse({'error': 'O nome da marca é obrigatório'}, status=400)
+    
+    brand, created = Brand.objects.get_or_create(name=brand_name)
+    return JsonResponse({'id': brand.id, 'name': brand.name}, status=201 if created else 200)
+
+
+def brand_autocomplete(request):
+    qs = Brand.objects.all()
+
+    if request.GET.get('term'):
+        qs = qs.filter(name__istartswith=request.GET.get('term'))
+
+    brands = list(qs.values('id', 'name'))
+    return JsonResponse(brands, safe=False)
+
+
+class BrandCreateView(CreateView):
+    model = Brand
+    fields = ['name']
+    template_name = 'brands/brand_form.html'
+    success_url = reverse_lazy('products:new_product')
+
+
+class BrandAutocomplete(autocomplete.Select2QuerySetView):
+    def get_queryset(self):
+        qs = Brand.objects.all()
+        if self.q:
+            qs = qs.filter(name__icontains=self.q)
+        return qs[:10]
+
+
+def validate_query(query):
+        # Remova caracteres indesejados ou limite a caracteres alfanuméricos e espaço
+        query = re.sub(r'[^a-zA-Z0-9 ]', '', query)
+        return query
+    
+
+class ProductListView(ListView):
+    model = Product
+    template_name = 'products.html'
+    context_object_name = 'products'
+    paginate_by = 10
+    
+    
+
+    def get_queryset(self):
+        queryset = super().get_queryset().order_by('name')
+        search_query = self.request.GET.get('search_query', '').strip()
+        query = self.request.GET.get('query', '')
+        product_name = self.request.GET.get('product_name', '')
+        department_id = self.request.GET.get('department', '')
+        category_id = self.request.GET.get('category', '')
+        subcategory_id = self.request.GET.get('subcategory', '')
+        brand_id = self.request.GET.get('brand', '')  # Adicione esta linha
+        product_line_id = self.request.GET.get('product_line', '')  # E esta linha
+        status = self.request.GET.get('status', '')
+        search_query = validate_query(search_query)
+        search_query = ' '.join(search_query.split())
+
+        
+        if search_query:
+            queryset = queryset.filter(
+                Q(name__icontains=search_query) | 
+                Q(sku__icontains=search_query) | 
+                Q(ean__icontains=search_query)
+            )
+
+        if query:
+            queryset = queryset.filter(
+                Q(name__icontains=query) | Q(sku__icontains=query) | Q(ean__icontains=query)
+            )
+        if product_name:
+            queryset = queryset.filter(name__icontains=product_name)
+        if department_id:
+            queryset = queryset.filter(department__id=department_id)
+        if category_id:
+            queryset = queryset.filter(category__id=category_id)
+        if subcategory_id:
+            queryset = queryset.filter(subcategory__id=subcategory_id)
+        if brand_id:  # Adicione esta condição
+            queryset = queryset.filter(brand__id=brand_id)
+        if product_line_id:  # E esta condição
+            queryset = queryset.filter(product_line__id=product_line_id)
+        if status:
+            queryset = queryset.filter(status=(status.lower() == 'true'))
+
+        return queryset
+
+    def get(self, request, *args, **kwargs):
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            self.object_list = self.get_queryset()
+            products_json = serializers.serialize('json', self.object_list)
+            return JsonResponse(products_json, safe=False)
+        else:
+            return super().get(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        # Remove a primeira chamada de super().get_context_data(**kwargs)
+        department_id = self.request.GET.get('department')
+        category_id = self.request.GET.get('category')
+        context = super().get_context_data(**kwargs)  # Mantém essa chamada
+        context['departments'] = Departamento.objects.all()
+        context['categories'] = Category.objects.filter(department_id=department_id) if department_id else Category.objects.none()
+        context['subcategories'] = Subcategory.objects.filter(category_id=category_id) if category_id else Subcategory.objects.none()
+        context['current_department'] = department_id
+        context['current_category'] = category_id
+        context['current_subcategory'] = self.request.GET.get('subcategory', '')
+        context['brands'] = Brand.objects.all()
+        context['product_lines'] = ProductLine.objects.all()
+
+        items_per_page = self.request.GET.get('items_per_page', 10)  
+        self.paginate_by = int(items_per_page)
+        context['current_items_per_page'] = items_per_page
+        return context
+
+    
+
+class ProductDetailView(DetailView):
+    model = Product
+    template_name = 'product_detail.html'
+    
+
+@method_decorator(login_required(login_url='login'), name='dispatch')#decorator
+class NewProductCreateView(CreateView):
+    model = Product
+    form_class = ProductModelForm
+    template_name = 'new_product.html'
+    success_url = reverse_lazy('products:products_list')
+
+    def form_valid(self, form):
+        new_brand_name = self.request.POST.get('new_brand')
+        if new_brand_name:
+            brand, created = Brand.objects.get_or_create(name=new_brand_name.strip())
+            form.instance.brand = brand
+        return super(NewProductCreateView, self).form_valid(form) 
+    
+
+@method_decorator(login_required(login_url='login'), name='dispatch')#decorator
+class ProductUpdatView(UpdateView):
+    model = Product
+    form_class = ProductModelForm
+    template_name = 'product_update.html'
+
+    def form_valid(self, form):
+        new_brand_name = self.request.POST.get('new_brand')
+        if new_brand_name:
+            brand, created = Brand.objects.get_or_create(name=new_brand_name.strip())
+            form.instance.brand = brand
+        return super(ProductUpdatView, self).form_valid(form)
+    
+    def get_initial(self):
+        initial = super().get_initial()
+        if self.object.department:
+            initial['department'] = self.object.department.id
+        if self.object.category:
+            initial['category'] = self.object.category.id
+        if self.object.subcategory:
+            initial['subcategory'] = self.object.subcategory.id
+        return initial
+
+    def get_success_url(self):
+        return reverse_lazy('products:product_detail', kwargs={'pk': self.object.pk})
+
+
+@method_decorator(login_required(login_url='login'), name='dispatch')#decorator
+class ProductDeleteView(DeleteView):
+    model = Product
+    template_name = 'product_delete.html'
+    success_url = '/products/'
+
+
+@login_required
+def import_products(request):
+    if request.method == 'POST':
+        form = ProductImportForm(request.POST, request.FILES)
+        if form.is_valid():
+            file = request.FILES['file']
+            try:
+                if str(file).endswith('.csv'):
+                    handle_csv_upload(file)
+                elif str(file).endswith('.xml'):
+                    handle_xml_upload(file)
+            except Exception as e:
+                messages.error(request, f'Erro ao importar produtos: {e}')
+            return redirect('products:products_list')
+    else:
+        form = ProductImportForm()
+    return render(request, 'import_products.html', {'form': form})
+
+
+def handle_csv_upload(f):
+    reader = csv.DictReader(f.decode('utf-8').splitlines())
+    for row in reader:
+        # Validação dos campos obrigatórios
+        if not row.get('codigoEAN') or not row.get('nomeDoProduto'):
+            continue  # Pula para a próxima linha se os campos obrigatórios não estiverem presentes
+
+        # Tratamento da marca (opcional)
+        brand = None
+        if row.get('marca'):
+            brand, _ = Brand.objects.get_or_create(name=row['marca'])
+
+        # Criação do produto
+        Product.objects.create(
+            ean=row['codigoEAN'],
+            name=row['nomeDoProduto'],
+            brand=brand,
+            photo=row.get('foto')  # Assume que 'foto' é um URL ou caminho válido para a imagem
+        )
+
+def handle_xml_upload(f):
+    tree = ET.parse(f)
+    root = tree.getroot()
+    for elem in root.findall('product'):
+        # Validação dos campos obrigatórios
+        codigoEAN = elem.find('codigoEAN').text if elem.find('codigoEAN') is not None else None
+        nomeDoProduto = elem.find('nomeDoProduto').text if elem.find('nomeDoProduto') is not None else None
+        if not codigoEAN or not nomeDoProduto:
+            continue  # Pula para o próximo elemento se os campos obrigatórios não estiverem presentes
+
+        # Tratamento da marca (opcional)
+        brand = None
+        if elem.find('marca') is not None:
+            brand_name = elem.find('marca').text
+            brand, _ = Brand.objects.get_or_create(name=brand_name)
+
+        # Criação do produto
+        Product.objects.create(
+            ean=codigoEAN,
+            name=nomeDoProduto,
+            brand=brand,
+            photo=elem.find('foto').text if elem.find('foto') is not None else None  # Assume que 'foto' é um URL ou caminho válido para a imagem
+        )
+
+
+def get_categories(request):
+    department_id = request.GET.get('department_id')
+    categories = Category.objects.filter(department_id=department_id).values('id', 'name')
+    return JsonResponse(list(categories), safe=False)
+
+
+def get_subcategories(request):
+    category_id = request.GET.get('category_id')
+    subcategories = Subcategory.objects.filter(category_id=category_id).values('id', 'name')
+    return JsonResponse(list(subcategories), safe=False)
+
+
+class CategoryAutocomplete(autocomplete.Select2QuerySetView):
+    def get_queryset(self):
+        department_id = self.forwarded.get('department', None)
+        if department_id:
+            queryset = Category.objects.filter(department__id=department_id)
+        else:
+            queryset = Category.objects.none()
+        if self.q:
+            queryset = queryset.filter(name__istartswith=self.q)
+        return queryset
+
+class SubcategoryAutocomplete(autocomplete.Select2QuerySetView):
+    def get_queryset(self):
+        category_id = self.forwarded.get('category', None)
+        if category_id:
+            queryset = Subcategory.objects.filter(category__id=category_id)
+        else:
+            queryset = Subcategory.objects.none()
+        if self.q:
+            queryset = queryset.filter(name__istartswith=self.q)
+        return queryset
+
+
+templates:
+
+new_product.html:
+
+{% extends "base.html" %}
+{% load static %}
+{% load widget_tweaks %}
+{% include 'autocomplete_light/static.html' %}
+
+{% block extrahead %}
+  {{ block.super }}
+  <!-- CSS do Bootstrap -->
+  {% include 'autocomplete_light/static.html' %}
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+  <!-- Scripts -->
+  <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.bundle.min.js"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" rel="stylesheet" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
+  <!-- Estilos para dimensionamento dos campos -->
+  <style>
+    .form-control {
+      width: 100%; /* Ajusta o tamanho dos campos de acordo com o container */
+    }
+    @media (max-width: 768px) { /* Ajustes para telas menores */
+      .form-control {
+        font-size: smaller; /* Diminui o tamanho da fonte */
+      }
+    }
+    .required-field label::after {
+        content: " *";
+        color: red;
+    }
+  </style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid ">
+  <form action="" method="post" enctype="multipart/form-data" class="needs-validation" novalidate>
+    {% csrf_token %}
+    <h1 style="font-size: 2rem; margin-bottom: 20px;">Cadastrar Produto</h1>
+    <p><small>* Campos obrigatórios</small></p>
+    <div class="row">
+      <!-- Primeira Coluna -->
+      <div class="col-md-4">
+        <div class="mb-3">
+          <label for="id_name" class="form-label">Nome do Produto:<span style="color: red;">*</span></label>
+          {{ form.name|add_class:'form-control' }}
+          {{ form.name.errors }}
+        </div>
+        <div class="mb-3">
+          <label for="id_ean" class="form-label">Código de barras - EAN:</label>
+          {{ form.ean|add_class:'form-control' }}
+          {{ form.ean.errors }}
+        </div>
+        <div class="mb-3">
+          <label for="id_sku" class="form-label">Código interno - SKU:</label>
+          {{ form.sku|add_class:'form-control' }}
+          {{ form.sku.errors }}
+        </div>
+        <div class="mb-3">
+            <label for="id_status" class="form-label">Status:<span style="color: red;">*</span></label>
+            {{ form.status|add_class:'form-control' }}
+            {{ form.status.errors }}
+          </div>
+        <div class="mb-3">
+          <label for="id_department" class="form-label">Departamento:</label>
+          {{ form.department|add_class:'form-control' }}
+          {{ form.department.errors }}
+        </div>
+        <div class="mb-3">
+          <label for="id_category" class="form-label">Categoria:</label>
+          {{ form.category|add_class:'form-control' }}
+          {{ form.category.errors }}
+        </div>
+        <div class="mb-3">
+          <label for="id_subcategory" class="form-label">Subcategoria:</label>
+          {{ form.subcategory|add_class:'form-control' }}
+          {{ form.subcategory.errors }}
+        </div>
+        
+      </div>
+      <!-- Segunda Coluna -->
+      <div class="col-md-4">
+        <div class="mb-3">
+          <label for="id_brand" class="form-label">Marca:</label>
+          {{ form.brand|add_class:'form-control select2' }}
+          {{ form.brand.errors }}
+        </div>
+        <div class="mb-3">
+          <label for="id_product_line" class="form-label">Linha de Produto:</label>
+          {{ form.product_line|add_class:'form-control' }}
+          {{ form.product_line.errors }}
+        </div>
+        <div class="mb-3">
+          <label for="id_photo" class="form-label">Imagem:</label>
+          {{ form.photo|add_class:'form-control' }}
+          {{ form.photo.errors }}
+        </div>
+        <div class="mb-3">
+          <label for="id_descricao" class="form-label">Descrição:</label>
+          {{ form.descricao|add_class:'form-control' }}
+          {{ form.descricao.errors }}
+        </div>
+        <div class="mb-3">
+          <label for="id_notas" class="form-label">Notas:</label>
+          {{ form.notas|add_class:'form-control' }}
+          {{ form.notas.errors }}
+        </div>
+      </div>
+      <!-- Terceira Coluna -->
+      <div class="col-md-4">
+        <div class="mb-3">
+            <label for="id_unidade_dimensao" class="form-label">Und. de Medida Embalagem:</label>
+            {{ form.unidade_dimensao|add_class:'form-control' }}
+            {{ form.unidade_dimensao.errors }}
+        </div>
+        <div class="mb-3">
+          <label for="id_altura_embalagem" class="form-label">Altura da Embalagem:</label>
+          {{ form.altura_embalagem|add_class:'form-control' }}
+          {{ form.altura_embalagem.errors }}
+        </div>
+        <div class="mb-3">
+          <label for="id_largura_embalagem" class="form-label">Largura da Embalagem:</label>
+          {{ form.largura_embalagem|add_class:'form-control' }}
+          {{ form.largura_embalagem.errors }}
+        </div>
+        <div class="mb-3">
+          <label for="id_comprimento_embalagem" class="form-label">Comprimento da Embalagem:</label>
+          {{ form.comprimento_embalagem|add_class:'form-control' }}
+          {{ form.comprimento_embalagem.errors }}
+        </div>
+        <div class="mb-3">
+          <label for="id_espessura_embalagem" class="form-label">Espessura da Embalagem:</label>
+          {{ form.espessura_embalagem|add_class:'form-control' }}
+          {{ form.espessura_embalagem.errors }}
+        </div>
+        <div class="mb-3">
+          <label for="id_raio_embalagem" class="form-label">Raio da Embalagem:</label>
+          {{ form.raio_embalagem|add_class:'form-control' }}
+          {{ form.raio_embalagem.errors }} 
+        </div>
+        
+
+        <div class="text-end mt-5">
+            <a href="{% url 'products:import_products' %}" class="btn btn-outline-success me-2">Importar</a>
+            <input type="submit" value="Cadastrar" class="btn btn-primary me-2">
+            <a href="{% url 'products:products_list' %}" class="btn btn-secondary me-2">Voltar</a>
+          </div>
+      </div>
+    </div>
+
+
+ 
+  </form>
+</div>
+
+
+
+<script>
+
+
+
+    document.getElementById('id_department').addEventListener('change', function() {
+        var departmentId = this.value;
+        fetch(`/products/get-categories/?department_id=${departmentId}`) // Ajuste o caminho conforme a necessidade
+            .then(response => response.json())
+            .then(data => {
+                var categorySelect = document.getElementById('id_category');
+                var subcategorySelect = document.getElementById('id_subcategory');
+                categorySelect.innerHTML = '<option value="">---------</option>';
+                subcategorySelect.innerHTML = '<option value="">---------</option>'; // Adicionado para resetar as subcategorias
+                data.forEach(function(category) {
+                    var option = new Option(category.name, category.id);
+                    categorySelect.add(option);
+                });
+            });
+    });
+    
+    document.getElementById('id_category').addEventListener('change', function() {
+        var categoryId = this.value;
+        fetch(`/products/get-subcategories/?category_id=${categoryId}`) // Ajuste o caminho conforme a necessidade
+            .then(response => response.json())
+            .then(data => {
+                var subcategorySelect = document.getElementById('id_subcategory');
+                subcategorySelect.innerHTML = '<option value="">---------</option>';
+                data.forEach(function(subcategory) {
+                    var option = new Option(subcategory.name, subcategory.id);
+                    subcategorySelect.add(option);
+                });
+            });
+    });
+
+    const form = document.querySelector('form');
+
+    form.addEventListener('submit', (event) => {
+    const nameField = document.getElementById('id_name');
+    const statusField = document.getElementById('id_status');
+
+    
+});
+</script>
+{% endblock %}
+
+
+product_detail.html:
+
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="container mt-0">
+  <div class="row">
+    <div class="col-md-6 mx-auto">
+      <div class="card">
+        <div class="card-header bg-dark text-white">
+          
+          <h4 class="card-title">{{ object.name }} - {{ object.brand.name|default:"" }}</h4>
+        </div>
+        <div class="card-body">
+          {% if object.photo %}
+            <img src="{{ object.photo.url }}" alt="{{ object.name }}" class="img-fluid rounded mx-auto d-block mb-3" style="max-height: 300px;">
+          {% else %}
+            <img src="/media/products/sem imagem.gif" alt="Foto padrão" class="img-fluid rounded mx-auto d-block mb-3" style="max-height: 300px;">
+          {% endif %}
+
+          <dl class="row">
+            <dt class="col-sm-4">EAN:</dt>
+            <dd class="col-sm-8">{{ object.ean|default:"Não especificado" }}</dd>
+
+            <dt class="col-sm-4">SKU:</dt>
+            <dd class="col-sm-8">{{ object.sku|default:"Não especificado" }}</dd>
+
+            <dt class="col-sm-4">Departamento:</dt>
+            <dd class="col-sm-8">{{ object.department.nome|default:"Não especificado" }}</dd>
+
+            <dt class="col-sm-4">Categoria:</dt>
+            <dd class="col-sm-8">{{ object.category.name|default:"Não especificado" }}</dd>
+
+            <dt class="col-sm-4">Subcategoria:</dt>
+            <dd class="col-sm-8">{{ object.subcategory.name|default:"Não especificado" }}</dd>
+
+            <dt class="col-sm-4">Linha de produto:</dt>
+            <dd class="col-sm-8">{{ object.product_line.name|default:"Não especificado" }}</dd>
+
+            <dt class="col-sm-4">Status:</dt>
+            <dd class="col-sm-8">{% if object.status %}Ativo{% else %}Inativo{% endif %}</dd>
+
+            <dt class="col-sm-4">Descrição:</dt>
+            <dd class="col-sm-8">{{ object.descricao|default:"Não especificada" }}</dd>
+
+            <dt class="col-sm-4">Notas:</dt>
+            <dd class="col-sm-8">{{ object.notas|default:"Não especificado" }}</dd>
+          </dl>
+
+          {% if user.is_authenticated %}
+            <div class="text-center mt-3">
+              <a href="{% url 'products:product_update' pk=object.pk %}" class="btn btn-primary">Editar</a>
+              <a href="{% url 'products:products_list' %}" class="btn btn-outline-success">Voltar</a>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+product_update.html:
+
+{% extends "base.html" %}
+{% load static %}
+{% load widget_tweaks %}
+{% include 'autocomplete_light/static.html' %}
+
+{% block extrahead %}
+  {{ block.super }}
+  <!-- CSS do Bootstrap -->
+  {% include 'autocomplete_light/static.html' %}
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+  <!-- Scripts -->
+  <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.bundle.min.js"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" rel="stylesheet" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
+  <!-- Estilos para dimensionamento dos campos -->
+  <style>
+    .form-control {
+      width: 100%; /* Ajusta o tamanho dos campos de acordo com o container */
+    }
+    @media (max-width: 768px) { /* Ajustes para telas menores */
+      .form-control {
+        font-size: smaller; /* Diminui o tamanho da fonte */
+      }
+    }
+  </style>
+  {% endblock %}
+
+  {% block content %}
+  <div class="container-fluid mt-4">
+      <form action="" method="post" enctype="multipart/form-data" class="needs-validation" novalidate>
+          {% csrf_token %}
+          <h1 style="font-size: 2rem; margin-bottom: 20px;">Atualizar Produto</h1>
+          <div class="row">
+              <div class="col-md-4">
+                  <div class="mb-3">
+                      <label for="id_name" class="form-label">Nome do Produto:</label>
+                      {{ form.name|add_class:'form-control' }}
+                      {{ form.name.errors }}
+                  </div>
+                  <div class="mb-3">
+                      <label for="id_ean" class="form-label">Código de barras - EAN:</label>
+                      {{ form.ean|add_class:'form-control' }}
+                      {{ form.ean.errors }}
+                  </div>
+                  <div class="mb-3">
+                      <label for="id_sku" class="form-label">Código interno - SKU:</label>
+                      {{ form.sku|add_class:'form-control' }}
+                      {{ form.sku.errors }}
+                  </div>
+  
+                  <div class="mb-3">
+                    <label for="id_department" class="form-label">Departamento:</label>
+                    {{ form.department|add_class:'form-control' }}
+                    {{ form.department.errors }}
+                  </div>
+                  <div class="mb-3">
+                    <label for="id_category" class="form-label">Categoria:</label>
+                    <select id="id_category" name="category" class="form-control" data-selected="{{ form.instance.category_id|default_if_none:'' }}"></select>
+                    {{ form.category.errors }}
+                  </div>
+                  <div class="mb-3">
+                    <label for="id_subcategory" class="form-label">Subcategoria:</label>
+                    <select id="id_subcategory" name="subcategory" class="form-control" data-selected="{{ form.instance.subcategory_id|default_if_none:'' }}"></select>
+                    {{ form.subcategory.errors }}
+                  </div>
+  
+                  <div class="mb-3">
+                      <label for="id_status" class="form-label">Status:</label>
+                      {{ form.status|add_class:'form-control' }}
+                      {{ form.status.errors }}
+                  </div>
+              </div>
+  
+              <div class="col-md-4">
+                  <div class="mb-3">
+                      <label for="id_brand" class="form-label">Marca:</label>
+                      {{ form.brand|add_class:'form-control select2' }}
+                      {{ form.brand.errors }}
+                  </div>
+  
+                  <div class="mb-3">
+                      <label for="id_product_line" class="form-label">Linha de Produto:</label>
+                      {{ form.product_line|add_class:'form-control' }}
+                      {{ form.product_line.errors }}
+                  </div>
+  
+                  <div class="mb-3">
+                      <label for="id_photo" class="form-label">Imagem:</label>
+                      {{ form.photo|add_class:'form-control' }}
+                      {{ form.photo.errors }}
+                  </div>
+                  <div class="mb-3">
+                      <label for="id_descricao" class="form-label">Descrição:</label>
+                      {{ form.descricao|add_class:'form-control' }}
+                      {{ form.descricao.errors }}
+                  </div>
+                  <div class="mb-3">
+                      <label for="id_notas" class="form-label">Notas:</label>
+                      {{ form.notas|add_class:'form-control' }}
+                      {{ form.notas.errors }}
+                  </div>
+              </div>
+  
+              <div class="col-md-4">
+                <div class="mb-3">
+                    <label for="id_unidade_dimensao" class="form-label">Unidade de Medida:</label>
+                    {{ form.unidade_dimensao|add_class:'form-control' }}
+                    {{ form.unidade_dimensao.errors }}
+                </div>
+                  <div class="mb-3">
+                      <label for="id_altura_embalagem" class="form-label">Altura da Embalagem:</label>
+                      {{ form.altura_embalagem|add_class:'form-control' }}
+                      {{ form.altura_embalagem.errors }}
+                  </div>
+                  <div class="mb-3">
+                      <label for="id_largura_embalagem" class="form-label">Largura da Embalagem:</label>
+                      {{ form.largura_embalagem|add_class:'form-control' }}
+                      {{ form.largura_embalagem.errors }}
+                  </div>
+                  <div class="mb-3">
+                      <label for="id_comprimento_embalagem" class="form-label">Comprimento da Embalagem:</label>
+                      {{ form.comprimento_embalagem|add_class:'form-control' }}
+                      {{ form.comprimento_embalagem.errors }}
+                  </div>
+                  <div class="mb-3">
+                      <label for="id_espessura_embalagem" class="form-label">Espessura da Embalagem:</label>
+                      {{ form.espessura_embalagem|add_class:'form-control' }}
+                      {{ form.espessura_embalagem.errors }}
+                  </div>
+                  
+                  <div class="mb-3">
+                    <label for="id_raio_embalagem" class="form-label">Raio da Embalagem:</label>
+                    {{ form.raio_embalagem|add_class:'form-control' }}
+                    {{ form.raio_embalagem.errors }} 
+                  </div>
+                  <input type="submit" value="Atualizar" class="btn btn-primary me-2">
+                  <a href="{% url 'products:products_list' %}" class="btn btn-outline-success">Voltar</a>                 
+                 </div>
+             </div>
+          </div>
+      </form>
+  </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const departmentSelect = document.getElementById('id_department');
+        const categorySelect = document.getElementById('id_category');
+        const subcategorySelect = document.getElementById('id_subcategory');
+    
+        // Função para carregar as categorias baseadas no departamento selecionado
+        async function loadCategories() {
+            if (!departmentSelect.value) {
+                return;
+            }
+            const response = await fetch(`/products/get-categories/?department_id=${departmentSelect.value}`);
+            const categories = await response.json();
+            updateSelectOptions(categorySelect, categories, categorySelect.dataset.selected);
+    
+            // Se uma categoria estiver pré-selecionada, dispara o evento de mudança para carregar as subcategorias
+            if (categorySelect.dataset.selected) {
+                categorySelect.dispatchEvent(new Event('change'));
+            }
+        }
+    
+        // Função para carregar as subcategorias baseadas na categoria selecionada
+        async function loadSubcategories() {
+            if (!categorySelect.value) {
+                return;
+            }
+            const response = await fetch(`/products/get-subcategories/?category_id=${categorySelect.value}`);
+            const subcategories = await response.json();
+            updateSelectOptions(subcategorySelect, subcategories, subcategorySelect.dataset.selected);
+        }
+    
+        // Função para atualizar as opções de um <select>
+        function updateSelectOptions(select, options, selectedValue) {
+            select.innerHTML = '<option value="">---------</option>'; // Limpa as opções existentes
+            options.forEach(option => { // Adiciona as novas opções
+                const isSelected = option.id.toString() === selectedValue;
+                select.add(new Option(option.name, option.id, isSelected, isSelected));
+            });
+        }
+    
+        departmentSelect.addEventListener('change', loadCategories); // Evento de mudança no departamento
+        categorySelect.addEventListener('change', loadSubcategories); // Evento de mudança na categoria
+    
+        // Inicializa os selects com os valores salvos (se houver)
+        if (departmentSelect.value) {
+            loadCategories(); // Não precisa esperar, pois o evento de mudança na categoria será disparado após carregar as categorias
+            loadSubcategories();
+        }   
+    });
+</script>
+    
+    
+{% endblock %}
+
+
+products.html:
+
+{% extends "base.html" %}
+
+{% block content %}
+<link href="https://stackpath.bootstrapcdn.com/bootstrap/5.1.3/css/bootstrap.min.css" rel="stylesheet">
+
+<style>
+  .clickable {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    cursor: pointer;
+  }
+
+  .clickable:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+  }
+
+
+</style>
+<div class="container" >
+  <h2 class="mb-4">Catálogo de Produtos</h2>
+  <div class="row g-3">
+    <div class="col-md-15">
+      <form method="GET" action="{% url 'products:products_list' %}" class="input-group">
+        <input type="text" name="search_query" class="form-control" placeholder="Nome, SKU ou EAN">
+        <button type="submit" class="btn btn-outline-success">Buscar</button>
+      </form>
+    </div>
+  <form method="GET" action="{% url 'products:products_list' %}"> 
+    <div class="row g-2 ">
+      <div class="col-md-4">
+        <select class="form-select" name="department" onchange="this.form.submit()">
+          <option value="">Departamento/ Seção/ Setor</option>
+          {% for department in departments %}
+          <option value="{{ department.id }}" {% if current_department == department.id|stringformat:"s" %} selected {% endif %}>
+              {{ department.nome }}
+          </option>
+          {% endfor %}
+      </select>
+    </div>
+      <div class="col-md-4">
+        <select class="form-select" name="category" onchange="this.form.submit()">
+          <option value="">Categorias</option>
+          {% for category in categories %}
+          <option value="{{ category.id }}" {% if request.GET.category == category.id|stringformat:"s" %}selected{% endif %}>{{ category.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md-4">
+        <select class="form-select" name="subcategory" onchange="this.form.submit()">
+          <option value="">Subcategorias</option>
+          {% for subcategory in subcategories %}
+          <option value="{{ subcategory.id }}" {% if request.GET.subcategory == subcategory.id|stringformat:"s" %}selected{% endif %}>{{ subcategory.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md-4">
+        <select class="form-select" name="status" onchange="this.form.submit()">
+          <option value="">Qualquer Status</option>
+          <option value="True" {% if request.GET.status == 'True' %}selected{% endif %}>Ativo</option>
+          <option value="False" {% if request.GET.status == 'False' %}selected{% endif %}>Inativo</option>
+        </select>
+      </div>
+      <div class="col-md-4">
+      <select class="form-select" name="brand" onchange="this.form.submit()">
+        <option value="">Marcas</option>
+        {% for brand in brands %} 
+          <option value="{{ brand.id }}" {% if request.GET.brand == brand.id|stringformat:"s" %}selected{% endif %}>{{ brand.name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+      <div class="col-md-4">
+        <select class="form-select" name="product_line" onchange="this.form.submit()">
+          <option value="">Linha de Indústria</option>
+          {% for product_line in product_lines %}
+          <option value="{{ product_line.id }}" {% if request.GET.product_line == product_line.id|stringformat:"s" %}selected{% endif %}>{{ product_line.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
+      <div class="text-end mt-2 ">
+        <a href="{% url 'products:new_product' %}" class="btn btn-primary">
+            <i class="bi bi-plus-lg"></i> Cadastrar Produto
+        </a>
+    </div>
+  </form> 
+    
+{% comment %} 
+  </div>
+  <div class="container">  
+    <div class="row">
+      <div class="col-auto">
+        <div class="d-flex justify-content-start mb-3">
+          <form action="" method="get" class="d-inline">
+            <div class="input-group">
+              <label class="input-group-text " for="items_per_page">Itens por página:</label>
+              <select id="items_per_page" name="items_per_page" class="form-select" onchange="this.form.submit()">  
+                <option value="10" {% if current_items_per_page == "10" %}selected{% endif %}>10</option>              
+                <option value="20" {% if current_items_per_page == "20" %}selected{% endif %}>20</option>
+                <option value="50" {% if current_items_per_page == "50" %}selected{% endif %}>50</option>
+                <option value="100" {% if current_items_per_page == "100" %}selected{% endif %}>100</option>
+              </select>
+            </div>
+          </form>
+        </div>
+      </div>
+      <div class="col">
+         
+      </div>
+    </div>
+  </div> {% endcomment %}
+
+  <div class="row row-cols-0 row-cols-md-5 g-4">
+    {% for product in products %}
+      <div class="col">
+        <div class="card h-100 clickable" data-href="{% url 'products:product_detail' product.id %}">
+          {% if product.photo %}
+            <img src="{{ product.photo.url }}" class="card-img-top" alt="{{ product.name }}" style="max-height: 180px; object-fit: cover;">
+          {% else %}
+                <img src="/media/products/sem imagem.gif" alt="Foto padrão" class="card-img-top" style="max-height: 180px; object-fit: cover;">
+          {% endif %}
+          <div class="card-body">
+            <h5 class="card-title">{{ product.name }}</h5>
+            {% if product.ean %}
+            <p class="card-text">Código EAN: {{ product.ean }}</p>
+            {% endif %}
+            {% if product.sku %}
+              <p class="card-text">SKU: {{ product.sku }}</p>
+            {% endif %}
+            <a href="{% url 'products:product_update' product.pk %}" class="btn btn-warning btn-sm me-2">
+              <i class="bi bi-pencil-square"></i>
+            <a href="{% url 'products:product_detail' product.pk %}" class="btn btn-info btn-sm">
+              <i class="bi bi-eye-fill"></i>
+          </a>
+          </div>
+        </div>
+      </div>
+
+<script>
+        document.querySelectorAll('.clickable').forEach(item => {
+          item.addEventListener('click', event => {
+            window.location.href = item.getAttribute('data-href');
+          });
+        });
+      </script>
+    {% endfor %}
+  </div>
+
+  {% if not products %}
+    <p>Nenhum produto encontrado.</p>
+  {% endif %}
+
+  <nav aria-label="Navegação de página" class="mt-4">
+    <ul class="pagination justify-content-center">
+        {% if page_obj.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.previous_page_number }}&items_per_page={{ current_items_per_page }}" aria-label="Anterior">
+                    <span aria-hidden="true">«</span>
+                </a>
+            </li>
+        {% else %}
+            <li class="page-item disabled">
+                <a class="page-link" href="#" aria-label="Anterior">
+                    <span aria-hidden="true">«</span>
+                </a>
+            </li>
+        {% endif %}
+
+        {% for num in page_obj.paginator.page_range %}
+            <li class="page-item {% if page_obj.number == num %}active{% endif %}">
+                <a class="page-link" href="?page={{ num }}&items_per_page={{ current_items_per_page }}">{{ num }}</a>
+            </li>
+        {% endfor %}
+
+        {% if page_obj.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.next_page_number }}&items_per_page={{ current_items_per_page }}" aria-label="Próximo">
+                    <span aria-hidden="true">»</span>
+                </a>
+            </li>
+        {% else %}
+            <li class="page-item disabled">
+                <a class="page-link" href="#" aria-label="Próximo">
+                    <span aria-hidden="true">»</span>
+                </a>
+            </li>
+        {% endif %}
+    </ul>
+</nav>
+
+
+  <div class="container">
+    <div class="row">
+      <div class="col">
+
+    </div>
+      <div class="col-auto">
+        <div class="d-flex justify-content-end mb-4">
+          <form action="" method="get" class="d-inline">
+            <div class="input-group">
+              <label class="input-group-text" for="items_per_page">Itens por página:</label>
+              <select id="items_per_page" name="items_per_page" class="form-select" onchange="this.form.submit()">
+                <option value="10" {% if current_items_per_page == "10" %}selected{% endif %}>10</option>
+                <option value="20" {% if current_items_per_page == "20" %}selected{% endif %}>20</option>
+                <option value="50" {% if current_items_per_page == "50" %}selected{% endif %}>50</option>
+                <option value="100" {% if current_items_per_page == "100" %}selected{% endif %}>100</option>
+              </select>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script>
+    document.addEventListener("DOMContentLoaded", function() {
+        var departmentSelect = document.querySelector('select[name="department"]');
+        var categorySelect = document.querySelector('select[name="category"]');
+        var subcategorySelect = document.querySelector('select[name="subcategory"]');
+        var productSearchInput = document.getElementById('product-search');
+        var typingTimer; // Timer para aguardar o término da digitação
+        var doneTypingInterval = 500;
+    
+        function doneTyping() {
+            var query = productSearchInput.value.trim();
+    
+            // Verificar se a consulta está vazia
+            if (query === '') {
+                // Limpar os resultados de pesquisa, se necessário
+                return;
+            }
+    
+            // Enviar solicitação AJAX para buscar produtos
+            fetch(`/products/search/?query=${query}`)
+                .then(response => response.json())
+                .then(data => {
+                    // Atualize a visualização com os resultados da pesquisa
+                    console.log(data); // Exemplo: exibir resultados no console para depuração
+                })
+                .catch(error => {
+                    console.error('Ocorreu um erro ao buscar produtos:', error);
+                });
+        }
+    
+        // Adicionar evento de digitação ao campo de pesquisa
+        productSearchInput.addEventListener('keyup', function() {
+            // Limpar o timer anterior, se existir
+            clearTimeout(typingTimer);
+    
+            // Iniciar o timer para esperar o término da digitação
+            typingTimer = setTimeout(doneTyping, doneTypingInterval);
+        });
+    
+        departmentSelect.addEventListener('change', function() {
+            var departmentId = this.value;
+            fetch(`/products/get-categories/?department_id=${departmentId}`)
+                .then(response => response.json())
+                .then(data => {
+                    categorySelect.innerHTML = '<option value="">Todas as Categorias</option>';  
+                    subcategorySelect.innerHTML = '<option value="">Todas as Subcategorias</option>';                  
+                    data.forEach(function(category) {
+                        var option = new Option(category.name, category.id);
+                        categorySelect.add(option);
+                    });
+                });
+        });
+    
+        categorySelect.addEventListener('change', function() {
+            var categoryId = this.value;
+            fetch(`/products/get-subcategories/?category_id=${categoryId}`)
+                .then(response => response.json())
+                .then(data => {
+                    subcategorySelect.innerHTML = '<option value="">Todas as Subcategorias</option>';
+                    data.forEach(function(subcategory) {
+                        var option = new Option(subcategory.name, subcategory.id);
+                        subcategorySelect.appendChild(option);
+                    });
+                });
+        });
+
+        document.addEventListener('DOMContentLoaded', function() {
+          fetch('/products/list-brands/')
+              .then(response => response.json())
+              .then(data => {
+                  const brandSelect = document.querySelector('select[name="brand"]');
+                  brandSelect.innerHTML = '<option value="">Todas as Marcas</option>';
+                  data.forEach(brand => {
+                      const option = new Option(brand.name, brand.id);
+                      brandSelect.appendChild(option);
+                  });
+              })
+              .catch(error => console.error('Erro ao carregar as marcas:', error));
+});
+    });
+    </script>
+    
+    
+    
+    
+</div>
+{% endblock %}
+
+
