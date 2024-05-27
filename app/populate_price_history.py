@@ -13,6 +13,7 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'app.settings')
 django.setup()
 
 from products.models import Product, ProductPriceHistory
+from suppliers.models import Supplier
 
 def generate_random_date_within_last_year():
     today = datetime.today()
@@ -22,6 +23,7 @@ def generate_random_date_within_last_year():
 
 def generate_price_history():
     products = Product.objects.all()
+    supplier_ids = [3, 4, 5, 7, 8, 9, 13, 14]  # Lista de IDs de fornecedores
 
     for product in products:
         ProductPriceHistory.objects.filter(product=product).delete()
@@ -33,10 +35,13 @@ def generate_price_history():
 
         for date in dates:
             price = Decimal(random.uniform(0.001, 9.999)).quantize(Decimal("0.001"))
+            supplier_id = random.choice(supplier_ids)
+            supplier = Supplier.objects.get(pk=supplier_id)
             ProductPriceHistory.objects.create(
                 product=product,
                 price=price,
-                date=date
+                date=date,
+                supplier=supplier
             )
 
 if __name__ == "__main__":

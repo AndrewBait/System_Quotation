@@ -23,8 +23,10 @@
                             <th>Mês</th>
                             <th>Data do Preço Mínimo</th>
                             <th>Preço Mínimo</th>
+                            <th>Fornecedor do Preço Mínimo</th>
                             <th>Data do Preço Máximo</th>
                             <th>Preço Máximo</th>
+                            <th>Fornecedor do Preço Máximo</th>
                         </tr>
                     </thead>
                     <tbody id="priceHistoryBody{{ item.id }}">
@@ -33,8 +35,10 @@
                                 <td>{{ entry.month }}</td>
                                 <td>{% if entry.min_price_date %}{{ entry.min_price_date }}{% else %}N/A{% endif %}</td>
                                 <td>{% if entry.min_price is not None %}R$ {{ entry.min_price|floatformat:3 }}{% else %}N/A{% endif %}</td>
+                                <td>{% if entry.min_supplier %}{{ entry.min_supplier }}{% else %}N/A{% endif %}</td>
                                 <td>{% if entry.max_price_date %}{{ entry.max_price_date }}{% else %}N/A{% endif %}</td>
                                 <td>{% if entry.max_price is not None %}R$ {{ entry.max_price|floatformat:3 }}{% else %}N/A{% endif %}</td>
+                                <td>{% if entry.max_supplier %}{{ entry.max_supplier }}{% else %}N/A{% endif %}</td>
                             </tr>
                         {% endfor %}
                     </tbody>

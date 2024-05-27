@@ -149,10 +149,15 @@ class Product(models.Model):
         return self.name
 
 
+from django.db import models
+from django.utils.translation import gettext_lazy as _
+from suppliers.models import Supplier  # Importar o modelo Supplier
+
 class ProductPriceHistory(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='price_history')
     price = models.DecimalField(_("Preço de Custo"), max_digits=10, decimal_places=3)
-    date = models.DateField(_("Data da Atualização"))#, auto_now_add=True(vou adiconar mais tarde))
+    date = models.DateField(_("Data da Atualização"))
+    supplier = models.ForeignKey('suppliers.Supplier', on_delete=models.SET_NULL, null=True, blank=True, related_name='price_history')
 
     class Meta:
         ordering = ['-date']

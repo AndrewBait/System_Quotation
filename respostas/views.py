@@ -28,6 +28,8 @@ from cotacao.models import Cotacao
 from products.models import ProductPriceHistory
 import re
 
+from respostas import models
+
 
 
 def apenas_digitos(cnpj):
@@ -333,6 +335,11 @@ from django.db.models.functions import TruncDay
 from django.db.models import Min, Max
 import json
 from django.db.models import Subquery, OuterRef, F
+from django.shortcuts import get_object_or_404, render
+from django.http import JsonResponse
+from products.models import Product
+from suppliers.models import Supplier
+
 
 def visualizar_cotacoes(request, cotacao_uuid):
     cotacao = get_object_or_404(Cotacao, uuid=cotacao_uuid)
@@ -352,27 +359,36 @@ def visualizar_cotacoes(request, cotacao_uuid):
         produto = item.produto
         ultimo_preco = produto.price_history.order_by('-date').first()
 
-        # Obter todos os registros de histórico de preços
         price_history_records = produto.price_history.all().annotate(month=TruncMonth('date')).order_by('date')
 
-        # Processar os registros em Python para encontrar min/max preços e suas datas
-        price_history = defaultdict(lambda: {'min_price': float('inf'), 'min_price_date': None, 'max_price': float('-inf'), 'max_price_date': None})
+        price_history = defaultdict(lambda: {
+            'min_price': float('inf'), 
+            'min_price_date': None, 
+            'min_supplier': None, 
+            'max_price': float('-inf'), 
+            'max_price_date': None, 
+            'max_supplier': None
+        })
 
         for record in price_history_records:
             month = record.date.strftime('%Y-%m')
             if record.price < price_history[month]['min_price']:
                 price_history[month]['min_price'] = record.price
                 price_history[month]['min_price_date'] = record.date
+                price_history[month]['min_supplier'] = record.supplier
             if record.price > price_history[month]['max_price']:
                 price_history[month]['max_price'] = record.price
                 price_history[month]['max_price_date'] = record.date
+                price_history[month]['max_supplier'] = record.supplier
 
         price_history_formatted = [{
             'month': month,
             'min_price': round(data['min_price'], 3) if data['min_price'] != float('inf') else None,
             'min_price_date': data['min_price_date'].strftime('%Y-%m-%d') if data['min_price_date'] else None,
+            'min_supplier': data['min_supplier'].name if data['min_supplier'] else None,
             'max_price': round(data['max_price'], 3) if data['max_price'] != float('-inf') else None,
-            'max_price_date': data['max_price_date'].strftime('%Y-%m-%d') if data['max_price_date'] else None
+            'max_price_date': data['max_price_date'].strftime('%Y-%m-%d') if data['max_price_date'] else None,
+            'max_supplier': data['max_supplier'].name if data['max_supplier'] else None
         } for month, data in price_history.items()]
 
         item_data = {
@@ -389,17 +405,43 @@ def visualizar_cotacoes(request, cotacao_uuid):
 
     return render(request, 'respostas/visualizar_respostas.html', {'cotacao': cotacao, 'itens_data': itens_data})
 
-from django.db.models.functions import TruncMonth
+from django.shortcuts import get_object_or_404
 from django.http import JsonResponse
+from django.db.models import Min, Max
+from django.db.models.functions import TruncMonth
+from products.models import Product
+from suppliers.models import Supplier  # Importar o modelo Supplier
 
 def get_price_history(request, product_id):
     product = get_object_or_404(Product, id=product_id)
     price_history = (product.price_history
                      .annotate(month=TruncMonth('date'))
                      .values('month')
-                     .annotate(min_price=Min('price'))
+                     .annotate(
+                         min_price=Min('price'),
+                         max_price=Max('price'),
+                         min_price_date=Min('date', filter=models.Q(price=models.OuterRef('min_price'))),
+                         max_price_date=Max('date', filter=models.Q(price=models.OuterRef('max_price'))),
+                         min_supplier=Min('supplier', filter=models.Q(price=models.OuterRef('min_price'))),
+                         max_supplier=Max('supplier', filter=models.Q(price=models.OuterRef('max_price')))
+                     )
                      .order_by('month'))
 
-    price_history_formatted = [{'date': entry['month'].strftime('%Y-%m-%d'), 'price': entry['min_price']} for entry in price_history]
+    # Obter os nomes dos fornecedores a partir dos IDs
+    supplier_ids = {entry['min_supplier'] for entry in price_history if entry['min_supplier']} | {entry['max_supplier'] for entry in price_history if entry['max_supplier']}
+    suppliers = Supplier.objects.filter(id__in=supplier_ids)
+    supplier_map = {supplier.id: supplier.name for supplier in suppliers}
+
+    price_history_formatted = [
+        {
+            'month': entry['month'].strftime('%Y-%m'),
+            'min_price': entry['min_price'],
+            'min_price_date': entry['min_price_date'].strftime('%Y-%m-%d') if entry['min_price_date'] else None,
+            'min_supplier': supplier_map.get(entry['min_supplier']),
+            'max_price': entry['max_price'],
+            'max_price_date': entry['max_price_date'].strftime('%Y-%m-%d') if entry['max_price_date'] else None,
+            'max_supplier': supplier_map.get(entry['max_supplier'])
+        } for entry in price_history
+    ]
 
     return JsonResponse(price_history_formatted, safe=False)
