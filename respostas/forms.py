@@ -12,18 +12,23 @@ import re
 class ItemRespostaForm(forms.ModelForm):
     class Meta:
         model = ItemRespostaCotacao
-        fields = ['preco', 'observacao', 'imagem']
+        fields = ['preco', 'prazo', 'preco_prazo_alternativo', 'prazo_alternativo', 'observacao', 'imagem']
         widgets = {
             'preco': NumberInput(attrs={'class': 'form-control', 'min': '0', 'step': '0.001'}),
+            'prazo': NumberInput(attrs={'class': 'form-control', 'min': '0', 'step': '1'}),
+            'preco_prazo_alternativo': NumberInput(attrs={'class': 'form-control', 'min': '0', 'step': '0.001'}),
+            'prazo_alternativo': NumberInput(attrs={'class': 'form-control', 'min': '0', 'step': '1'}),
             'observacao': TextInput(attrs={'class': 'form-control', 'maxlength': '144'}),
             'imagem': FileInput(attrs={'class': 'form-control', 'accept': 'image/*'})
         }
     
+
     def __init__(self, *args, **kwargs):
-        self.item_cotacao = kwargs.pop('item_cotacao', None)  
-        super(ItemRespostaForm, self).__init__(*args, **kwargs)  
-        self.fields['imagem'].required = False  
-        
+        self.item_cotacao = kwargs.pop('item_cotacao', None)
+        super(ItemRespostaForm, self).__init__(*args, **kwargs)
+        self.fields['imagem'].required = False
+
+
         
     def clean_preco(self):
         preco = self.cleaned_data.get('preco')
@@ -45,7 +50,7 @@ class ItemRespostaForm(forms.ModelForm):
         if observacao:
             clean_observacao = bleach.clean(observacao)
             return clean_observacao
-        return observacao  # Retorna None se não houver observação
+        return observacao
     
 
     
@@ -104,7 +109,7 @@ class ItemRespostaForm(forms.ModelForm):
 class RespostaCotacaoForm(forms.ModelForm):
     class Meta:
         model = RespostaCotacao
-        fields = [] # Não precisamos de campos aqui, pois a relação com a cotação e o fornecedor será definida na view
+        fields = ['prazo_alternativo']  # Inclui o campo prazo_alternativo
 
     def __init__(self, *args, **kwargs):
         self.cotacao = kwargs.pop('cotacao', None)

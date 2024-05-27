@@ -10,6 +10,13 @@ class RespostaCotacao(models.Model):
     cotacao = models.ForeignKey(Cotacao, on_delete=models.CASCADE)
     fornecedor = models.ForeignKey(Supplier, on_delete=models.CASCADE)
     data_resposta = models.DateTimeField(auto_now_add=True)
+    prazo_alternativo = models.CharField(max_length=20, choices=[
+        ('avista', 'À vista'),
+        ('7', '7 dias'),
+        ('14', '14 dias'),
+        ('21', '21 dias'),
+        ('28', '28 dias'),
+    ], blank=True, null=True)
 
 
     class Meta:
@@ -19,6 +26,9 @@ class ItemRespostaCotacao(models.Model):
     resposta_cotacao = models.ForeignKey(RespostaCotacao, on_delete=models.CASCADE)
     item_cotacao = models.ForeignKey(ItemCotacao, on_delete=models.CASCADE)
     preco = models.DecimalField(max_digits=10, decimal_places=3, null=True, blank=True)
+    prazo = models.PositiveIntegerField(null=True, blank=True)  # Prazo original
+    preco_prazo_alternativo = models.DecimalField(max_digits=10, decimal_places=3, null=True, blank=True)
+    prazo_alternativo = models.PositiveIntegerField(null=True, blank=True)  # Novo campo para prazo alternativo
     observacao = models.TextField(blank=True)
     imagem = models.ImageField(upload_to='respostas/', blank=True, null=True)
 

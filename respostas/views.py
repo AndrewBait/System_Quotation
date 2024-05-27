@@ -57,7 +57,6 @@ def responder_cotacao(request, cotacao_uuid, fornecedor_id, token):
 
     auth_param = request.GET.get('auth')
     if auth_param:
-        # Gerar hash do CNPJ truncado
         cnpj_limpo = apenas_digitos(fornecedor.cnpj)
         cnpj_slice = cnpj_limpo[:4]
         hash_object = hashlib.sha256(cnpj_slice.encode())
@@ -101,10 +100,13 @@ def responder_cotacao(request, cotacao_uuid, fornecedor_id, token):
             resposta = resposta_form.save(commit=False)
             resposta.cotacao = cotacao
             resposta.fornecedor = fornecedor
+            resposta.prazo_alternativo = request.POST.get('prazo_alternativo')
             resposta.save()
             for item_form in item_forms:
                 item_resposta = item_form.save(commit=False)
                 item_resposta.resposta_cotacao = resposta
+                item_resposta.prazo = cotacao.prazo
+                item_resposta.prazo_alternativo = resposta.prazo_alternativo
                 item_resposta.save()
             return redirect('respostas:cotacao_respondida')
 
