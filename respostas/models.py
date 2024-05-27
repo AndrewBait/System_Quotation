@@ -10,12 +10,12 @@ class RespostaCotacao(models.Model):
     cotacao = models.ForeignKey(Cotacao, on_delete=models.CASCADE)
     fornecedor = models.ForeignKey(Supplier, on_delete=models.CASCADE)
     data_resposta = models.DateTimeField(auto_now_add=True)
-    prazo_alternativo = models.CharField(max_length=20, choices=[
-        ('avista', 'À vista'),
-        ('7', '7 dias'),
-        ('14', '14 dias'),
-        ('21', '21 dias'),
-        ('28', '28 dias'),
+    prazo_alternativo = models.IntegerField(choices=[
+        (0, 'À vista'),
+        (7, '7 dias'),
+        (14, '14 dias'),
+        (21, '21 dias'),
+        (28, '28 dias'),
     ], blank=True, null=True)
 
 

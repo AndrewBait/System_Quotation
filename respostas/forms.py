@@ -17,11 +17,17 @@ class ItemRespostaForm(forms.ModelForm):
             'preco': NumberInput(attrs={'class': 'form-control', 'min': '0', 'step': '0.001'}),
             'prazo': NumberInput(attrs={'class': 'form-control', 'min': '0', 'step': '1'}),
             'preco_prazo_alternativo': NumberInput(attrs={'class': 'form-control', 'min': '0', 'step': '0.001'}),
-            'prazo_alternativo': NumberInput(attrs={'class': 'form-control', 'min': '0', 'step': '1'}),
+            'prazo_alternativo': forms.Select(choices=[
+                (None, 'Selecione um prazo alternativo'),
+                (0, 'À vista'),
+                (7, '7 dias'),
+                (14, '14 dias'),
+                (21, '21 dias'),
+                (28, '28 dias'),
+            ], attrs={'class': 'form-control'}),
             'observacao': TextInput(attrs={'class': 'form-control', 'maxlength': '144'}),
             'imagem': FileInput(attrs={'class': 'form-control', 'accept': 'image/*'})
         }
-    
 
     def __init__(self, *args, **kwargs):
         self.item_cotacao = kwargs.pop('item_cotacao', None)

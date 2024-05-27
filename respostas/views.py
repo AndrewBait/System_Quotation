@@ -100,7 +100,9 @@ def responder_cotacao(request, cotacao_uuid, fornecedor_id, token):
             resposta = resposta_form.save(commit=False)
             resposta.cotacao = cotacao
             resposta.fornecedor = fornecedor
-            resposta.prazo_alternativo = request.POST.get('prazo_alternativo')
+            prazo_alternativo = request.POST.get('prazo_alternativo')
+            if prazo_alternativo:
+                resposta.prazo_alternativo = int(prazo_alternativo)
             resposta.save()
             for item_form in item_forms:
                 item_resposta = item_form.save(commit=False)

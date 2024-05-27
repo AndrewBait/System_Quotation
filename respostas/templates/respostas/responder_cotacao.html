@@ -30,7 +30,7 @@
 <body>
     <div class="container my-5">
         <h2 class="mb-4">Responder Cotação: {{ cotacao.nome }} <br> Prazo: {{cotacao.prazo}} dias</h2>
-        <form method="post" enctype="multipart/form-data">
+        <form id="respostaForm" method="post" enctype="multipart/form-data">
             {% csrf_token %}
             {{ form.as_p }} <!-- Renderiza o formulário -->
             
@@ -38,7 +38,7 @@
                 <label for="prazoAlternativo" class="form-label">Prazo Alternativo</label>
                 <select class="form-select" id="prazoAlternativo" name="prazo_alternativo">
                     <option value="">Selecione um prazo alternativo</option>
-                    <option value="avista">À vista</option>
+                    <option value="0">À vista</option>
                     <option value="7">7 dias</option>
                     <option value="14">14 dias</option>
                     <option value="21">21 dias</option>
@@ -78,11 +78,43 @@
                     </tbody>
                 </table>
             </div>
+            <div id="validationError" class="error-message" style="display:none;"></div>
             <button type="submit" class="btn btn-primary">Enviar Resposta</button>
         </form>
     </div>
     
-        <!-- Bootstrap JS with Popper -->
-        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.bundle.min.js"></script>
-    </body>
+    <!-- Bootstrap JS with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.getElementById('respostaForm').addEventListener('submit', function(event) {
+            var prazoAlternativo = document.getElementById('prazoAlternativo').value;
+            var precoAlternativos = document.querySelectorAll('input[name$="preco_prazo_alternativo"]');
+            var hasPrecoAlternativo = false;
+            var hasPrazoAlternativo = prazoAlternativo !== '';
+            var validationError = document.getElementById('validationError');
+            validationError.style.display = 'none';
+            validationError.innerHTML = '';
+
+            precoAlternativos.forEach(function(input) {
+                if (input.value !== '') {
+                    hasPrecoAlternativo = true;
+                }
+            });
+
+            if (hasPrecoAlternativo && !hasPrazoAlternativo) {
+                event.preventDefault();
+                validationError.style.display = 'block';
+                validationError.innerHTML = 'Por favor, selecione um prazo alternativo se você fornecer um preço alternativo.';
+                return;
+            }
+
+            if (hasPrazoAlternativo && !hasPrecoAlternativo) {
+                event.preventDefault();
+                validationError.style.display = 'block';
+                validationError.innerHTML = 'Por favor, forneça um preço alternativo se você selecionar um prazo alternativo.';
+                return;
+            }
+        });
+    </script>
+</body>
 </html>
