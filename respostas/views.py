@@ -352,7 +352,7 @@ def visualizar_cotacoes(request, cotacao_uuid):
         respostas = item.itemrespostacotacao_set.all().select_related('resposta_cotacao__fornecedor').order_by('preco')
         respostas_data = [{
             'preco': round(resposta.preco, 3) if resposta.preco is not None else None,
-            'fornecedor_nome': resposta.resposta_cotacao.fornecedor.name,
+            'fornecedor_nome': resposta.resposta_cotacao.fornecedor.company if resposta.resposta_cotacao.fornecedor.company else resposta.resposta_cotacao.fornecedor.name,
             'fornecedor_id': resposta.resposta_cotacao.fornecedor.pk,
             'observacao': resposta.observacao,
             'imagem_url': resposta.imagem.url if resposta.imagem else None,
@@ -379,11 +379,11 @@ def visualizar_cotacoes(request, cotacao_uuid):
             if record.price < price_history[month]['min_price']:
                 price_history[month]['min_price'] = record.price
                 price_history[month]['min_price_date'] = record.date
-                price_history[month]['min_supplier'] = record.supplier
+                price_history[month]['min_supplier'] = record.supplier.company if record.supplier else None
             if record.price > price_history[month]['max_price']:
                 price_history[month]['max_price'] = record.price
                 price_history[month]['max_price_date'] = record.date
-                price_history[month]['max_supplier'] = record.supplier
+                price_history[month]['max_supplier'] = record.supplier.company if record.supplier else None
 
         # Converte o defaultdict para uma lista, ordenada pelo mês e limitando ao número de meses padrão
         price_history_list = sorted(price_history.items(), key=lambda x: x[0], reverse=True)
@@ -391,10 +391,10 @@ def visualizar_cotacoes(request, cotacao_uuid):
             'month': month,
             'min_price': round(data['min_price'], 3) if data['min_price'] != float('inf') else None,
             'min_price_date': data['min_price_date'].strftime('%d/%m/%Y') if data['min_price_date'] else None,
-            'min_supplier': data['min_supplier'].name if data['min_supplier'] else None,
+            'min_supplier': data['min_supplier'],
             'max_price': round(data['max_price'], 3) if data['max_price'] != float('-inf') else None,
             'max_price_date': data['max_price_date'].strftime('%d/%m/%Y') if data['max_price_date'] else None,
-            'max_supplier': data['max_supplier'].name if data['max_supplier'] else None
+            'max_supplier': data['max_supplier']
         } for month, data in price_history_list[:default_interval_days//30]]
 
         item_data = {
@@ -414,7 +414,6 @@ def visualizar_cotacoes(request, cotacao_uuid):
 
 
 
-
 from django.http import JsonResponse
 from django.utils import timezone
 from django.db.models.functions import TruncMonth
@@ -429,7 +428,6 @@ def get_price_history(request, item_id, days):
     interval = int(days)
     start_date = timezone.now() - timezone.timedelta(days=interval)
 
-    # Filtra os registros de histórico de preços para o intervalo selecionado
     price_history_records = produto.price_history.filter(date__gte=start_date).annotate(month=TruncMonth('date')).order_by('-date')
 
     price_history = defaultdict(lambda: {
@@ -446,22 +444,21 @@ def get_price_history(request, item_id, days):
         if record.price < price_history[month]['min_price']:
             price_history[month]['min_price'] = record.price
             price_history[month]['min_price_date'] = record.date
-            price_history[month]['min_supplier'] = record.supplier
+            price_history[month]['min_supplier'] = record.supplier.company if record.supplier else None
         if record.price > price_history[month]['max_price']:
             price_history[month]['max_price'] = record.price
             price_history[month]['max_price_date'] = record.date
-            price_history[month]['max_supplier'] = record.supplier
+            price_history[month]['max_supplier'] = record.supplier.company if record.supplier else None
 
-    # Converte o defaultdict para uma lista, ordenada pelo mês e limitando ao número de meses selecionado
     price_history_list = sorted(price_history.items(), key=lambda x: x[0], reverse=True)
     price_history_formatted = [{
         'month': month,
         'min_price': round(data['min_price'], 3) if data['min_price'] != float('inf') else None,
         'min_price_date': data['min_price_date'].strftime('%d/%m/%Y') if data['min_price_date'] else None,
-        'min_supplier': data['min_supplier'].name if data['min_supplier'] else None,
+        'min_supplier': data['min_supplier'],
         'max_price': round(data['max_price'], 3) if data['max_price'] != float('-inf') else None,
         'max_price_date': data['max_price_date'].strftime('%d/%m/%Y') if data['max_price_date'] else None,
-        'max_supplier': data['max_supplier'].name if data['max_supplier'] else None
+        'max_supplier': data['max_supplier']
     } for month, data in price_history_list[:days//30]]
 
     return JsonResponse({'price_history': price_history_formatted})
