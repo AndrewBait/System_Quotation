@@ -1,4 +1,5 @@
 from django.urls import path
+from . import views
 from .views import (
     ListarPedidosView,
     DetalhesPedidoAgrupadoView,
@@ -10,7 +11,6 @@ from .views import (
     gerar_pedidos,
     EditarPedidoView,
     DeletarPedidoAgrupadoView,
-    get_price_history
 )
 
 app_name = 'respostas'
@@ -18,7 +18,7 @@ app_name = 'respostas'
 urlpatterns = [
     path('responder/<uuid:cotacao_uuid>/<int:fornecedor_id>/<uuid:token>/', responder_cotacao, name='responder_cotacao'),
     path('respostas/<uuid:cotacao_uuid>/', visualizar_cotacoes, name='visualizar_cotacoes'),
-    path('api/price-history/<int:product_id>/', get_price_history, name='get_price_history'),
+    path('cotacao/price_history/<int:item_id>/<int:days>/', views.get_price_history, name='get_price_history'),
     path('cotacao_respondida/', cotacao_respondida_view, name='cotacao_respondida'),
     path('gerar-pedidos/', gerar_pedidos, name='gerar_pedidos'),
     path('pedidos/', ListarPedidosView.as_view(), name='listar_pedidos'),

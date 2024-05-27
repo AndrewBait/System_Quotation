@@ -331,19 +331,22 @@ class DeletarPedidoView(DeleteView):
     
 from django.core.serializers.json import DjangoJSONEncoder
 from django.db.models.functions import TruncMonth
-from django.db.models.functions import TruncDay
 from django.db.models import Min, Max
+from collections import defaultdict
 import json
-from django.db.models import Subquery, OuterRef, F
 from django.shortcuts import get_object_or_404, render
-from django.http import JsonResponse
-from products.models import Product
+from django.utils import timezone
+from products.models import Product, ProductPriceHistory
 from suppliers.models import Supplier
-
+from cotacao.models import Cotacao, ItemCotacao
 
 def visualizar_cotacoes(request, cotacao_uuid):
     cotacao = get_object_or_404(Cotacao, uuid=cotacao_uuid)
     itens_data = []
+
+    # Definimos o intervalo padrão de 3 meses
+    default_interval_days = 90
+    default_start_date = timezone.now() - timezone.timedelta(days=default_interval_days)
 
     for item in cotacao.itens_cotacao.all():
         respostas = item.itemrespostacotacao_set.all().select_related('resposta_cotacao__fornecedor').order_by('preco')
@@ -359,14 +362,15 @@ def visualizar_cotacoes(request, cotacao_uuid):
         produto = item.produto
         ultimo_preco = produto.price_history.order_by('-date').first()
 
-        price_history_records = produto.price_history.all().annotate(month=TruncMonth('date')).order_by('date')
+        # Filtra os registros de histórico de preços para os últimos 3 meses por padrão
+        price_history_records = produto.price_history.filter(date__gte=default_start_date).annotate(month=TruncMonth('date')).order_by('-date')
 
         price_history = defaultdict(lambda: {
-            'min_price': float('inf'), 
-            'min_price_date': None, 
-            'min_supplier': None, 
-            'max_price': float('-inf'), 
-            'max_price_date': None, 
+            'min_price': float('inf'),
+            'min_price_date': None,
+            'min_supplier': None,
+            'max_price': float('-inf'),
+            'max_price_date': None,
             'max_supplier': None
         })
 
@@ -381,6 +385,8 @@ def visualizar_cotacoes(request, cotacao_uuid):
                 price_history[month]['max_price_date'] = record.date
                 price_history[month]['max_supplier'] = record.supplier
 
+        # Converte o defaultdict para uma lista, ordenada pelo mês e limitando ao número de meses padrão
+        price_history_list = sorted(price_history.items(), key=lambda x: x[0], reverse=True)
         price_history_formatted = [{
             'month': month,
             'min_price': round(data['min_price'], 3) if data['min_price'] != float('inf') else None,
@@ -389,7 +395,7 @@ def visualizar_cotacoes(request, cotacao_uuid):
             'max_price': round(data['max_price'], 3) if data['max_price'] != float('-inf') else None,
             'max_price_date': data['max_price_date'].strftime('%d/%m/%Y') if data['max_price_date'] else None,
             'max_supplier': data['max_supplier'].name if data['max_supplier'] else None
-        } for month, data in price_history.items()]
+        } for month, data in price_history_list[:default_interval_days//30]]
 
         item_data = {
             'id': item.pk,
@@ -406,43 +412,56 @@ def visualizar_cotacoes(request, cotacao_uuid):
     return render(request, 'respostas/visualizar_respostas.html', {'cotacao': cotacao, 'itens_data': itens_data})
 
 
-from django.shortcuts import get_object_or_404
+
+
+
 from django.http import JsonResponse
-from django.db.models import Min, Max
+from django.utils import timezone
 from django.db.models.functions import TruncMonth
-from products.models import Product
-from suppliers.models import Supplier  # Importar o modelo Supplier
+from collections import defaultdict
+from django.shortcuts import get_object_or_404
+from cotacao.models import ItemCotacao
 
-def get_price_history(request, product_id):
-    product = get_object_or_404(Product, id=product_id)
-    price_history = (product.price_history
-                     .annotate(month=TruncMonth('date'))
-                     .values('month')
-                     .annotate(
-                         min_price=Min('price'),
-                         max_price=Max('price'),
-                         min_price_date=Min('date', filter=models.Q(price=models.OuterRef('min_price'))),
-                         max_price_date=Max('date', filter=models.Q(price=models.OuterRef('max_price'))),
-                         min_supplier=Min('supplier', filter=models.Q(price=models.OuterRef('min_price'))),
-                         max_supplier=Max('supplier', filter=models.Q(price=models.OuterRef('max_price')))
-                     )
-                     .order_by('month'))
+def get_price_history(request, item_id, days):
+    print(f'Item ID: {item_id}, Days: {days}')  # Adicionar log para verificar a chamada
+    item = get_object_or_404(ItemCotacao, pk=item_id)
+    produto = item.produto
+    interval = int(days)
+    start_date = timezone.now() - timezone.timedelta(days=interval)
 
-    # Obter os nomes dos fornecedores a partir dos IDs
-    supplier_ids = {entry['min_supplier'] for entry in price_history if entry['min_supplier']} | {entry['max_supplier'] for entry in price_history if entry['max_supplier']}
-    suppliers = Supplier.objects.filter(id__in=supplier_ids)
-    supplier_map = {supplier.id: supplier.name for supplier in suppliers}
+    # Filtra os registros de histórico de preços para o intervalo selecionado
+    price_history_records = produto.price_history.filter(date__gte=start_date).annotate(month=TruncMonth('date')).order_by('-date')
 
-    price_history_formatted = [
-        {
-            'month': entry['month'].strftime('%Y-%m'),
-            'min_price': entry['min_price'],
-            'min_price_date': entry['min_price_date'].strftime('%d-%m-%Y') if entry['min_price_date'] else None, 
-            'min_supplier': supplier_map.get(entry['min_supplier']),
-            'max_price': entry['max_price'],
-            'max_price_date': entry['max_price_date'].strftime('%d-%m-%Y') if entry['max_price_date'] else None,
-            'max_supplier': supplier_map.get(entry['max_supplier'])
-        } for entry in price_history
-    ]
+    price_history = defaultdict(lambda: {
+        'min_price': float('inf'),
+        'min_price_date': None,
+        'min_supplier': None,
+        'max_price': float('-inf'),
+        'max_price_date': None,
+        'max_supplier': None
+    })
 
-    return JsonResponse(price_history_formatted, safe=False)
+    for record in price_history_records:
+        month = record.date.strftime('%Y-%m')
+        if record.price < price_history[month]['min_price']:
+            price_history[month]['min_price'] = record.price
+            price_history[month]['min_price_date'] = record.date
+            price_history[month]['min_supplier'] = record.supplier
+        if record.price > price_history[month]['max_price']:
+            price_history[month]['max_price'] = record.price
+            price_history[month]['max_price_date'] = record.date
+            price_history[month]['max_supplier'] = record.supplier
+
+    # Converte o defaultdict para uma lista, ordenada pelo mês e limitando ao número de meses selecionado
+    price_history_list = sorted(price_history.items(), key=lambda x: x[0], reverse=True)
+    price_history_formatted = [{
+        'month': month,
+        'min_price': round(data['min_price'], 3) if data['min_price'] != float('inf') else None,
+        'min_price_date': data['min_price_date'].strftime('%d/%m/%Y') if data['min_price_date'] else None,
+        'min_supplier': data['min_supplier'].name if data['min_supplier'] else None,
+        'max_price': round(data['max_price'], 3) if data['max_price'] != float('-inf') else None,
+        'max_price_date': data['max_price_date'].strftime('%d/%m/%Y') if data['max_price_date'] else None,
+        'max_supplier': data['max_supplier'].name if data['max_supplier'] else None
+    } for month, data in price_history_list[:days//30]]
+
+    return JsonResponse({'price_history': price_history_formatted})

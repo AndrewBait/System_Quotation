@@ -105,30 +105,31 @@
         <script>
             const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
             const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl));
+        
 
             // Armazenar o histórico de preços de todos os produtos
-            const priceHistoryData = {};
+            const priceHistoryData = {}; // Inicializa o objeto fora do loop
 
             {% for item in itens_data %}
-                priceHistoryData[{{ item.id }}] = {{ item.price_history|safe }};
+              priceHistoryData[{{ item.id }}] = {{ item.price_history|safe }};
             {% endfor %}
 
             function filterPriceHistory(productId, days) {
-                console.log(`Filtering price history for product ${productId} for the last ${days} days.`);
-                const tableBody = document.getElementById('priceHistoryBody' + productId);
-                const rows = tableBody.getElementsByTagName('tr');
+                console.log("productId:", productId); // Verifica se o ID do produto está correto
+                console.log("days:", days); // Verifica se o valor do select está correto
+                const tableBody = document.getElementById(`priceHistoryBody${productId}`);
+                const rows = tableBody.querySelectorAll('tr'); // Seleciona todas as linhas, incluindo o cabeçalho
                 const cutoffDate = new Date();
                 cutoffDate.setDate(cutoffDate.getDate() - days);
-
-                // Limpar o corpo da tabela
-                tableBody.innerHTML = '';
-
-                // Filtrar e adicionar novas linhas
-                const filteredData = priceHistoryData[productId].filter(entry => {
-                    const entryDate = new Date(entry.month + '-01');
-                    console.log(`Checking date ${entry.month}, cutoff date is ${cutoffDate}.`);
-                    return entryDate >= cutoffDate;
+                
+                rows.forEach((row, index) => { // Percorre as linhas a partir do índice 1 para ignorar o cabeçalho.
+                  if (index > 0){
+                    const rowDateParts = row.cells[0].textContent.split('-'); // Divide a data da célula em ano e mês
+                    const rowDate = new Date(rowDateParts[0], rowDateParts[1]-1, 1); // Converte para um objeto Date (dia 1 do mês)
+                    row.style.display = rowDate >= cutoffDate ? '' : 'none'; // Mostra/esconde a linha
+                  }
                 });
+            }           
             
 
                 filteredData.forEach(entry => {
@@ -153,9 +154,10 @@
                 });
 
                 // Atualizar a tabela
-                $('#productsTable').DataTable().draw();
-            }
+                $('#productsTable').DataTable().draw(); 
 
+            }
+            
             $(document).ready(function () {
                 $('#productsTable').DataTable({
                     "language": {
@@ -167,7 +169,17 @@
                     "searching": true,
                     "ordering": true
                 });
+                  //Disparar filtragem inicial para todos os modais ao abrir
+                $('.modal').on('shown.bs.modal', function () {
+                    const productId = $(this).find('table').attr('id').replace('priceHistoryBody', '');
+                    const selectElement = document.getElementById(`daysSelect${productId}`);
+                    const selectedValue = selectElement.value; 
+                    filterPriceHistory(productId, selectedValue); // Filtra com o valor inicial do select
+                });
+            });
 
+
+                });
                 // Configurações da paginação
                 const rowsPerPage = 10;
                 let currentPage = 1;

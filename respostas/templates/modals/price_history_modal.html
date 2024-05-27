@@ -9,13 +9,10 @@
             <div class="modal-body">
                 <label for="daysSelect{{ forloop.counter }}">Selecionar intervalo de dias:</label>
                 <select id="daysSelect{{ forloop.counter }}" class="form-select mb-3" onchange="filterPriceHistory({{ item.id }}, this.value)">
-                    <option value="7">Últimos 7 dias</option>
-                    <option value="14">Últimos 14 dias</option>
-                    <option value="28">Últimos 28 dias</option>
-                    <option value="60">Últimos 60 dias</option>
-                    <option value="90">Últimos 90 dias</option>
-                    <option value="180">Últimos 180 dias</option>
-                    <option value="360">Últimos 360 dias</option>
+                    <option value="90" selected>Últimos 3 meses</option>
+                    <option value="180">Últimos 6 meses</option>
+                    <option value="365">Últimos 12 meses</option>
+                    <option value="730">Últimos 24 meses</option>
                 </select>
                 <div class="table-responsive">
                     <table class="table table-striped table-hover">
@@ -49,3 +46,37 @@
         </div>
     </div>
 </div>
+
+<script>
+    function filterPriceHistory(itemId, days) {
+        const url = `/respostas/cotacao/price_history/${itemId}/${days}/`;  // Certifique-se de que a URL está correta
+        console.log(url);  // Log para verificar a URL gerada
+        fetch(url)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                const tbody = document.getElementById(`priceHistoryBody${itemId}`);
+                tbody.innerHTML = '';
+                data.price_history.forEach(entry => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td class="text-nowrap">${entry.month}</td>
+                        <td class="text-center text-nowrap">${entry.min_price_date || 'N/A'}</td>
+                        <td class="text-end text-nowrap">${entry.min_price !== null ? 'R$ ' + parseFloat(entry.min_price).toFixed(3) : 'N/A'}</td>
+                        <td class="text-center text-nowrap">${entry.min_supplier || 'N/A'}</td>
+                        <td class="text-center text-nowrap">${entry.max_price_date || 'N/A'}</td>
+                        <td class="text-end text-nowrap">${entry.max_price !== null ? 'R$ ' + parseFloat(entry.max_price).toFixed(3) : 'N/A'}</td>
+                        <td class="text-center text-nowrap">${entry.max_supplier || 'N/A'}</td>
+                    `;
+                    tbody.appendChild(row);
+                });
+            })
+            .catch(error => {
+                console.error('There was a problem with the fetch operation:', error);
+            });
+    }
+</script>
