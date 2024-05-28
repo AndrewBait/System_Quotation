@@ -76,7 +76,6 @@ class ProductModelForm(forms.ModelForm):
             except (ValueError, TypeError):
                 pass
             
-            
     def save(self, commit=True):
         product = super().save(commit=False)
         altura_embalagem = self.cleaned_data.get('altura_embalagem')
