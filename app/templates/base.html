@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pt-br" data-bs-theme="dark">
+<html lang="pt-br">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -27,16 +27,9 @@
             display: flex;
             flex-direction: column;
         }
-        .container-fluid {
-            flex: 1; 
-        }
-        footer {
-            flex-shrink: 0; /* Prevents the footer from shrinking */
-        }
-        /* Novo estilo para ajustar o conteúdo principal */
         .main-content {
+            flex: 1;
             margin-left: 250px; /* Deve ser igual à largura da sidebar */
-            flex-grow: 1;
             transition: margin-left 0.3s;
         }
         .sidebar.collapsed + .main-content {
@@ -47,6 +40,16 @@
                 margin-left: 0; /* Sem margem quando a tela é pequena */
             }
         }
+        footer {
+            flex-shrink: 0;
+            background-color: #343a40; /* Cor de fundo da sidebar */
+            color: white;
+            text-align: center;
+            padding: 1rem;
+            position: relative;
+            width: 100%;
+            bottom: 0;
+        }
     </style>
 </head>
 <body>
@@ -56,29 +59,52 @@
     <!-- Wrapper para o conteúdo principal -->
     <div class="main-content">
         {% block content %}{% endblock %}
-        {% include 'components/_footer.html' %}
     </div>
 
-    <div class="container-fluid"> 
-        <div class="row">
-            <div class="col-12">
-                <footer class="bg-dark text-white text-center p-3">
-                    <p>&copy; 2024 - Andrew</p>
-                </footer>
-            </div>               
-        </div>
-    </div>
+    <footer class="bg-dark text-white text-center p-3">
+        <p>&copy; 2024 - Andrew</p>
+    </footer>
+
 <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const html = document.documentElement;
+        const currentTheme = localStorage.getItem('theme') || 'light';
+        html.setAttribute('data-bs-theme', currentTheme);
+        const icon = document.getElementById('theme-toggle-icon');
+        if (currentTheme === 'light') {
+            icon.classList.remove('bi-lightbulb-fill');
+            icon.classList.add('bi-lightbulb');
+        } else {
+            icon.classList.remove('bi-lightbulb');
+            icon.classList.add('bi-lightbulb-fill');
+        }
+    });
+
+    function toggleSidebar() {
+        const sidebar = document.getElementById('sidebar');
+        sidebar.classList.toggle('collapsed');
+        const icon = document.getElementById('sidebar-toggle-icon');
+        if (sidebar.classList.contains('collapsed')) {
+            icon.classList.remove('bi-chevron-left');
+            icon.classList.add('bi-chevron-right');
+        } else {
+            icon.classList.remove('bi-chevron-right');
+            icon.classList.add('bi-chevron-left');
+        }
+    }
+
     function toggleTheme() {
         const html = document.documentElement;
         const currentTheme = html.getAttribute('data-bs-theme');
         const icon = document.getElementById('theme-toggle-icon');
         if (currentTheme === 'light') {
             html.setAttribute('data-bs-theme', 'dark');
+            localStorage.setItem('theme', 'dark');
             icon.classList.remove('bi-lightbulb');
             icon.classList.add('bi-lightbulb-fill');
         } else {
             html.setAttribute('data-bs-theme', 'light');
+            localStorage.setItem('theme', 'light');
             icon.classList.remove('bi-lightbulb-fill');
             icon.classList.add('bi-lightbulb');
         }
