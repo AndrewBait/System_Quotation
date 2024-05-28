@@ -6,18 +6,18 @@ from django_select2.forms import ModelSelect2Widget
 
 
 class ProductModelForm(forms.ModelForm):
-    altura_embalagem = forms.FloatField(label='Altura', required=False)
-    largura_embalagem = forms.FloatField(label='Largura', required=False)
-    comprimento_embalagem = forms.FloatField(label='Comprimento', required=False)
-    espessura_embalagem = forms.FloatField(label='Espessura', required=False)
-    raio_embalagem = forms.FloatField(label='Raio', required=False)
+    altura_embalagem = forms.FloatField(label='Altura', required=False, min_value=0)
+    largura_embalagem = forms.FloatField(label='Largura', required=False, min_value=0)
+    comprimento_embalagem = forms.FloatField(label='Comprimento', required=False, min_value=0)
+    espessura_embalagem = forms.FloatField(label='Espessura', required=False, min_value=0)
+    raio_embalagem = forms.FloatField(label='Raio', required=False, min_value=0)
     UNIDADE_CHOICES = (
         ('mm', 'Milímetro'),
         ('cm', 'Centímetro'),
         ('m', 'Metro'),
     )
     unidade_dimensao = forms.ChoiceField(label='Unidade de Medida', choices=UNIDADE_CHOICES, required=False)
-    quantidade_por_volume = forms.IntegerField(label='Quantidade por Volume', required=False)
+    quantidade_por_volume = forms.IntegerField(label='Quantidade por Volume', required=False, min_value=0)
 
     class Meta:
         model = Product

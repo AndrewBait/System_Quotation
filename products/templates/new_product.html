@@ -42,7 +42,7 @@
           {{ form.name.errors }}
         </div>
         <div class="mb-3">
-          <label for="id_ean" class="form-label">Código de barras - EAN:</label>
+          <label for="id_ean" min = "0" class="form-label">Código de barras - EAN:</label>
           {{ form.ean|add_class:'form-control' }}
           {{ form.ean.errors }}
         </div>
@@ -103,41 +103,41 @@
       <!-- Terceira Coluna -->
       <div class="col-md-4">
         <div class="mb-3">
-          <label for="id_unidade_dimensao" class="form-label">Und. de Medida Embalagem:</label>
+          <label for="id_unidade_dimensao" min = "0" class="form-label">Und. de Medida Embalagem:</label>
           {{ form.unidade_dimensao|add_class:'form-control' }}
           {{ form.unidade_dimensao.errors }}
         </div>
         <div class="mb-3">
-          <label for="id_altura_embalagem" class="form-label">Altura da Embalagem:</label>
+          <label for="id_altura_embalagem" min = "0" class="form-label">Altura da Embalagem:</label>
           {{ form.altura_embalagem|add_class:'form-control' }}
           {{ form.altura_embalagem.errors }}
         </div>
         <div class="mb-3">
-          <label for="id_largura_embalagem" class="form-label">Largura da Embalagem:</label>
+          <label for="id_largura_embalagem" min = "0" class="form-label">Largura da Embalagem:</label>
           {{ form.largura_embalagem|add_class:'form-control' }}
           {{ form.largura_embalagem.errors }}
         </div>
         <div class="mb-3">
-          <label for="id_comprimento_embalagem" class="form-label">Comprimento da Embalagem:</label>
+          <label for="id_comprimento_embalagem" min = "0" class="form-label">Comprimento da Embalagem:</label>
           {{ form.comprimento_embalagem|add_class:'form-control' }}
           {{ form.comprimento_embalagem.errors }}
         </div>
         <div class="mb-3">
-          <label for="id_espessura_embalagem" class="form-label">Espessura da Embalagem:</label>
+          <label for="id_espessura_embalagem" min = "0" class="form-label">Espessura da Embalagem:</label>
           {{ form.espessura_embalagem|add_class:'form-control' }}
           {{ form.espessura_embalagem.errors }}
         </div>
         <div class="mb-3">
-          <label for="id_raio_embalagem" class="form-label">Raio da Embalagem:</label>
+          <label for="id_raio_embalagem" min = "0" class="form-label">Raio da Embalagem:</label>
           {{ form.raio_embalagem|add_class:'form-control' }}
           {{ form.raio_embalagem.errors }}
         </div>
         <div class="mb-3">
-          <label for="id_unidade_de_medida" class="form-label">Unidade de Medida:</label>
+          <label for="id_unidade_de_medida" min = "0" class="form-label">Unidade de Medida:</label>
           {{ form.unidade_de_medida|add_class:'form-control' }}
           {{ form.unidade_de_medida.errors }}
         </div>
-        <div class="mb-3" id="quantidadePorVolumeContainer" style="display: none;">
+        <div class="mb-3" id="quantidadePorVolumeContainer" min = "0" style="display: none;">
           <label for="id_quantidade_por_volume" class="form-label">Quantidade por Volume:</label>
           {{ form.quantidade_por_volume|add_class:'form-control' }}
           {{ form.quantidade_por_volume.errors }}

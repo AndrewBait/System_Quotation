@@ -193,14 +193,14 @@
             const html = document.documentElement;
             const currentTheme = html.getAttribute('data-bs-theme');
             const icon = document.getElementById('theme-toggle-icon');
-            if (currentTheme === 'light') {
-                html.setAttribute('data-bs-theme', 'dark');
-                localStorage.setItem('theme', 'dark');
+            if (currentTheme === 'dark') {
+                html.setAttribute('data-bs-theme', 'light');
+                localStorage.setItem('theme', 'light');
                 icon.classList.remove('bi-lightbulb');
                 icon.classList.add('bi-lightbulb-fill');
             } else {
-                html.setAttribute('data-bs-theme', 'light');
-                localStorage.setItem('theme', 'light');
+                html.setAttribute('data-bs-theme', 'dark');
+                localStorage.setItem('theme', 'dark');
                 icon.classList.remove('bi-lightbulb-fill');
                 icon.classList.add('bi-lightbulb');
             }

@@ -18,7 +18,13 @@ class Embalagem(models.Model):
         ('cm', 'Centímetro'),
         ('m', 'Metro'),
     )
-    unidade = models.CharField(max_length=2, choices=UNIDADE_CHOICES) 
+    unidade = models.CharField(max_length=2, choices=UNIDADE_CHOICES)
+    
+    def clean(self):
+        for field in ['altura', 'largura', 'comprimento', 'espessura', 'raio']:
+            value = getattr(self, field)
+            if value is not None and value <= 0:
+                raise ValidationError({field: _('O valor deve ser positivo.')})
 
 
 class Departamento(models.Model):
@@ -80,12 +86,10 @@ class Product(models.Model):
 
     UNIDADE_DE_MEDIDA_CHOICES = [
         ('Kg', 'Quilo'),
-        ('L', 'Litro'),
         ('Dp', 'Display'),
         ('Un', 'Unidade'),
         ('Cx', 'Caixa'),
         ('Fd', 'Fardo'),
-        ('Bdj', 'Bandeija'),
         ('Pct', 'Pacote'),
         ('Sch', 'Sache'),
         ('Tp', 'Take Profit'),
@@ -129,6 +133,11 @@ class Product(models.Model):
         
         if self.unidade_de_medida not in ['Dp', 'Cx', 'Fd', 'Pct', 'Tp'] and self.quantidade_por_volume:
             raise ValidationError("A quantidade por volume só deve ser preenchida para as unidades de medida Display, Caixa, Fardo, Pacote, e Take Profit.")
+        
+        for field in ['altura_embalagem', 'largura_embalagem', 'comprimento_embalagem', 'espessura_embalagem', 'raio_embalagem', 'preco_de_custo']:
+            value = getattr(self, field)
+            if value is not None and value <= 0:
+                raise ValidationError({field: _('O valor deve ser positivo.')})
         
         query = Product.objects.filter(name=self.name, category=self.category, subcategory=self.subcategory)
         if self.pk:
