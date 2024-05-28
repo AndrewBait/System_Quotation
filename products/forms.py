@@ -41,7 +41,7 @@ class ProductModelForm(forms.ModelForm):
         unidade_dimensao = self.cleaned_data.get('unidade_dimensao')
 
         if altura_embalagem and largura_embalagem and comprimento_embalagem and espessura_embalagem and unidade_dimensao:
-            embalagem = Embalagem.objects.create(
+            embalagem, created = Embalagem.objects.get_or_create(
                 altura=altura_embalagem,
                 largura=largura_embalagem,
                 comprimento=comprimento_embalagem,

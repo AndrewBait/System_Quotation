@@ -227,7 +227,7 @@ class NewProductCreateView(CreateView):
     
 
 @method_decorator(login_required(login_url='login'), name='dispatch')#decorator
-class ProductUpdatView(UpdateView):
+class ProductUpdateView(UpdateView):
     model = Product
     form_class = ProductModelForm
     template_name = 'product_update.html'
@@ -237,7 +237,7 @@ class ProductUpdatView(UpdateView):
         if new_brand_name:
             brand, created = Brand.objects.get_or_create(name=new_brand_name.strip())
             form.instance.brand = brand
-        return super(ProductUpdatView, self).form_valid(form)
+        return super(ProductUpdateView, self).form_valid(form)
     
     def get_initial(self):
         initial = super().get_initial()
