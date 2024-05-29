@@ -156,7 +156,7 @@
                 // Atualizar a tabela
                 $('#productsTable').DataTable().draw(); 
 
-            
+            }
             
             $(document).ready(function () {
                 $('#productsTable').DataTable({
@@ -177,6 +177,11 @@
                     filterPriceHistory(productId, selectedValue); // Filtra com o valor inicial do select
                 });
             });
+            
+
+
+ 
+
         </script>
 
         <style>
@@ -204,6 +209,9 @@
             }
         </style>
     </div>
+    
+
+
         {% include 'modals/success_modal.html' %}
         {% include 'modals/fechar_cotacao_modal.html' %}
     </form>
