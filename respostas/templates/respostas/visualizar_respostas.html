@@ -58,45 +58,49 @@
                 </thead>
                 <tbody>
                     {% for item in itens_data %}
-                        {% if item.respostas %}
-                            <tr data-produto="{{ item.produto_nome }}">
-                                <td>{{ item.quantidade }}</td>
-                                <td>{{ item.tipo_volume }}</td>
-                                <td>
-                                    <span class="d-inline d-md-none">{{ item.produto_nome }}</span>
-                                    <span class="d-none d-md-inline" data-bs-toggle="tooltip" data-bs-placement="top" title="{{ item.produto_nome }}">
-                                        {{ item.produto_nome|truncatechars:25 }}
-                                    </span>
-                                </td>
-                                <td class="d-none d-md-table-cell">
-                                    <div>
-                                        R$ {{ item.ultimo_preco }} em {% if item.data_ultimo_preco %}{{ item.data_ultimo_preco|date:"d/m/Y" }}{% else %}N/A{% endif %}
-                                        <button type="button" class="btn btn-link btn-sm text-decoration-none"
-                                                data-bs-toggle="modal" data-bs-target="#priceHistoryModal{{ forloop.counter }}"
-                                                data-product-id="{{ item.id }}">
-                                            Ver Histórico
-                                        </button>
-                                    </div>
-                                    {% include 'modals/price_history_modal.html' %}
-                                </td>
-                                <td>
-                                    <div class="d-flex flex-wrap align-items-center">
-                                        {% for resposta in item.respostas|slice:":3" %}
-                                            <div class="offer-item me-2 mb-2 {% if forloop.counter == 1 %}text-success{% elif forloop.counter == 2 %}text-warning{% elif forloop.counter == 3 %}text-danger{% endif %}">
-                                                {% include 'modals/offer_details_modal.html' with modal_id=forloop.counter resposta=resposta item=item %}
-                                            </div>
-                                            {% if not forloop.last %}<br>{% endif %}
-                                        {% endfor %}
-                                        {% if item.respostas|length > 3 %}
-                                            <button type="button" class="btn btn-link btn-sm text-decoration-none" data-bs-toggle="modal" data-bs-target="#moreOffersModal{{ item.id }}">
-                                                • Ver mais
-                                            </button>
-                                            {% include 'modals/more_offers_modal.html' with modal_id=item.id item=item %}
+                    {% if item.respostas %}
+                        <tr data-produto="{{ item.produto_nome }}">
+                            <td>{{ item.quantidade }}</td>
+                            <td>{{ item.tipo_volume }}</td>
+                            <td>
+                                <span class="d-inline d-md-none">{{ item.produto_nome }}</span>
+                                <span class="d-none d-md-inline" data-bs-toggle="tooltip" data-bs-placement="top" title="{{ item.produto_nome }}">
+                                    {{ item.produto_nome|truncatechars:25 }}
+                                </span>
+                            </td>
+                            <td class="d-none d-md-table-cell">
+                                <div>
+                                    R$ {{ item.ultimo_preco }} em {% if item.data_ultimo_preco %}{{ item.data_ultimo_preco|date:"d/m/Y" }}{% else %}N/A{% endif %}
+                                    <button type="button" class="btn btn-link btn-sm text-decoration-none"
+                                            data-bs-toggle="modal" data-bs-target="#priceHistoryModal{{ forloop.counter }}"
+                                            data-product-id="{{ item.id }}">
+                                        Ver Histórico
+                                    </button>
+                                </div>
+                                {% include 'modals/price_history_modal.html' %}
+                            </td>
+                            <td>
+                                <div class="d-flex flex-wrap align-items-center">
+                                    {% for resposta in item.respostas %}
+                                        {% if resposta.preco and resposta.preco > 0 %}
+                                            {% if resposta.is_top3 %}
+                                                <div class="offer-item me-2 mb-2 {% if forloop.counter == 1 %}text-success{% elif forloop.counter == 2 %}text-warning{% elif forloop.counter == 3 %}text-danger{% endif %}">
+                                                    {% include 'modals/offer_details_modal.html' with modal_id=forloop.counter resposta=resposta item=item %}
+                                                </div>
+                                                {% if not forloop.last %}<br>{% endif %}
+                                            {% endif %}
                                         {% endif %}
-                                    </div>
-                                </td>
-                            </tr>
-                        {% endif %}
+                                    {% endfor %}
+                                    {% if item.respostas|length > 3 %}
+                                        <button type="button" class="btn btn-link btn-sm text-decoration-none" data-bs-toggle="modal" data-bs-target="#moreOffersModal{{ item.id }}">
+                                            • Ver mais
+                                        </button>
+                                        {% include 'modals/more_offers_modal.html' with modal_id=item.id item=item %}
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                    {% endif %}
                     {% endfor %}
                 </tbody>
             </table>
@@ -105,7 +109,6 @@
         <script>
             const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
             const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl));
-        
 
             // Armazenar o histórico de preços de todos os produtos
             const priceHistoryData = {}; // Inicializa o objeto fora do loop
@@ -129,7 +132,7 @@
                     row.style.display = rowDate >= cutoffDate ? '' : 'none'; // Mostra/esconde a linha
                   }
                 });
-            }           
+            }        
             
 
                 filteredData.forEach(entry => {
@@ -169,19 +172,15 @@
                     "searching": true,
                     "ordering": true
                 });
-                  //Disparar filtragem inicial para todos os modais ao abrir
+
+                // Disparar filtragem inicial para todos os modais ao abrir
                 $('.modal').on('shown.bs.modal', function () {
                     const productId = $(this).find('table').attr('id').replace('priceHistoryBody', '');
                     const selectElement = document.getElementById(`daysSelect${productId}`);
-                    const selectedValue = selectElement.value; 
+                    const selectedValue = selectElement.value;
                     filterPriceHistory(productId, selectedValue); // Filtra com o valor inicial do select
                 });
             });
-            
-
-
- 
-
         </script>
 
         <style>
@@ -191,30 +190,24 @@
             .btn-link {
                 text-decoration: none;
             }
-
             .offer-item {
                 font-weight: bold; /* Opcional: Negrito para destacar */
             }
-
             .text-success {
                 color: #28a745 !important; /* Verde */
             }
-
             .text-warning {
                 color: #ffc107 !important; /* Amarelo */
             }
-
             .text-danger {
                 color: #dc3545 !important; /* Vermelho */
             }
         </style>
     </div>
     
-
-
-        {% include 'modals/success_modal.html' %}
-        {% include 'modals/fechar_cotacao_modal.html' %}
-    </form>
+    {% include 'modals/success_modal.html' %}
+    {% include 'modals/fechar_cotacao_modal.html' %}
+</form>
 {% endblock %}
 
 {% block scripts %}
