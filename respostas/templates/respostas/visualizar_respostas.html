@@ -81,16 +81,13 @@
                             </td>
                             <td>
                                 <div class="d-flex flex-wrap align-items-center">
-                                    {% for resposta in item.respostas %}
-                                        {% if resposta.preco and resposta.preco > 0 %}
-                                            {% if resposta.is_top3 %}
-                                                <div class="offer-item me-2 mb-2 {% if forloop.counter == 1 %}text-success{% elif forloop.counter == 2 %}text-warning{% elif forloop.counter == 3 %}text-danger{% endif %}">
-                                                    {% include 'modals/offer_details_modal.html' with modal_id=forloop.counter resposta=resposta item=item %}
-                                                </div>
-                                                {% if not forloop.last %}<br>{% endif %}
-                                            {% endif %}
-                                        {% endif %}
+                                    {% for resposta in item.respostas|slice:":3" %}
+                                        <div class="offer-item me-2 mb-2 {% if forloop.counter == 1 %}text-success{% elif forloop.counter == 2 %}text-warning{% elif forloop.counter == 3 %}text-danger{% endif %}">
+                                            {% include 'modals/offer_details_modal.html' with modal_id=forloop.counter resposta=resposta item=item %}
+                                        </div>
+                                        {% if not forloop.last %}<br>{% endif %}
                                     {% endfor %}
+                                
                                     {% if item.respostas|length > 3 %}
                                         <button type="button" class="btn btn-link btn-sm text-decoration-none" data-bs-toggle="modal" data-bs-target="#moreOffersModal{{ item.id }}">
                                             • Ver mais

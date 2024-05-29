@@ -8,29 +8,26 @@
             <div class="modal-body">
                 <div class="container">
                     {% for resposta in item.respostas|slice:"3:" %}
-                        {% with modal_id=item.id|stringformat:"s_"|add:forloop.counter0 %}
                         <div class="row align-items-center mb-2">
                             <div class="col-6 text-truncate">
                                 <div class="form-check">
-                                    <input type="radio" name="selecao_{{ item.id }}" value="{{ resposta.fornecedor_id }}_{{ resposta.preco }}" class="form-check-input" id="selecao_{{ modal_id }}">
-                                    <label class="form-check-label" for="selecao_{{ modal_id }}">
-                                        <button type="button" class="btn btn-link text-start" data-bs-toggle="modal" data-bs-target="#detailsModal{{ modal_id }}">
+                                    <input type="radio" name="selecao_{{ item.id }}" value="{{ resposta.fornecedor_id }}_{{ resposta.preco }}" class="form-check-input" id="selecao_{{ forloop.counter }}">
+                                    <label class="form-check-label" for="selecao_{{ forloop.counter }}">
+                                        <button type="button" class="btn btn-link text-start" data-bs-toggle="modal" data-bs-target="#detailsModal{{ forloop.counter }}">
                                             <strong>R$ {{ resposta.preco }} - {{ resposta.fornecedor_nome }}</strong>
                                         </button>
                                     </label>
                                 </div>
                             </div>
                             <div class="col-6">
-                                <button type="button" class="btn btn-link" data-bs-toggle="modal" data-bs-target="#detailsModal{{ modal_id }}">
+                                <button type="button" class="btn btn-link" data-bs-toggle="modal" data-bs-target="#detailsModal{{ forloop.counter }}">
                                     Ver Detalhes
                                 </button>
                             </div>
-                        </div>
-                        {% endwith %}                                                    
+                        </div>                                                
                     {% endfor %}
                 </div>
             </div>
         </div>
     </div>
 </div>
-

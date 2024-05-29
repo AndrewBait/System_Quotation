@@ -134,15 +134,15 @@ def visualizar_cotacoes(request, cotacao_uuid):
     default_start_date = timezone.now() - timezone.timedelta(days=default_interval_days)
 
     for item in cotacao.itens_cotacao.all():
-        respostas = item.itemrespostacotacao_set.filter(preco__gt=0).select_related('resposta_cotacao__fornecedor').order_by('preco')
+        # Filtrar respostas válidas (preço maior que 0 e não None)
+        respostas_validas = list(filter(lambda r: r.preco is not None and r.preco > 0, item.itemrespostacotacao_set.select_related('resposta_cotacao__fornecedor').order_by('preco')))
         respostas_data = [{
             'preco': round(resposta.preco, 3),
-            'fornecedor_nome': resposta.resposta_cotacao.fornecedor.company if resposta.resposta_cotacao.fornecedor.company else resposta.resposta_cotacao.fornecedor.name,
+            'fornecedor_nome': resposta.resposta_cotacao.fornecedor.company or resposta.resposta_cotacao.fornecedor.name,
             'fornecedor_id': resposta.resposta_cotacao.fornecedor.pk,
             'observacao': resposta.observacao,
-            'imagem_url': resposta.imagem.url if resposta.imagem else None,
-            'is_top3': idx < 3
-        } for idx, resposta in enumerate(respostas) if resposta.preco and resposta.preco > 0]
+            'imagem_url': resposta.imagem.url if resposta.imagem else None
+        } for resposta in respostas_validas]
 
         produto = item.produto
         ultimo_preco = produto.price_history.order_by('-date').first()
@@ -392,80 +392,80 @@ from products.models import Product, ProductPriceHistory
 from suppliers.models import Supplier
 from cotacao.models import Cotacao, ItemCotacao
 
-def visualizar_cotacoes(request, cotacao_uuid):
-    cotacao = get_object_or_404(Cotacao, uuid=cotacao_uuid)
-    itens_data = []
+# def visualizar_cotacoes(request, cotacao_uuid):
+#     cotacao = get_object_or_404(Cotacao, uuid=cotacao_uuid)
+#     itens_data = []
 
-    # Definimos o intervalo padrão de 3 meses
-    default_interval_days = 90
-    default_start_date = timezone.now() - timezone.timedelta(days=default_interval_days)
+#     # Definimos o intervalo padrão de 3 meses
+#     default_interval_days = 90
+#     default_start_date = timezone.now() - timezone.timedelta(days=default_interval_days)
 
-    for item in cotacao.itens_cotacao.all():
-        respostas = item.itemrespostacotacao_set.all().select_related('resposta_cotacao__fornecedor').order_by('preco')
-        respostas_data = [{
-            'preco': round(resposta.preco, 3) if resposta.preco is not None else None,
-            'fornecedor_nome': resposta.resposta_cotacao.fornecedor.company if resposta.resposta_cotacao.fornecedor.company else resposta.resposta_cotacao.fornecedor.name,
-            'fornecedor_id': resposta.resposta_cotacao.fornecedor.pk,
-            'observacao': resposta.observacao,
-            'imagem_url': resposta.imagem.url if resposta.imagem else None,
-            'is_top3': idx < 3
-        } for idx, resposta in enumerate(respostas)]
+#     for item in cotacao.itens_cotacao.all():
+#         respostas = item.itemrespostacotacao_set.all().select_related('resposta_cotacao__fornecedor').order_by('preco')
+#         respostas_data = [{
+#             'preco': round(resposta.preco, 3) if resposta.preco is not None else None,
+#             'fornecedor_nome': resposta.resposta_cotacao.fornecedor.company if resposta.resposta_cotacao.fornecedor.company else resposta.resposta_cotacao.fornecedor.name,
+#             'fornecedor_id': resposta.resposta_cotacao.fornecedor.pk,
+#             'observacao': resposta.observacao,
+#             'imagem_url': resposta.imagem.url if resposta.imagem else None,
+#             'is_top3': idx < 3
+#         } for idx, resposta in enumerate(respostas)]
 
-        produto = item.produto
-        ultimo_preco = produto.price_history.order_by('-date').first()
+#         produto = item.produto
+#         ultimo_preco = produto.price_history.order_by('-date').first()
 
-        # Filtra os registros de histórico de preços para os últimos 3 meses por padrão
-        price_history_records = produto.price_history.filter(date__gte=default_start_date).annotate(month=TruncMonth('date')).order_by('-date')
+#         # Filtra os registros de histórico de preços para os últimos 3 meses por padrão
+#         price_history_records = produto.price_history.filter(date__gte=default_start_date).annotate(month=TruncMonth('date')).order_by('-date')
 
-        price_history = defaultdict(lambda: {
-            'min_price': float('inf'),
-            'min_price_date': None,
-            'min_supplier': None,
-            'max_price': float('-inf'),
-            'max_price_date': None,
-            'max_supplier': None
-        })
+#         price_history = defaultdict(lambda: {
+#             'min_price': float('inf'),
+#             'min_price_date': None,
+#             'min_supplier': None,
+#             'max_price': float('-inf'),
+#             'max_price_date': None,
+#             'max_supplier': None
+#         })
 
-        for record in price_history_records:
-            month = record.date.strftime('%Y-%m')
-            if record.price < price_history[month]['min_price']:
-                price_history[month]['min_price'] = record.price
-                price_history[month]['min_price_date'] = record.date
-                price_history[month]['min_supplier'] = record.supplier.company if record.supplier else None
-            if record.price > price_history[month]['max_price']:
-                price_history[month]['max_price'] = record.price
-                price_history[month]['max_price_date'] = record.date
-                price_history[month]['max_supplier'] = record.supplier.company if record.supplier else None
+#         for record in price_history_records:
+#             month = record.date.strftime('%Y-%m')
+#             if record.price < price_history[month]['min_price']:
+#                 price_history[month]['min_price'] = record.price
+#                 price_history[month]['min_price_date'] = record.date
+#                 price_history[month]['min_supplier'] = record.supplier.company if record.supplier else None
+#             if record.price > price_history[month]['max_price']:
+#                 price_history[month]['max_price'] = record.price
+#                 price_history[month]['max_price_date'] = record.date
+#                 price_history[month]['max_supplier'] = record.supplier.company if record.supplier else None
 
-        # Converte o defaultdict para uma lista, ordenada pelo mês e limitando ao número de meses padrão
-        price_history_list = sorted(price_history.items(), key=lambda x: x[0], reverse=True)
-        price_history_formatted = [{
-            'month': month,
-            'min_price': round(data['min_price'], 3) if data['min_price'] != float('inf') else None,
-            'min_price_date': data['min_price_date'].strftime('%d/%m/%Y') if data['min_price_date'] else None,
-            'min_supplier': data['min_supplier'],
-            'max_price': round(data['max_price'], 3) if data['max_price'] != float('-inf') else None,
-            'max_price_date': data['max_price_date'].strftime('%d/%m/%Y') if data['max_price_date'] else None,
-            'max_supplier': data['max_supplier']
-        } for month, data in price_history_list[:default_interval_days//30]]
+#         # Converte o defaultdict para uma lista, ordenada pelo mês e limitando ao número de meses padrão
+#         price_history_list = sorted(price_history.items(), key=lambda x: x[0], reverse=True)
+#         price_history_formatted = [{
+#             'month': month,
+#             'min_price': round(data['min_price'], 3) if data['min_price'] != float('inf') else None,
+#             'min_price_date': data['min_price_date'].strftime('%d/%m/%Y') if data['min_price_date'] else None,
+#             'min_supplier': data['min_supplier'],
+#             'max_price': round(data['max_price'], 3) if data['max_price'] != float('-inf') else None,
+#             'max_price_date': data['max_price_date'].strftime('%d/%m/%Y') if data['max_price_date'] else None,
+#             'max_supplier': data['max_supplier']
+#         } for month, data in price_history_list[:default_interval_days//30]]
 
-        item_data = {
-            'id': item.pk,
-            'produto_nome': produto.name,
-            'quantidade': item.quantidade,
-            'tipo_volume': item.get_tipo_volume_display(),
-            'ultimo_preco': round(ultimo_preco.price, 3) if ultimo_preco and ultimo_preco.price is not None else None,
-            'data_ultimo_preco': ultimo_preco.date if ultimo_preco else None,
-            'price_history': price_history_formatted,
-            'respostas': respostas_data
-        }
-        itens_data.append(item_data)
+#         item_data = {
+#             'id': item.pk,
+#             'produto_nome': produto.name,
+#             'quantidade': item.quantidade,
+#             'tipo_volume': item.get_tipo_volume_display(),
+#             'ultimo_preco': round(ultimo_preco.price, 3) if ultimo_preco and ultimo_preco.price is not None else None,
+#             'data_ultimo_preco': ultimo_preco.date if ultimo_preco else None,
+#             'price_history': price_history_formatted,
+#             'respostas': respostas_data
+#         }
+#         itens_data.append(item_data)
 
-    return render(request, 'respostas/visualizar_respostas.html', {
-        'cotacao': cotacao,
-        'itens_data': itens_data,
-        'prazo': cotacao.prazo  # Incluindo o prazo no contexto
-    })
+#     return render(request, 'respostas/visualizar_respostas.html', {
+#         'cotacao': cotacao,
+#         'itens_data': itens_data,
+#         'prazo': cotacao.prazo  # Incluindo o prazo no contexto
+#     })
 
 
 
