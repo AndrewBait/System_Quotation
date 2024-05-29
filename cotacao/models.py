@@ -50,7 +50,7 @@ class ItemCotacao(models.Model):
     cotacao = models.ForeignKey(Cotacao, on_delete=models.CASCADE, related_name='itens_cotacao', verbose_name='Cotação', help_text='Cotação à qual o item pertence')
     produto = models.ForeignKey('products.Product', on_delete=models.CASCADE, verbose_name='Produto', help_text='Produto da cotação', related_name='itens_cotacao', blank=False, null=False)
     quantidade = models.PositiveIntegerField(default=1, verbose_name='Quantidade', help_text='Quantidade do produto', blank=False, null=False)
-    tipo_volume = models.CharField(max_length=2, choices=[('Kg', 'Quilo(s)'), ('L', 'Litro(s)'), ('Dp', 'Display(s)'), ('Un', 'Unidade(s)'), ('Cx', 'Caixa(s)'), ('Fd', 'Fardo(s)'), ('Bd', 'Bandeija(s)'), ('Pc', 'Pacote(s)'), ('Sc', 'Sache(s)'), ('Tp', 'Take Profit(s)'),], default='un', verbose_name='Tipo de Volume', help_text='Tipo de volume do produto', blank=False, null=False)
+    tipo_volume = models.CharField(max_length=2, choices=[('Kg', 'Quilo(s)'), ('Dp', 'Display(s)'), ('Un', 'Unidade(s)'), ('Cx', 'Caixa(s)'), ('Fd', 'Fardo(s)'), ('Pc', 'Pacote(s)'), ('Sc', 'Sache(s)'), ('Tp', 'Take Profit(s)'),], default='un', verbose_name='Tipo de Volume', help_text='Tipo de volume do produto', blank=False, null=False)
     observacao = models.TextField(blank=True, null=True, default='', verbose_name='Observação', help_text='Observações sobre o item', max_length=100)
     
 

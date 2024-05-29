@@ -164,15 +164,24 @@ def gerar_pedidos(request):
 
         try:
             with transaction.atomic():
+                # Processamento inicial para otimizar as buscas de itens e fornecedores
                 selecao_keys = [key for key in request.POST if key.startswith('selecao_')]
+                item_ids = [int(key.split('_', 1)[1]) for key in selecao_keys]
+                item_cotacoes = ItemCotacao.objects.filter(pk__in=item_ids).select_related('produto')
+                item_cotacao_map = {item.pk: item for item in item_cotacoes}
+
+                fornecedor_ids = {int(request.POST[key].split('_')[0].strip()) for key in selecao_keys}
+                fornecedores = Supplier.objects.filter(pk__in=fornecedor_ids)
+                fornecedor_map = {fornecedor.pk: fornecedor for fornecedor in fornecedores}
+
                 for key in selecao_keys:
                     item_id = int(key.split('_', 1)[1])
                     fornecedor_id, preco = request.POST[key].split('_')
                     fornecedor_id = int(fornecedor_id.strip())
                     preco_decimal = Decimal(preco.replace(',', '.').strip())
 
-                    item_cotacao = ItemCotacao.objects.get(pk=item_id)
-                    fornecedor = Supplier.objects.get(pk=fornecedor_id)
+                    item_cotacao = item_cotacao_map[item_id]
+                    fornecedor = fornecedor_map[fornecedor_id]
 
                     if fornecedor not in pedido_agrupado_dict:
                         pedido_agrupado = PedidoAgrupado.objects.create(
@@ -193,6 +202,7 @@ def gerar_pedidos(request):
                         preco=preco_decimal,
                         pedido_agrupado=pedido_agrupado
                     )
+
         except Exception as e:
             messages.error(request, f'Erro geral ao gerar pedidos: {str(e)}')
             has_errors = True

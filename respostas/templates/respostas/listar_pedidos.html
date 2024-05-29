@@ -38,18 +38,19 @@
             {% else %}bg-warning text-dark
             {% endif %}
           ">
-            <h5 class="card-title mb-0">Cotação: {{ pedido_agrupado.cotacao.nome }} - Fornecedor: {{ pedido_agrupado.fornecedor.name }}</h5>
+            <h5 class="card-title mb-0">Cotação: {{ pedido_agrupado.cotacao.nome }} - Fornecedor: {{ pedido_agrupado.fornecedor.company }}</h5>
           </div>
           <div class="card-body d-flex flex-column"> 
             <ul class="list-group list-group-flush flex-grow-1"> 
-              <li class="list-group-item">Data da Requisição: {{ pedido_agrupado.data_requisicao }}</li>
+              <li class="list-group-item">Data da Requisição: {{ pedido_agrupado.data_requisicao }}</li> 
+              <li class="list-group-item">Vendedor: {{ pedido_agrupado.fornecedor.name }}</li> 
               <li class="list-group-item">Total de Itens: {{ pedido_agrupado.total_itens }}</li>
               <li class="list-group-item">Preço Total: R$ {{ pedido_agrupado.preco_total }}</li>
               <li class="list-group-item">Prazo: {{ pedido_agrupado.cotacao.prazo }} dias</li>
               <li class="list-group-item">
                 Status: 
                 <span class="badge rounded-pill 
-                  {% if pedido_agrupado.status == 'Pendente' %}bg-warning text-dark 
+                  {% if pedido_agrupado.status == 'Pndente' %}bg-warning text-dark 
                   {% elif pedido_agrupado.status == 'Aprovado' %}bg-success
                   {% elif pedido_agrupado.status == 'Rejeitado' %}bg-danger
                   {% endif %}
@@ -57,7 +58,6 @@
                   {{ pedido_agrupado.status }}
                 </span>
               </li>
-              <li class="list-group-item">Usuário: {{ pedido_agrupado.usuario_criador.get_full_name }}</li>
             </ul>
             <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-auto"> 
               <a href="{% url 'respostas:detalhes_pedido_agrupado' pedido_agrupado.pk %}" class="btn btn-primary">Ver Detalhes</a>
