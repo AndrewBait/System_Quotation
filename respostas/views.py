@@ -236,7 +236,12 @@ def gerar_pedidos(request):
                     item_cotacao = ItemCotacao.objects.get(pk=item_id)
                     fornecedor = get_object_or_404(Supplier, pk=fornecedor_id)
 
-                    # Cria uma chave única para o pedido agrupado, considerando o fornecedor e o prazo alternativo
+                    # Obtendo o prazo alternativo correto do formulário
+                    prazo_alternativo_key = f'prazo_alternativo_{item_id}'
+                    prazo_alternativo = request.POST.get(prazo_alternativo_key, None)
+                    if prazo_alternativo is not None:
+                        prazo_alternativo = int(prazo_alternativo)
+
                     pedido_agrupado_key = (fornecedor_id, is_alternative)
 
                     if pedido_agrupado_key not in pedido_agrupado_dict:
@@ -251,13 +256,21 @@ def gerar_pedidos(request):
                     else:
                         pedido_agrupado = pedido_agrupado_dict[pedido_agrupado_key]
 
+                    item_resposta_cotacao = ItemRespostaCotacao.objects.get(
+                        resposta_cotacao__cotacao=cotacao,
+                        resposta_cotacao__fornecedor=fornecedor,
+                        item_cotacao=item_cotacao
+                    )
+
                     Pedido.objects.create(
                         produto=item_cotacao.produto,
                         quantidade=item_cotacao.quantidade,
                         tipo_volume=item_cotacao.tipo_volume,
                         preco=preco_decimal,
                         pedido_agrupado=pedido_agrupado,
-                        observacoes="Preço alternativo selecionado" if is_alternative else ""
+                        observacoes="Preço alternativo selecionado" if is_alternative else "",
+                        prazo_alternativo_selecionado=is_alternative,
+                        prazo_alternativo=item_resposta_cotacao.prazo_alternativo if is_alternative else None 
                     )
 
         except Exception as e:
@@ -269,13 +282,12 @@ def gerar_pedidos(request):
 
     return redirect(reverse('respostas:visualizar_cotacoes', args=[cotacao_uuid]))
 
-
-
-
 class ListarPedidosView(ListView):
     model = PedidoAgrupado
-    template_name = 'respostas/listar_pedidos.html'
+    template_name = 'respostas/listar_pedidos.html'  
     context_object_name = 'pedidos_agrupados'
+    paginate_by = 10  # Número de pedidos agrupados por página
+    
 
     def get_queryset(self):
         queryset = super().get_queryset()
@@ -284,22 +296,32 @@ class ListarPedidosView(ListView):
         start_date = self.request.GET.get('start_date')
         end_date = self.request.GET.get('end_date')
 
-        if query:
+        # Filtros de busca
+        search_query = self.request.GET.get('q')
+        if search_query:
             queryset = queryset.filter(
-                Q(cotacao__nome__icontains=query) |
-                Q(fornecedor__name__icontains=query) |
-                Q(fornecedor__company__name__icontains=query)
+                Q(cotacao__nome__icontains=search_query) |
+                Q(fornecedor__name__icontains=search_query) |  
+                Q(fornecedor__company__icontains=search_query) | 
+                Q(usuario_criador__username__icontains=search_query)  
             )
-        
+
+        # Filtros por status
+        status = self.request.GET.get('status')
         if status:
             queryset = queryset.filter(status=status)
-        
-        if start_date and end_date:
-            start_date = timezone.make_aware(datetime.datetime.strptime(start_date, '%Y-%m-%d'))
-            end_date = timezone.make_aware(datetime.datetime.strptime(end_date, '%Y-%m-%d'))
+
+        # Filtros por datas (com tratamento de timezone)
+        start_date_str = self.request.GET.get('start_date')
+        end_date_str = self.request.GET.get('end_date')
+
+        if start_date_str and end_date_str:
+            start_date = timezone.make_aware(datetime.datetime.strptime(start_date_str, '%Y-%m-%d'))
+            # Adiciona um dia à data final para incluir o dia inteiro no intervalo
+            end_date = timezone.make_aware(datetime.datetime.strptime(end_date_str, '%Y-%m-%d') + datetime.timedelta(days=1)) 
             queryset = queryset.filter(data_requisicao__range=(start_date, end_date))
 
-        return queryset  
+        return queryset
     
     
 

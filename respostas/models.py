@@ -63,6 +63,8 @@ class Pedido(models.Model):
     quantidade = models.DecimalField(max_digits=10, decimal_places=3, verbose_name="Quantidade")
     tipo_volume = models.CharField(max_length=50, choices=Product.UNIDADE_CHOICES, verbose_name="Tipo de Volume")
     preco = models.DecimalField(max_digits=10, decimal_places=3, verbose_name="Preço")
+    prazo_alternativo_selecionado = models.BooleanField(default=False, verbose_name="Prazo Alternativo Selecionado")
+    prazo_alternativo = models.PositiveIntegerField(null=True, blank=True, verbose_name="Prazo Alternativo")
     observacoes = models.TextField(blank=True, null=True, verbose_name="Observações")
     pedido_agrupado = models.ForeignKey(PedidoAgrupado, related_name='pedidos', on_delete=models.CASCADE, verbose_name="Pedido Agrupado", null=True, default=None)
 
