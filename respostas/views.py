@@ -262,9 +262,14 @@ def gerar_pedidos(request):
                         item_cotacao=item_cotacao
                     )
 
+                    quantidade_unitaria = item_cotacao.produto.quantidade_por_volume or 1
+                    quantidade_total = item_cotacao.quantidade
+                    if item_cotacao.tipo_volume in ['Cx', 'Dp', 'Fd', 'Pct', 'Tp']:
+                        quantidade_total *= quantidade_unitaria
+
                     Pedido.objects.create(
                         produto=item_cotacao.produto,
-                        quantidade=item_cotacao.quantidade,
+                        quantidade=quantidade_total,
                         tipo_volume=item_cotacao.tipo_volume,
                         preco=preco_decimal,
                         pedido_agrupado=pedido_agrupado,
@@ -281,6 +286,7 @@ def gerar_pedidos(request):
             messages.success(request, 'Pedidos gerados com sucesso!')
 
     return redirect(reverse('respostas:visualizar_cotacoes', args=[cotacao_uuid]))
+
 
 class ListarPedidosView(ListView):
     model = PedidoAgrupado

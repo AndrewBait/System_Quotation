@@ -51,7 +51,7 @@
                 <td>{{ pedido_agrupado.data_requisicao }}</td>
                 <td>{{ pedido_agrupado.fornecedor.name }}</td>
                 <td>{{ pedido_agrupado.total_itens }}</td>
-                <td>R$ {{ pedido_agrupado.preco_total }}</td>
+                <td>R$ {{ pedido_agrupado.preco_total|floatformat:3 }}</td>
                 <td>
                     {% if pedido_agrupado.pedidos.first.prazo_alternativo_selecionado and pedido_agrupado.pedidos.first.prazo_alternativo %}
                       {{ pedido_agrupado.pedidos.first.prazo_alternativo }} dias (Alternativo)

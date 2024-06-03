@@ -71,9 +71,17 @@ class Pedido(models.Model):
     def __str__(self):
         return f"{self.produto.name} - Quantidade: {self.quantidade}"
 
+    @property
+    def preco_total(self):
+        if self.tipo_volume in ['Cx', 'Dp', 'Fd', 'Pct', 'Tp']:  # Tipos de volume que consideram quantidade por volume
+            quantidade_unitaria = self.produto.quantidade_por_volume or 1
+            return self.preco * self.quantidade * quantidade_unitaria
+        elif self.tipo_volume == 'Kg':  # Considerando que 'Kg' representa quilo
+            return self.preco * self.quantidade
+        else:
+            return self.preco * self.quantidade
+
     class Meta:
         verbose_name = "Pedido"
         verbose_name_plural = "Pedidos"
-        
-        
 
