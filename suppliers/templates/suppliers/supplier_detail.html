@@ -2,8 +2,7 @@
 
 {% block content %}
 <style>
-
-  .star {
+    .star {
         position: relative;
         display: inline-block;
         font-size: 24px; /* Tamanho das estrelas */
@@ -21,267 +20,227 @@
     .star-empty {
         pointer-events: none; /* Ignora eventos de mouse */
     }
-  .rating span {
-      cursor: pointer; /* Muda o cursor para o estilo de 'mãozinha' ao passar o mouse */
-      font-size: 1.5em; /* Aumenta o tamanho da fonte das estrelas */
-      color: grey; /* Cor padrão das estrelas */
-  }
-
-  .rating span.active {
-      color: gold; /* Cor das estrelas ativas */
-  }
-
-  .card-hover:hover {
-      cursor: pointer;
-      box-shadow: 0 8px 16px 0 rgba(0,0,0,0.2); /* Efeito de sombra ao passar o mouse */
-  }
+    .rating span {
+        cursor: pointer; /* Muda o cursor para o estilo de 'mãozinha' ao passar o mouse */
+        font-size: 1.5em; /* Aumenta o tamanho da fonte das estrelas */
+        color: grey; /* Cor padrão das estrelas */
+    }
+    .rating span.active {
+        color: gold; /* Cor das estrelas ativas */
+    }
+    .card-hover:hover {
+        cursor: pointer;
+        box-shadow: 0 8px 16px 0 rgba(0,0,0,0.2); /* Efeito de sombra ao passar o mouse */
+    }
 </style>
 <div class="container mt-5">
-  <div class="row">
-    <div class="col-md-8">
-      <div class="card">
-        <div class="card-header d-flex justify-content-between align-items-center">
-          <h2>Detalhes do Fornecedor</h2>
-          <div class="d-flex align-items-center">
-            <div class="me-3">
-              {% comment %} <label for="startDate" class="form-label">Data Início:</label>
-              <input type="date" id="startDate" name="startDate" class="form-control">
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h2>Detalhes do Fornecedor</h2>
+                    <div class="d-flex align-items-center">
+                        <div class="me-3"></div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <h5 class="card-title">{{ object.name }}</h5>
+                    <p class="card-text"><strong>E-mail:</strong> {{ object.email }}</p>
+                    <p class="card-text"><strong>Telefone:</strong> {{ object.phone }}</p>
+                    {% if object.company %}
+                    <p class="card-text"><strong>Empresa:</strong> {{ object.company }}</p>
+                    {% endif %}
+                    {% if object.cnpj %}
+                    <p class="card-text"><strong>CNPJ:</strong> {{ object.cnpj }}</p>
+                    {% endif %}
+                    {% if object.address_line_1 or object.address_line_2 %}
+                    <p class="card-text"><strong>Endereço:</strong> {{ object.address_line_1 }}, {{ object.address_line_2|default_if_none:"" }}</p>
+                    {% endif %}
+                    {% if object.city or object.state %}
+                    <p class="card-text"><strong>Cidade/Estado:</strong> {{ object.city }}/{{ object.state }}</p>
+                    {% endif %}
+                    {% if object.zip_code %}
+                    <p class="card-text"><strong>CEP:</strong> {{ object.zip_code }}</p>
+                    {% endif %}
+                    {% if object.minimum_order_value %}
+                    <p class="card-text"><strong>Valor Mínimo para Pedido:</strong> R$ {{ object.minimum_order_value|floatformat:2 }}</p>
+                    {% endif %}
+                    {% if object.order_response_deadline %}
+                    <p class="card-text"><strong>Prazo de Resposta para Pedidos:</strong> {{ object.order_response_deadline }}</p>
+                    {% endif %}
+                    {% if object.departments.exists %}
+                    <p class="card-text"><strong>Departamentos:</strong> 
+                        {% for department in object.departments.all %}
+                            {{ department.nome }}
+                            {% if not forloop.last %}, {% endif %}
+                        {% endfor %}
+                    {% else %}
+                    <p class="card-text"><strong>Departamentos:</strong> Nenhum cadastrado.</p>
+                    {% endif %}
+                    {% if object.categories.exists %}
+                    <p class="card-text"><strong>Categorias:</strong> {% for category in object.categories.all %}{{ category.name }}{% if not forloop.last %}, {% endif %}{% endfor %}</p>
+                    {% endif %}
+                    {% if object.subcategories.exists %}
+                    <p class="card-text"><strong>Subcategorias:</strong> {% for subcategory in object.subcategories.all %}{{ subcategory.name }}{% if not forloop.last %}, {% endif %}{% endfor %}</p>
+                    {% endif %}
+                    {% if object.brands.exists %}
+                    <p class="card-text"><strong>Marcas:</strong> {% for brand in object.brands.all %}{{ brand.name }}{% if not forloop.last %}, {% endif %}{% endfor %}</p>
+                    {% endif %}
+                    {% if delivery_days_list %}
+                    <p class="card-text"><strong>Dias de Entrega:</strong> {{ delivery_days_list|join:", " }}</p>
+                    {% endif %}
+                    {% if object.billing_deadline %}
+                    <p class="card-text"><strong>Prazo de Faturamento:</strong> {{ object.get_billing_deadline_display }}</p>
+                    {% endif %}
+                    {% if object.specific_billing_deadline %}
+                    <p class="card-text"><strong>Prazo Específico de Faturamento:</strong> {{ object.specific_billing_deadline }}</p>
+                    {% endif %}
+                    <div>
+                        <a href="{% url 'suppliers:supplier_update' object.id %}" class="btn btn-primary" alt="Editar Fornecedor">Editar</a>
+                        <a href="{% url 'suppliers:supplier_list' %}" class="btn btn-secondary" alt="Voltar">Voltar</a>
+                        <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal">
+                            Excluir
+                        </button>
+                    </div>
+                </div>
             </div>
-            <div class="me-3">
-              <label for="endDate" class="form-label">Data Fim:</label>
-              <input type="date" id="endDate" name="endDate" class="form-control">
-            </div>
-            <div class="me-3">
-              <label for="quotations" class="form-label">Cotações Respondidas:</label>
-              <select id="quotations" name="quotations" class="form-select">
-                <option value="">Selecione uma cotação</option>
-                <!-- Opções serão adicionadas aqui via JavaScript ou backend -->
-              </select> {% endcomment %}
-            </div>
-          </div>
         </div>
-        <div class="card-body">
-          <h5 class="card-title">{{ object.name }}</h5>
-          <p class="card-text"><strong>E-mail:</strong> {{ object.email }}</p>
-          <p class="card-text"><strong>Telefone:</strong> {{ object.phone }}</p>
-          {% if object.company %}
-          <p class="card-text"><strong>Empresa:</strong> {{ object.company }}</p>
-          {% endif %}
-          {% if object.cnpj %}
-          <p class="card-text"><strong>CNPJ:</strong> {{ object.cnpj }}</p>
-          {% endif %}
-          {% if object.address_line_1 or object.address_line_2 %}
-          <p class="card-text"><strong>Endereço:</strong> {{ object.address_line_1 }}, {{ object.address_line_2|default_if_none:"" }}</p>
-          {% endif %}
-          {% if object.city or object.state %}
-          <p class="card-text"><strong>Cidade/Estado:</strong> {{ object.city }}/{{ object.state }}</p>
-          {% endif %}
-          {% if object.zip_code %}
-          <p class="card-text"><strong>CEP:</strong> {{ object.zip_code }}</p>
-          {% endif %}
-          {% if object.minimum_order_value %}
-          <p class="card-text"><strong>Valor Mínimo para Pedido:</strong> R$ {{ object.minimum_order_value|floatformat:2 }}</p>
-          {% endif %}
-          {% if object.order_response_deadline %}
-          <p class="card-text"><strong>Prazo de Resposta para Pedidos:</strong> {{ object.order_response_deadline }}</p>
-          {% endif %}
-          {% if object.departments.exists %}
-          <p class="card-text"><strong>Departamentos:</strong> 
-              {% for department in object.departments.all %}
-                  {{ department.nome }}
-                  {% if not forloop.last %}, {% endif %}
-              {% endfor %}
-          {% else %}
-          <p class="card-text"><strong>Departamentos:</strong> Nenhum cadastrado.</p>
-          {% endif %}
-          {% if object.categories.exists %}
-          <p class="card-text"><strong>Categorias:</strong> {% for category in object.categories.all %}{{ category.name }}{% if not forloop.last %}, {% endif %}{% endfor %}</p>
-          {% endif %}
-          {% if object.subcategories.exists %}
-          <p class="card-text"><strong>Subcategorias:</strong> {% for subcategory in object.subcategories.all %}{{ subcategory.name }}{% if not forloop.last %}, {% endif %}{% endfor %}</p>
-          {% endif %}
-          {% if object.brands.exists %}
-          <p class="card-text"><strong>Marcas:</strong> {% for brand in object.brands.all %}{{ brand.name }}{% if not forloop.last %}, {% endif %}{% endfor %}</p>
-          {% endif %}
-          <div>
-            <a href="{% url 'suppliers:supplier_update' object.id %}" class="btn btn-primary" alt="Editar Fornecedor">Editar</a>
-            <a href="{% url 'suppliers:supplier_list' %}" class="btn btn-secondary" alt="Voltar">Voltar</a>
-            <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal">
-              Excluir
-            </button>
-          </div>
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Avaliações</h5>
+                </div>
+                <form method="post" action="{% url 'suppliers:supplier_update_ratings' object.id %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="save_ratings">
+                    <div class="card-body">
+                        <div class="mb-2">
+                            <label>Qualidade:</label>
+                            <div class="rating" data-field-name="quality_rating" data-score="{{ object.quality_rating | default_if_none:'0' }}">
+                                <span data-value="1">&#9734;</span>
+                                <span data-value="2">&#9734;</span>
+                                <span data-value="3">&#9734;</span>
+                                <span data-value="4">&#9734;</span>
+                                <span data-value="5">&#9734;</span>
+                            </div>
+                            <input type="hidden" name="quality_rating" value="{{ object.quality_rating | default:'0' }}">
+                        </div>
+                        <div class="mb-2">
+                            <label>Tempo da Entrega:</label>
+                            <div class="rating" data-field-name="delivery_time_rating" data-score="{{ object.delivery_time_rating | default_if_none:'0' }}">
+                                <span data-value="1">&#9734;</span>
+                                <span data-value="2">&#9734;</span>
+                                <span data-value="3">&#9734;</span>
+                                <span data-value="4">&#9734;</span>
+                                <span data-value="5">&#9734;</span>
+                            </div>
+                            <input type="hidden" name="delivery_time_rating" value="{{ object.delivery_time_rating | default:'0' }}">
+                        </div>
+                        <div class="mb-2">
+                            <label>Preço:</label>
+                            <div class="rating" data-field-name="flexibility_rating" data-score="{{ object.flexibility_rating | default_if_none:'0' }}">
+                                <span data-value="1">&#9734;</span>
+                                <span data-value="2">&#9734;</span>
+                                <span data-value="3">&#9734;</span>
+                                <span data-value="4">&#9734;</span>
+                                <span data-value="5">&#9734;</span>
+                            </div>
+                            <input type="hidden" name="flexibility_rating" value="{{ object.flexibility_rating | default:'0' }}">
+                        </div>
+                        <div class="mb-2">
+                            <label>Confiança:</label>
+                            <div class="rating" data-field-name="partnership_rating" data-score="{{ object.partnership_rating | default_if_none:'0' }}">
+                                <span data-value="1">&#9734;</span>
+                                <span data-value="2">&#9734;</span>
+                                <span data-value="3">&#9734;</span>
+                                <span data-value="4">&#9734;</span>
+                                <span data-value="5">&#9734;</span>
+                            </div>
+                            <input type="hidden" name="partnership_rating" value="{{ object.partnership_rating | default:'0' }}">
+                        </div>
+                        <div class="mb-2">
+                            <h3>Comentários:</h3>
+                            <textarea class="form-control" name="comments" rows="3">{{ object.comments|default:"" }}</textarea>
+                            <input type="hidden" name="save_ratings" value="1">
+                        </div>
+                        <div class="mb-3">
+                            <button type="submit" class="btn btn-primary">Salvar Avaliações</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
         </div>
-      </div>
     </div>
-    <div class="col-md-3">
-      <div class="card">
-        <div class="card-header">
-          <h5>Avaliações</h5>
-        </div>
-        <form method="post" action="{% url 'suppliers:supplier_update_ratings' object.id %}">
-          {% csrf_token %}
-          <input type="hidden" name="action" value="save_ratings">
-        <div class="card-body">
-          <div class="mb-2">
-            <label>Qualidade:</label>
-            <div class="rating" data-field-name="quality_rating" data-score="{{ object.quality_rating | default_if_none:'0' }}">
-              <!-- Estrelas para avaliação; clique altera o valor do campo oculto -->
-              <span data-value="1">&#9734;</span>
-              <span data-value="2">&#9734;</span>
-              <span data-value="3">&#9734;</span>
-              <span data-value="4">&#9734;</span>
-              <span data-value="5">&#9734;</span>
-            </div>
-            <input type="hidden" name="quality_rating" value="{{ object.quality_rating | default:'0' }}">
-            <label>Tempo da Entrega:</label>
-            <div class="rating" data-field-name="delivery_time_rating" data-score="{{ object.delivery_time_rating | default_if_none:'0' }}">
-              <!-- Estrelas para avaliação; clique altera o valor do campo oculto -->
-              <span data-value="1">&#9734;</span>
-              <span data-value="2">&#9734;</span>
-              <span data-value="3">&#9734;</span>
-              <span data-value="4">&#9734;</span>
-              <span data-value="5">&#9734;</span>
-            </div>
-            <input type="hidden" name="delivery_time_rating" value="{{ object.delivery_time_rating | default:'0' }}">
-            
-            <label>Preço:</label>
-            <div class="rating" data-field-name="flexibility_rating" data-score="{{ object.flexibility_rating | default_if_none:'0' }}">
-              <!-- Estrelas para avaliação; clique altera o valor do campo oculto -->
-              <span data-value="1">&#9734;</span>
-              <span data-value="2">&#9734;</span>
-              <span data-value="3">&#9734;</span>
-              <span data-value="4">&#9734;</span>
-              <span data-value="5">&#9734;</span>
-            </div>
-            <input type="hidden" name="flexibility_rating" value="{{ object.flexibility_rating | default:'0' }}">
-            </div>
-            <label>Confiança:</label>
-            <div class="rating" data-field-name="partnership_rating" data-score="{{ object.partnership_rating | default_if_none:'0' }}">
-              <!-- Estrelas para avaliação; clique altera o valor do campo oculto -->
-              <span data-value="1">&#9734;</span>
-              <span data-value="2">&#9734;</span>
-              <span data-value="3">&#9734;</span>
-              <span data-value="4">&#9734;</span>
-              <span data-value="5">&#9734;</span>
-            </div>
-            <input type="hidden" name="partnership_rating" value="{{ object.partnership_rating | default:'0' }}">
-            </div>  
-            <div class="mb-2">
-            <h3>Comentários:</h3>
-            <textarea class="form-control" name="comments" rows="3">{{ object.comments|default:"" }}</textarea>
-            <input type="hidden" name="save_ratings" value="1"> <!-- Campo oculto para salvar avaliações -->
-            </div>
-          <div class="mb-3">
-            <button type="submit" class="btn btn-primary">Salvar Avaliações</button>
-          </div>
-        </div>
-      </form>
-
-
-          <!-- Restante das avaliações -->
-        </div>
-      </div>
-    </div>
-  </div>
 </div>
 
 <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="deleteModalLabel">Confirmar Exclusão</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body">
-        Tem certeza que deseja excluir este fornecedor?
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-        <form method="post" action="{% url 'suppliers:supplier_delete' object.id %}">
-          {% csrf_token %}
-          <button type="submit" class="btn btn-danger">Excluir</button>
-        </form>
-      </div>
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteModalLabel">Confirmar Exclusão</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                Tem certeza que deseja excluir este fornecedor?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <form method="post" action="{% url 'suppliers:supplier_delete' object.id %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">Excluir</button>
+                </form>
+            </div>
+        </div>
     </div>
-  </div>
 </div>
 
-
-
-
-  <!-- <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="deleteModalLabel">Confirmar Exclusão</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button.
-      </div>
-      <div class="modal-body">
-        Tem certeza que deseja excluir este fornecedor?
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-        <form method="post" action="{% url 'suppliers:supplier_delete' object.id %}">
-          {% csrf_token %}
-          <button type="submit" class="btn btn-danger">Excluir</button>
-        </form>
-      </div>
-    </div>
-  </div>
-</div> -->
-
-      
-
-
 <div class="modal fade" id="successModal" tabindex="-1" aria-labelledby="successModalLabel" aria-hidden="true">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="successModalLabel">Sucesso</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body">
-        Avaliações atualizadas com sucesso!
-      </div>
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="successModalLabel">Sucesso</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                Avaliações atualizadas com sucesso!
+            </div>
+        </div>
     </div>
-  </div>
 </div>
 
 <script>
-  $(window).on('load', function() {
-      $('.rating').each(function() {
-          const ratingElement = this;
-          const value = $(this).data('score');
-          updateStars(ratingElement, parseInt(value));
-      });
+    $(window).on('load', function() {
+        $('.rating').each(function() {
+            const ratingElement = this;
+            const value = $(this).data('score');
+            updateStars(ratingElement, parseInt(value));
+        });
 
-      function updateStars(ratingElement, value) {
-          const stars = ratingElement.querySelectorAll('span');
-          stars.forEach((star, index) => {
-              star.classList.remove('active'); // Remove a classe 'active'
-              if (index < value) {
-                  star.innerHTML = '&#9733;'; // Estrela sólida
-                  star.classList.add('active'); // Adiciona a classe 'active'
-              } else {
-                  star.innerHTML = '&#9734;'; // Estrela vazia
-              }
-          });
-          $(ratingElement).next('input[type="hidden"]').val(value);
-      }
+        function updateStars(ratingElement, value) {
+            const stars = ratingElement.querySelectorAll('span');
+            stars.forEach((star, index) => {
+                star.classList.remove('active'); // Remove a classe 'active'
+                if (index < value) {
+                    star.innerHTML = '&#9733;'; // Estrela sólida
+                    star.classList.add('active'); // Adiciona a classe 'active'
+                } else {
+                    star.innerHTML = '&#9734;'; // Estrela vazia
+                }
+            });
+            $(ratingElement).next('input[type="hidden"]').val(value);
+        }
 
-      document.querySelectorAll('.rating span').forEach(star => {
-          star.addEventListener('click', function() {
-              const ratingElement = this.parentNode;
-              const value = parseInt(this.dataset.value);
-              updateStars(ratingElement, value);
-          });
-      });
+        document.querySelectorAll('.rating span').forEach(star => {
+            star.addEventListener('click', function() {
+                const ratingElement = this.parentNode;
+                const value = parseInt(this.dataset.value);
+                updateStars(ratingElement, value);
+            });
+        });
 
-      if (new URLSearchParams(window.location.search).get('success') === 'true') {
-          $('#successModal').modal('show');
-      }
-  });
+        if (new URLSearchParams(window.location.search).get('success') === 'true') {
+            $('#successModal').modal('show');
+        }
+    });
 </script>
-
-
-
 {% endblock %}

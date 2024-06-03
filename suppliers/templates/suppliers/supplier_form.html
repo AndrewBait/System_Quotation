@@ -182,9 +182,17 @@
                         {{ form.order_response_deadline|add_class:'form-control' }}
                     </div>
                     <!-- Repita para TER, QUA, QUI, SEX, SAB, DOM com seus respectivos IDs e valores -->
-                        {% include 'isolated/_delivery_days.html' %}
-                    
+                        {% include 'isolated/_delivery_days.html' %}                    
                     <br> 
+                    <div class="mb-3">
+                        <label for="id_billing_deadline" class="form-label">Prazo de Faturamento:</label>
+                        {{ form.billing_deadline }}
+                    </div>
+                    <div class="mb-3">
+                        <label for="id_specific_billing_deadline" class="form-label">Prazo Específico de Faturamento:</label>
+                        {{ form.specific_billing_deadline }}
+                    </div>
+
                     {% comment %} <h4>Cobrir Férias</h4>
                     <div class="mb-3">
                         <label for="id_holiday_cover_name" class="form-label">Nome do Fornecedor:</label>

@@ -6,11 +6,41 @@ from .models import Supplier
 
 
 class SupplierForm(forms.ModelForm):
+    delivery_days = forms.MultipleChoiceField(
+        choices=[
+            ("SEG", "Segunda-feira"),
+            ("TER", "Terça-feira"),
+            ("QUA", "Quarta-feira"),
+            ("QUI", "Quinta-feira"),
+            ("SEX", "Sexta-feira"),
+            ("SAB", "Sábado"),
+            ("DOM", "Domingo")
+        ],
+        widget=forms.CheckboxSelectMultiple,
+        required=False
+    )
 
-   
+    billing_deadline = forms.ChoiceField(
+        choices=[
+            ('1-2', '1 a 2 dias úteis'),
+            ('3-5', '3 a 5 dias úteis'),
+            ('6-10', '6 a 10 dias úteis'),
+            ('11-15', '11 a 15 dias úteis'),
+            ('15+', 'Mais de 15 dias úteis'),
+            ('negotiable', 'A combinar')
+        ],
+        widget=forms.Select(attrs={'class': 'form-control'}),
+        required=True
+    )
+
+    specific_billing_deadline = forms.CharField(
+        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Especificar prazo exato se aplicável'}),
+        required=False
+    )
+
     class Meta:
         model = Supplier
-        fields = '__all__'  # Inclui todos os campos do modelo no formulário
+        fields = '__all__'
         widgets = {
             'user': forms.Select(attrs={'class': 'form-control'}),
             'name': forms.TextInput(attrs={'class': 'form-control'}),
@@ -32,26 +62,36 @@ class SupplierForm(forms.ModelForm):
             'brands': forms.CheckboxSelectMultiple(),
             'holiday_cover_name': forms.TextInput(attrs={'class': 'form-control'}),
             'holiday_cover_email': forms.EmailInput(attrs={'class': 'form-control'}),
-            'holiday_cover_phone': forms.TextInput(attrs={'class': 'form-control'}),            
+            'holiday_cover_phone': forms.TextInput(attrs={'class': 'form-control'}),
             'observation': forms.Textarea(attrs={'class': 'form-control'}),
             'active': forms.Select(choices=[(True, 'Ativo'), (False, 'Inativo')], attrs={'class': 'form-control'}),
-            
         }
-        exclude = ['deleted']  # Exclui o campo 'deleted' do formulário
+        exclude = ['deleted']
 
-    def clean_minimum_order_value(self): # Método de validação do campo minimum_order_value
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if self.instance and self.instance.delivery_days:
+            self.fields['delivery_days'].initial = self.instance.delivery_days.split(',')
+
+    def clean_minimum_order_value(self):
         minimum_order_value = self.cleaned_data.get('minimum_order_value')
         if minimum_order_value is not None:
-            if minimum_order_value < 0:  # Ou qualquer outra comparação
-                raise forms.ValidationError("O valor mínimo do pedido deve ser maior ou igual a zero.") # Ou qualquer outra mensagem de erro
-        return minimum_order_value # Sempre retorne o valor limpo
-    
-    def clean_quality_rating(self): # Método de validação do campo quality_rating
+            if minimum_order_value < 0:
+                raise forms.ValidationError("O valor mínimo do pedido deve ser maior ou igual a zero.")
+        return minimum_order_value
+
+    def clean_quality_rating(self):
         quality_rating = self.cleaned_data.get('quality_rating')
         if quality_rating is not None:
             if not 0 <= quality_rating <= 5:
                 raise forms.ValidationError("A avaliação de qualidade deve estar entre 0 e 5.")
         return quality_rating
+
+    def clean_delivery_days(self):
+        delivery_days = self.cleaned_data.get('delivery_days')
+        if delivery_days:
+            return ','.join(delivery_days)  # Salva como string separada por vírgulas
+        return ''
 
     
 class SupplierStatusFilterForm(forms.Form): # Formulário para filtrar fornecedores por status

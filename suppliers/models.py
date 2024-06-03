@@ -8,15 +8,12 @@ from products.models import Departamento, Category, Subcategory, Brand
 from django.core.validators import MinValueValidator
 import datetime
 
-
-# Função de validação do CNPJ
 def validate_cnpj(value):
     cnpj_validator = CNPJ()
     if not cnpj_validator.validate(value):
         raise ValidationError("CNPJ inválido.")
-    
 
-class Supplier(models.Model): # Modelo de fornecedor
+class Supplier(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, blank=True, null=True)
     name = models.CharField(max_length=255)
     email = models.EmailField(unique=True)
@@ -41,10 +38,9 @@ class Supplier(models.Model): # Modelo de fornecedor
     deleted = models.BooleanField(default=False)
     holiday_cover_name = models.CharField("Nome do Fornecedor de Férias", max_length=255, null=True, blank=True)
     holiday_cover_email = models.EmailField("Email do Fornecedor de Férias", null=True, blank=True)
-    holiday_cover_phone = models.CharField("Telefone do Fornecedor de Férias", validators=[phone_regex], max_length=17, blank=True, null=True)   
-    # delivery_days = models.CharField("Dias de Entrega", max_length=100, blank=True, null=True)    
+    holiday_cover_phone = models.CharField("Telefone do Fornecedor de Férias", validators=[phone_regex], max_length=17, blank=True, null=True)
     observation = models.TextField("Observação", null=True, blank=True)
-    delivery_days = models.TextField("Dias de Entrega", blank=True, null=True)
+    delivery_days = models.CharField("Dias de Entrega", max_length=100, blank=True, null=True)
     quality_rating = models.IntegerField(default=0, blank=True, null=True)
     delivery_time_rating = models.IntegerField(default=0, blank=True, null=True)
     price_rating = models.IntegerField(default=0, blank=True, null=True)
@@ -52,20 +48,29 @@ class Supplier(models.Model): # Modelo de fornecedor
     flexibility_rating = models.IntegerField(default=0, blank=True, null=True)
     partnership_rating = models.IntegerField(default=0, blank=True, null=True)
     comments = models.TextField("Comentários", max_length=100, blank=True, null=True)
+    billing_deadline_choices = [
+        ('1-2', '1 a 2 dias úteis'),
+        ('3-5', '3 a 5 dias úteis'),
+        ('6-10', '6 a 10 dias úteis'),
+        ('11-15', '11 a 15 dias úteis'),
+        ('15+', 'Mais de 15 dias úteis'),
+        ('negotiable', 'A combinar')
+    ]
+    billing_deadline = models.CharField(max_length=20, choices=billing_deadline_choices, default='1-2', verbose_name="Prazo de Faturamento")
+    specific_billing_deadline = models.CharField(max_length=50, blank=True, null=True, verbose_name="Prazo Específico de Faturamento")
 
-    class Meta: # Meta informações do modelo
-        ordering = ['name'] # Ordem padrão de exibição dos registros
+    class Meta:
+        ordering = ['name']
 
-    def get_departments(self): # Retorna os departamentos do fornecedor
+    def get_departments(self):
         return ", ".join([d.name for d in self.departments.all()])
-    
-    def average_rating(self): # Retorna a média das avaliações
+
+    def average_rating(self):
         ratings = [self.quality_rating, self.delivery_time_rating, self.flexibility_rating, self.partnership_rating]
-        ratings = [rating for rating in ratings if rating is not None]  # Remova valores None
+        ratings = [rating for rating in ratings if rating is not None]
         if ratings:
             return sum(ratings) / len(ratings)
         return None
 
-    def __str__(self): # Retorna o nome do fornecedor
+    def __str__(self):
         return self.name
-

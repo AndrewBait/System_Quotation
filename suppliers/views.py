@@ -22,15 +22,17 @@ import logging
 
 
 logger = logging.getLogger(__name__) # Cria um logger com o nome do módulo
-
 class SupplierFormMixin: # Mixin para adicionar funcionalidades ao formulário de fornecedor
     def form_valid(self, form):
-        self.object = form.save()
+        self.object = form.save(commit=False)
+        delivery_days = form.cleaned_data.get('delivery_days')
+        if delivery_days:
+            self.object.delivery_days = delivery_days  # Já está formatado como string separada por vírgulas
+        self.object.save()
         form.save_m2m()
-        
         return super().form_valid(form)
 
-    def form_invalid(self, form): # Adiciona mensagens de erro ao objeto de requisição
+    def form_invalid(self, form):
         for field, errors in form.errors.items():
             for error in errors:
                 messages.error(self.request, f'{field}: {error}')
@@ -185,10 +187,15 @@ class SupplierListView(ListView):  # View para listar fornecedores
 
 
 @method_decorator(login_required(login_url='login'), name='dispatch')
-class SupplierDetailView(DetailView): # View para exibir detalhes de um fornecedor
+class SupplierDetailView(DetailView):
     model = Supplier
     template_name = 'suppliers/supplier_detail.html'
     
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        supplier = self.get_object()
+        context['delivery_days_list'] = supplier.delivery_days.split(',') if supplier.delivery_days else []
+        return context
 
 class RatingsUpdateView(LoginRequiredMixin, View): # View para atualizar as avaliações de um fornecedor
     def post(self, request, *args, **kwargs):
@@ -203,6 +210,7 @@ class RatingsUpdateView(LoginRequiredMixin, View): # View para atualizar as aval
             comments=request.POST.get('comments')
         )
         return HttpResponseRedirect(reverse('suppliers:supplier_detail', kwargs={'pk': supplier.pk}))
+    
 
 
 @method_decorator(login_required(login_url='login'), name='dispatch')
@@ -246,24 +254,31 @@ class SupplierUpdateView(LoginRequiredMixin, SupplierFormMixin, UpdateView): # V
         context['delivery_days_list'] = ["SEG", "TER", "QUA", "QUI", "SEX", "SAB", "DOM"]
         return context
     
-    def form_valid(self, form): # Método para lidar com formulários válidos
+    def form_valid(self, form):
         self.object = form.save(commit=False)
-        supplier = form.save(commit=False)
-        delivery_days = self.request.POST.getlist('delivery_days[]')
-        supplier.delivery_days = ','.join(delivery_days)
-        supplier.user = self.request.user  # Associa o fornecedor ao usuário atual
-
-        # Processar dados de avaliações somente se o formulário de avaliações for enviado
-        if 'save_ratings' in self.request.POST:
-            price_rating = self.request.POST.get('price_rating')
-            reliability_rating = self.request.POST.get('reliability_rating')
-            self.object.price_rating = price_rating
-            self.object.reliability_rating = reliability_rating
-        supplier.save()
-        form.save_m2m()
+        delivery_days = form.cleaned_data.get('delivery_days')
+        self.object.delivery_days = ','.join(delivery_days) if delivery_days else ''
         self.object.save()
-        
+        form.save_m2m()
         return super().form_valid(form)
+
+        # # Processar dados de avaliações somente se o formulário de avaliações for enviado
+        # if 'save_ratings' in self.request.POST:
+        #     price_rating = self.request.POST.get('price_rating')
+        #     reliability_rating = self.request.POST.get('reliability_rating')
+        #     self.object.price_rating = price_rating
+        #     self.object.reliability_rating = reliability_rating
+        # supplier.save()
+        # form.save_m2m()
+        # self.object.save()
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['delivery_days_list'] = ["SEG", "TER", "QUA", "QUI", "SEX", "SAB", "DOM"]
+        context['selected_days'] = self.object.delivery_days.split(',') if self.object.delivery_days else []
+        return context
+        
+        
 
     # def form_valid(self, form):
     #     supplier = form.save(commit=False)  # Salva o objeto Supplier 

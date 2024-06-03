@@ -1,9 +1,43 @@
 from django.contrib import admin
 from .models import Supplier
+from django import forms
+from django.forms.widgets import CheckboxSelectMultiple
 
+
+class SupplierAdminForm(forms.ModelForm):
+    delivery_days = forms.MultipleChoiceField(
+        choices=[
+            ("SEG", "Segunda-feira"),
+            ("TER", "Terça-feira"),
+            ("QUA", "Quarta-feira"),
+            ("QUI", "Quinta-feira"),
+            ("SEX", "Sexta-feira"),
+            ("SAB", "Sábado"),
+            ("DOM", "Domingo")
+        ],
+        widget=CheckboxSelectMultiple,
+        required=False
+    )
+    
+    class Meta:
+        model = Supplier
+        fields = '__all__'
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if self.instance and self.instance.delivery_days:
+            self.fields['delivery_days'].initial = self.instance.delivery_days.split(',')
+            
+    
+    def clean_delivery_days(self):
+        delivery_days = self.cleaned_data.get('delivery_days')
+        if delivery_days:
+            return ','.join(delivery_days)
+        return ''
 
 @admin.register(Supplier)
 class SupplierAdmin(admin.ModelAdmin):
+    form = SupplierAdminForm
     list_display = ['name', 'company', 'email', 'active']
     search_fields = ['name', 'company', 'email']
     list_filter = ['active', 'departments', 'categories', 'subcategories', 'brands']
@@ -19,6 +53,9 @@ class SupplierAdmin(admin.ModelAdmin):
         }),
         ("Detalhes Adicionais", {
             'fields': ('minimum_order_value', 'order_response_deadline', 'departments', 'categories', 'subcategories', 'brands')
+        }),
+        ("Dias de Entrega e Prazo de Faturamento", {
+            'fields': ('delivery_days', 'billing_deadline', 'specific_billing_deadline')
         }),
     )
 
