@@ -53,15 +53,12 @@
                 <td>{{ pedido_agrupado.total_itens }}</td>
                 <td>R$ {{ pedido_agrupado.preco_total }}</td>
                 <td>
-                    {% for pedido in pedido_agrupado.pedidos.all %}
-                        {% if pedido.prazo_alternativo_selecionado and pedido.prazo_alternativo %}
-                            {{ pedido.prazo_alternativo }} dias (Alternativo)
-                        {% else %}
-                            {{ pedido_agrupado.cotacao.prazo }} dias
-                        {% endif %}
-                        {% if not forloop.last %}, {% endif %}
-                    {% endfor %}
-                </td>
+                    {% if pedido_agrupado.pedidos.first.prazo_alternativo_selecionado and pedido_agrupado.pedidos.first.prazo_alternativo %}
+                      {{ pedido_agrupado.pedidos.first.prazo_alternativo }} dias (Alternativo)
+                    {% else %}
+                      {{ pedido_agrupado.cotacao.prazo }} dias
+                    {% endif %}
+                  </td>
                 <td>
                     <span class="badge rounded-pill 
                         {% if pedido_agrupado.status == 'pendente' %}bg-warning text-dark
