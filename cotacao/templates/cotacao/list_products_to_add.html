@@ -1,10 +1,8 @@
 {% extends "base.html" %}
 {% load static %}
 
-
 {% block content %}
 <style>
-    /* Estilos simplificados para paginação e tabelas */
     .pagination {
         display: flex;
         justify-content: center;
@@ -37,8 +35,7 @@
     <div class="input-group mb-3">
         <input type="text" id="searchField" placeholder="Pesquisar produto por nome, SKU ou EAN" class="form-control">
         <div class="input-group-append">
-            <button class="btn btn-outline-secondary">Pesquisar</button>            
-
+            <button class="btn btn-outline-secondary" onclick="fetchProducts()">Pesquisar</button>
         </div>
     </div>
     <div id="messageContainer" class="alert" style="display: none;" aria-live="assertive"></div>
@@ -56,14 +53,29 @@
                 </tr>
             </thead>
             <tbody id="productTableBody">
-                <!-- Dinamicamente preenchido por JavaScript -->
+                {% for produto in produtos %}
+                <tr>
+                    <td>{{ produto.sku }}</td>
+                    <td>{{ produto.ean }}</td>
+                    <td>{{ produto.nome }}</td>
+                    <td><input type="number" name="quantidade_{{ produto.id }}" min="1" class="form-control" value="1"></td>
+                    <td>
+                        <select name="tipo_volume_{{ produto.id }}" class="form-control">
+                            {% for tipo_volume in produto.tipos_volume %}
+                            <option value="{{ tipo_volume.0 }}">{{ tipo_volume.1 }}</option>
+                            {% endfor %}
+                        </select>
+                    </td>
+                    <td><input type="text" name="observacao_{{ produto.id }}" class="form-control"></td>
+                    <td><button onclick="addProduct({{ produto.id }})" class="btn btn-primary">Adicionar</button></td>
+                </tr>
+                {% endfor %}
             </tbody>
         </table>
     </div>
 </div>
 
 <script>
-
     function debounce(func, wait) {
         let timeout;
         return function(...args) {
@@ -92,7 +104,7 @@
                         <td><input type="number" name="quantidade_${prod.id}" min="1" class="form-control" value="1"></td>
                         <td>
                             <select name="tipo_volume_${prod.id}" class="form-control">
-                                <option value="Un">Unidad(s)</option>
+                                <option value="Un">Unidade(s)</option>
                                 <option value="Kg">Kilograma(s)</option> 
                                 <option value="Dp">Display(s)</option>
                                 <option value="Cx">Caixa(s)</option>
@@ -116,7 +128,6 @@
         messageContainer.textContent = message;
         messageContainer.style.display = 'block';
     
-        // Oculta a mensagem após 4 segundos
         setTimeout(() => {
             messageContainer.style.display = 'none';
         }, 4000);
@@ -146,13 +157,6 @@
             console.error('Error adding product: ', error);
             showStatusMessage('danger', 'Produto já adicionado.');
         });
-    }
-
-    function showStatusMessage(type, message) {
-        const messageContainer = document.getElementById('messageContainer');
-        messageContainer.className = `alert alert-${type}`;
-        messageContainer.textContent = message;
-        messageContainer.style.display = 'block';
     }
 </script>
 

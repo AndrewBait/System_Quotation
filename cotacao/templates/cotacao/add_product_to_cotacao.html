@@ -12,7 +12,6 @@
     {% endif %}
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2>Detalhes da Cotação: {{ cotacao.nome }}</h2>
-        <!-- Botão para adicionar produtos à cotação -->
         {% if cotacao %}
         <a href="{% url 'cotacao:list_products_to_add' cotacao.id %}" class="btn btn-primary">
             <i class="bi bi-plus-lg"></i> Adicionar Produto à Cotação
@@ -23,7 +22,6 @@
         {% endif %}
     </div>
     
-    <!-- Tabela de produtos -->
     {% if cotacao and cotacao.itens_cotacao.exists %}
     <table class="table table-hover">
         <thead>
@@ -38,26 +36,25 @@
             </tr>
         </thead>
         <tbody>
-        {% for item in cotacao.itens_cotacao.all %}
-            <form method="post" action="{% url 'cotacao:update_item_cotacao' item.id %}">
+        {% for item_data in itens_data %}
+            <form method="post" action="{% url 'cotacao:update_item_cotacao' item_data.item.id %}">
                 {% csrf_token %}
                 <tr>
-                    <td>{{ item.produto.ean|default_if_none:"N/E" }}</td>
-                    <td>{{ item.produto.sku|default_if_none:"N/E" }}</td>
-                    <td>{{ item.produto.name }}</td>
-                    <td><input type="number" name="quantidade" value="{{ item.quantidade }}" class="form-control" min="1"></td>
+                    <td>{{ item_data.item.produto.ean|default_if_none:"N/E" }}</td>
+                    <td>{{ item_data.item.produto.sku|default_if_none:"N/E" }}</td>
+                    <td>{{ item_data.item.produto.name }}</td>
+                    <td><input type="number" name="quantidade" value="{{ item_data.item.quantidade }}" class="form-control" min="1"></td>
                     <td>
                         <select name="tipo_volume" class="form-control">
-                            {% for key, value in item.tipo_volume_options %}
-                                <option value="{{ key }}" {% if key == item.tipo_volume %}selected{% endif %}>{{ value }}</option>
+                            {% for tipo_volume in item_data.tipos_volume %}
+                                <option value="{{ tipo_volume.0 }}" {% if tipo_volume.0 == item_data.item.tipo_volume %}selected{% endif %}>{{ tipo_volume.1 }}</option>
                             {% endfor %}
-                        </select>                  
-                        
+                        </select>
                     </td>
-                    <td><input type="text" name="observacao" value="{{ item.observacao }}" class="form-control"></td>
+                    <td><input type="text" name="observacao" value="{{ item_data.item.observacao }}" class="form-control"></td>
                     <td>
                         <button type="submit" class="btn btn-info">Salvar</button>
-                        <a href="{% url 'cotacao:delete_item_cotacao' item.id %}" class="btn btn-danger" onclick="#">Remover</a>
+                        <a href="{% url 'cotacao:delete_item_cotacao' item_data.item.id %}" class="btn btn-danger" onclick="#">Remover</a>
                     </td>
                 </tr>
             </form>

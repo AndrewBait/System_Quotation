@@ -260,8 +260,44 @@ class ListProductsToAddView(TemplateView):
         context = super().get_context_data(**kwargs)
         cotacao = get_object_or_404(Cotacao, pk=self.kwargs['cotacao_id'])
         produtos_ja_adicionados = ItemCotacao.objects.filter(cotacao=cotacao).values_list('produto', flat=True)
+        produtos = Product.objects.exclude(id__in=produtos_ja_adicionados)
+
+        produtos_data = []
+        for produto in produtos:
+            tipos_volume = []
+            if produto.unidade_de_medida == 'Un':
+                tipos_volume.append(('Un', 'Unidade(s)'))
+            if produto.unidade_de_medida == 'Cx':
+                tipos_volume.append(('Cx', 'Caixa(s)'))
+                tipos_volume.append(('Un', 'Unidade(s)'))
+            if produto.unidade_de_medida == 'Kg':
+                tipos_volume.append(('Kg', 'Kilograma(s)'))
+            if produto.unidade_de_medida == 'Dp':
+                tipos_volume.append(('Dp', 'Display(s)'))
+                tipos_volume.append(('Un', 'Unidade(s)'))
+            if produto.unidade_de_medida == 'Fd':
+                tipos_volume.append(('Fd', 'Fardo(s)'))
+                tipos_volume.append(('Un', 'Unidade(s)'))
+            if produto.unidade_de_medida == 'Pct':
+                tipos_volume.append(('Pct', 'Pacote(s)'))
+                tipos_volume.append(('Un', 'Unidade(s)'))
+            if produto.unidade_de_medida == 'Sc':
+                tipos_volume.append(('Sc', 'Sache(s)'))
+                tipos_volume.append(('Un', 'Unidade(s)'))
+            if produto.unidade_de_medida == 'Tp':
+                tipos_volume.append(('Tp', 'Take Profit(s)'))
+                tipos_volume.append(('Un', 'Unidade(s)'))
+            
+            produtos_data.append({
+                'id': produto.id,
+                'sku': produto.sku,
+                'ean': produto.ean,
+                'nome': produto.name,
+                'tipos_volume': tipos_volume,
+            })
+        
         context['form'] = ItemCotacaoForm()
-        context['produtos'] = Product.objects.exclude(id__in=produtos_ja_adicionados)
+        context['produtos'] = produtos_data
         context['cotacao'] = cotacao
         return context
 
@@ -316,24 +352,57 @@ class AddProductToCotacaoView(CreateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         cotacao = get_object_or_404(Cotacao, id=self.kwargs['cotacao_id'])
+        itens_cotacao = cotacao.itens_cotacao.all()
+
+        itens_data = []
+        for item in itens_cotacao:
+            produto = item.produto
+            tipos_volume = []
+            if produto.unidade_de_medida == 'Un':
+                tipos_volume.append(('Un', 'Unidade(s)'))
+            if produto.unidade_de_medida == 'Cx':
+                tipos_volume.append(('Cx', 'Caixa(s)'))
+                tipos_volume.append(('Un', 'Unidade(s)'))
+            if produto.unidade_de_medida == 'Kg':
+                tipos_volume.append(('Kg', 'Kilograma(s)'))
+            if produto.unidade_de_medida == 'Dp':
+                tipos_volume.append(('Dp', 'Display(s)'))
+                tipos_volume.append(('Un', 'Unidade(s)'))
+            if produto.unidade_de_medida == 'Fd':
+                tipos_volume.append(('Fd', 'Fardo(s)'))
+                tipos_volume.append(('Un', 'Unidade(s)'))
+            if produto.unidade_de_medida == 'Pct':
+                tipos_volume.append(('Pct', 'Pacote(s)'))
+                tipos_volume.append(('Un', 'Unidade(s)'))
+            if produto.unidade_de_medida == 'Sc':
+                tipos_volume.append(('Sc', 'Sache(s)'))
+                tipos_volume.append(('Un', 'Unidade(s)'))
+            if produto.unidade_de_medida == 'Tp':
+                tipos_volume.append(('Tp', 'Take Profit(s)'))
+                tipos_volume.append(('Un', 'Unidade(s)'))
+            
+            itens_data.append({
+                'item': item,
+                'tipos_volume': tipos_volume,
+            })
+        
         context['cotacao'] = cotacao
+        context['itens_data'] = itens_data
         return context
 
     def form_valid(self, form):
         cotacao_id = self.kwargs['cotacao_id']
         produto_id = form.cleaned_data['produto'].id
-        # Verificar se o produto já está na cotação
         if ItemCotacao.objects.filter(cotacao_id=cotacao_id, produto_id=produto_id).exists():
-            messages.error(self.request, "Este produto já foi adicionado à cotação.") # Mensagem de erro
-            return super().form_valid(form)
+            messages.error(self.request, "Este produto já foi adicionado à cotação.")
+            return super().form_invalid(form)
         form.instance.cotacao_id = cotacao_id
         form.save()
         messages.success(self.request, "Produto adicionado com sucesso!")
         return super().form_valid(form)
 
     def get_success_url(self):
-        return reverse('cotacao:list_products_to_add', kwargs={'cotacao_id': self.kwargs['cotacao_id']})
-    
+        return reverse('cotacao:add_product_to_cotacao', kwargs={'cotacao_id': self.kwargs['cotacao_id']})
     
     def post(self, request, cotacao_id):
         produto_id = request.POST.get('produto_id')
