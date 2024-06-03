@@ -18,10 +18,12 @@
                 <div class="modal-body">
                     <p><strong>Observações:</strong> {{ resposta.observacao|default:"Nenhuma observação disponível." }}</p>
                     {% if resposta.imagem_url %}
-                        <img src="{{ resposta.imagem_url }}" alt="Imagem do Produto" class="img-fluid">
+                        <img src="{{ resposta.imagem_url }}" alt="Imagem do Produto" class="img-fluid mb-3">
                     {% else %}
                         <p>Sem imagem disponível.</p>
                     {% endif %}
+                    <p><strong>Prazo de Faturamento:</strong> {{ resposta.billing_deadline }}</p>
+                    <p><strong>Dias de Entrega:</strong> {{ resposta.delivery_days }}</p>
                 </div>
             </div>
         </div>

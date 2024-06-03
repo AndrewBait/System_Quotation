@@ -133,6 +133,7 @@ def visualizar_cotacoes(request, cotacao_uuid):
     default_interval_days = 90
     default_start_date = timezone.now() - timezone.timedelta(days=default_interval_days)
 
+
     for item in cotacao.itens_cotacao.all():
         # Filtrar respostas válidas (preço maior que 0 e não None)
         respostas_validas = list(filter(lambda r: r.preco is not None and r.preco > 0, item.itemrespostacotacao_set.select_related('resposta_cotacao__fornecedor').order_by('preco')))
@@ -141,9 +142,11 @@ def visualizar_cotacoes(request, cotacao_uuid):
             'fornecedor_nome': resposta.resposta_cotacao.fornecedor.company or resposta.resposta_cotacao.fornecedor.name,
             'fornecedor_id': resposta.resposta_cotacao.fornecedor.pk,
             'observacao': resposta.observacao,
-            'imagem_url': resposta.imagem.url if resposta.imagem else None
+            'imagem_url': resposta.imagem.url if resposta.imagem else None,
+            'billing_deadline': resposta.resposta_cotacao.fornecedor.billing_deadline_display,
+            'delivery_days': resposta.resposta_cotacao.fornecedor.delivery_days_display,
         } for resposta in respostas_validas]
-
+        
         produto = item.produto
         ultimo_preco = produto.price_history.order_by('-date').first()
 

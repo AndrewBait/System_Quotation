@@ -3,7 +3,6 @@ from .models import Supplier
 from django import forms
 from django.forms.widgets import CheckboxSelectMultiple
 
-
 class SupplierAdminForm(forms.ModelForm):
     delivery_days = forms.MultipleChoiceField(
         choices=[
@@ -25,10 +24,9 @@ class SupplierAdminForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        if self.instance and self.instance.delivery_days:
-            self.fields['delivery_days'].initial = self.instance.delivery_days.split(',')
-            
-    
+        if self.instance and self.instance.pk:
+            self.fields['delivery_days'].initial = self.instance.delivery_days.split(',') if self.instance.delivery_days else []
+
     def clean_delivery_days(self):
         delivery_days = self.cleaned_data.get('delivery_days')
         if delivery_days:
@@ -60,16 +58,12 @@ class SupplierAdmin(admin.ModelAdmin):
     )
 
     def get_queryset(self, request):
-    # Modifica a queryset para excluir soft deleted suppliers
         qs = super().get_queryset(request)
-        return qs.filter(deleted=False)  # Certifique-se de que o campo 'deleted' existe
-    
+        return qs.filter(deleted=False)
+
     def delete_model(self, request, obj):
         obj.deleted = True
         obj.save()
 
     def delete_queryset(self, request, queryset):
-        queryset.update(deleted=True) 
-
-
-
+        queryset.update(deleted=True)

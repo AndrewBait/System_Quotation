@@ -52,6 +52,16 @@
           {{ form.sku.errors }}
         </div>
         <div class="mb-3">
+          <label for="id_unidade_de_medida" min = "0" class="form-label">Unidade de Medida:</label>
+          {{ form.unidade_de_medida|add_class:'form-control' }}
+          {{ form.unidade_de_medida.errors }}
+        </div>
+        <div class="mb-3" id="quantidadePorVolumeContainer" min = "0" style="display: none;">
+          <label for="id_quantidade_por_volume" class="form-label">Quantidade por Volume:</label>
+          {{ form.quantidade_por_volume|add_class:'form-control' }}
+          {{ form.quantidade_por_volume.errors }}
+        </div>
+        <div class="mb-3">
           <label for="id_status" class="form-label">Status:<span style="color: red;">*</span></label>
           {{ form.status|add_class:'form-control' }}
           {{ form.status.errors }}
@@ -132,16 +142,7 @@
           {{ form.raio_embalagem|add_class:'form-control' }}
           {{ form.raio_embalagem.errors }}
         </div>
-        <div class="mb-3">
-          <label for="id_unidade_de_medida" min = "0" class="form-label">Unidade de Medida:</label>
-          {{ form.unidade_de_medida|add_class:'form-control' }}
-          {{ form.unidade_de_medida.errors }}
-        </div>
-        <div class="mb-3" id="quantidadePorVolumeContainer" min = "0" style="display: none;">
-          <label for="id_quantidade_por_volume" class="form-label">Quantidade por Volume:</label>
-          {{ form.quantidade_por_volume|add_class:'form-control' }}
-          {{ form.quantidade_por_volume.errors }}
-        </div>
+
         <div class="text-end mt-5">
           <a href="{% url 'products:import_products' %}" class="btn btn-outline-success me-2">Importar</a>
           <input type="submit" value="Cadastrar" class="btn btn-primary me-2">

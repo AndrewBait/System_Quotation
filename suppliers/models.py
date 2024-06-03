@@ -58,6 +58,14 @@ class Supplier(models.Model):
     ]
     billing_deadline = models.CharField(max_length=20, choices=billing_deadline_choices, default='1-2', verbose_name="Prazo de Faturamento")
     specific_billing_deadline = models.CharField(max_length=50, blank=True, null=True, verbose_name="Prazo Específico de Faturamento")
+    
+    @property
+    def billing_deadline_display(self):
+        return dict(self.billing_deadline_choices).get(self.billing_deadline, '')
+
+    @property
+    def delivery_days_display(self):
+        return ', '.join(self.delivery_days.split(',')) if self.delivery_days else ''
 
     class Meta:
         ordering = ['name']
