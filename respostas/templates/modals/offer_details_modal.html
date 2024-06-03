@@ -1,32 +1,75 @@
 {% spaceless %}
-<div class="mb-2 d-flex align-items-center"> 
+<div class="mb-2 d-flex align-items-center">
     <div class="form-check">
         <input type="radio" name="selecao_{{ item.id }}" value="{{ resposta.fornecedor_id }}_{{ resposta.preco }}" class="form-check-input" id="selecao_{{ item.id }}_{{ resposta.fornecedor_id }}">
         <label class="form-check-label" for="selecao_{{ item.id }}_{{ resposta.fornecedor_id }}">
-            <button type="button" class="btn btn-link text-start" data-bs-toggle="modal" data-bs-target="#detailsModal{{ item.id }}_{{ forloop.counter }}" onclick="event.stopPropagation(); openDetailsModal('{{ item.id }}_{{ forloop.counter }}')">
-                <strong>R$ {{ resposta.preco }} - {{ resposta.fornecedor_nome }}</strong>
+            <button type="button" class="btn btn-link text-start" data-bs-toggle="modal" data-bs-target="#detailsModal_{{ item.id }}_{{ forloop.counter }}">
+                <span class="fw-bold">R$ {{ resposta.preco }}</span> - {{ resposta.fornecedor_nome }}
             </button>
         </label>
     </div>
-    <div class="modal fade" id="detailsModal{{ item.id }}_{{ forloop.counter }}" tabindex="-1" aria-labelledby="detailsModalLabel{{ item.id }}_{{ forloop.counter }}" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
+
+    <div class="modal fade" id="detailsModal_{{ item.id }}_{{ forloop.counter }}" tabindex="-1" aria-labelledby="detailsModalLabel_{{ item.id }}_{{ forloop.counter }}" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">  
+            <div class="modal-content bg-dark">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="detailsModalLabel{{ item.id }}_{{ forloop.counter }}">Detalhes da Oferta - {{ resposta.fornecedor_nome }}</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <h5 class="modal-title text-white" id="detailsModalLabel_{{ item.id }}_{{ forloop.counter }}">Detalhes da Oferta - {{ resposta.fornecedor_nome }}</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <div class="modal-body">
-                    <p><strong>Observações:</strong> {{ resposta.observacao|default:"Nenhuma observação disponível." }}</p>
+                <div class="modal-body text-white">
+                    {% if resposta.preco_prazo_alternativo %}
+                        <div class="form-check">
+                            <input type="radio" name="selecao_{{ item.id }}" value="{{ resposta.fornecedor_id }}_{{ resposta.preco_prazo_alternativo }}_alt" class="form-check-input" id="selecao_alt_{{ item.id }}_{{ resposta.fornecedor_id }}">
+                            <label class="form-check-label" for="selecao_alt_{{ item.id }}_{{ resposta.fornecedor_id }}">
+                                <span class="fw-bold">Preço Alternativo:</span> R$ {{ resposta.preco_prazo_alternativo }} ({{ resposta.prazo_alternativo }} dias)
+                            </label>
+                        </div>
+                    {% endif %}
+                    <p><span class="fw-bold">Prazo de Faturamento:</span> {{ resposta.billing_deadline }}</p>
+                    <p><span class="fw-bold">Dias de Entrega:</span> {{ resposta.delivery_days }}</p>
+                    <p><span class="fw-bold">Observações:</span> {{ resposta.observacao|default:"Nenhuma observação disponível." }}</p>
+
                     {% if resposta.imagem_url %}
                         <img src="{{ resposta.imagem_url }}" alt="Imagem do Produto" class="img-fluid mb-3">
                     {% else %}
                         <p>Sem imagem disponível.</p>
                     {% endif %}
-                    <p><strong>Prazo de Faturamento:</strong> {{ resposta.billing_deadline }}</p>
-                    <p><strong>Dias de Entrega:</strong> {{ resposta.delivery_days }}</p>
                 </div>
             </div>
         </div>
     </div>
 </div>
 {% endspaceless %}
+
+
+<style>
+    /* Estilos para a modal */
+    .modal-content {
+        background-color: #f8f9fa; /* Fundo mais claro e neutro */
+        color: #343a40; /* Texto escuro para melhor contraste */
+        border-radius: 8px; /* Bordas arredondadas */
+    }
+    .modal-content.bg-dark {
+        border-color: #343a40; /* Cor da borda mais escura */
+    }
+    
+    .modal-header {
+        background-color: #007bff; /* Cor de destaque (azul Bootstrap) */
+        color: white;
+        border-bottom: 1px solid #343a40; /* Cor da borda inferior mais escura */
+
+    }
+    
+    .modal-title {
+        font-weight: bold;
+    }
+    
+    .modal-body {
+        padding: 20px;
+    }
+    
+    .form-check-label {
+        margin-bottom: 0; /* Remove margem extra */
+    }
+     
+</style>

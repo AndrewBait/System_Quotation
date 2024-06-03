@@ -139,6 +139,8 @@ def visualizar_cotacoes(request, cotacao_uuid):
         respostas_validas = list(filter(lambda r: r.preco is not None and r.preco > 0, item.itemrespostacotacao_set.select_related('resposta_cotacao__fornecedor').order_by('preco')))
         respostas_data = [{
             'preco': round(resposta.preco, 3),
+            'preco_prazo_alternativo': round(resposta.preco_prazo_alternativo, 3) if resposta.preco_prazo_alternativo else None,
+            'prazo_alternativo': resposta.prazo_alternativo,
             'fornecedor_nome': resposta.resposta_cotacao.fornecedor.company or resposta.resposta_cotacao.fornecedor.name,
             'fornecedor_id': resposta.resposta_cotacao.fornecedor.pk,
             'observacao': resposta.observacao,
@@ -204,6 +206,14 @@ def visualizar_cotacoes(request, cotacao_uuid):
     })
 
 
+from decimal import Decimal
+from django.shortcuts import render, redirect, get_object_or_404
+from django.urls import reverse
+from django.db import transaction
+from django.contrib import messages
+from .models import Cotacao, ItemCotacao, PedidoAgrupado, Pedido, Supplier
+from datetime import date
+
 def gerar_pedidos(request):
     cotacao_uuid = request.POST.get('cotacao_uuid', '')
     cotacao = get_object_or_404(Cotacao, uuid=cotacao_uuid)
@@ -211,21 +221,25 @@ def gerar_pedidos(request):
 
     if request.method == 'POST':
         has_errors = False
-        pedido_agrupado_dict = {}
+        pedido_agrupado_dict = {}  # Dicionário para rastrear pedidos agrupados por fornecedor e prazo
 
         try:
             with transaction.atomic():
                 selecao_keys = [key for key in request.POST if key.startswith('selecao_')]
                 for key in selecao_keys:
                     item_id = int(key.split('_', 1)[1])
-                    fornecedor_id, preco = request.POST[key].split('_')
+                    fornecedor_id, preco, *alt_flag = request.POST[key].split('_')
                     fornecedor_id = int(fornecedor_id.strip())
                     preco_decimal = Decimal(preco.replace(',', '.').strip())
+                    is_alternative = bool(alt_flag)
 
                     item_cotacao = ItemCotacao.objects.get(pk=item_id)
-                    fornecedor = Supplier.objects.get(pk=fornecedor_id)
+                    fornecedor = get_object_or_404(Supplier, pk=fornecedor_id)
 
-                    if fornecedor not in pedido_agrupado_dict:
+                    # Cria uma chave única para o pedido agrupado, considerando o fornecedor e o prazo alternativo
+                    pedido_agrupado_key = (fornecedor_id, is_alternative)
+
+                    if pedido_agrupado_key not in pedido_agrupado_dict:
                         pedido_agrupado = PedidoAgrupado.objects.create(
                             fornecedor=fornecedor,
                             cotacao=cotacao,
@@ -233,17 +247,19 @@ def gerar_pedidos(request):
                             status='pendente',
                             usuario_criador=usuario
                         )
-                        pedido_agrupado_dict[fornecedor] = pedido_agrupado
+                        pedido_agrupado_dict[pedido_agrupado_key] = pedido_agrupado
                     else:
-                        pedido_agrupado = pedido_agrupado_dict[fornecedor]
+                        pedido_agrupado = pedido_agrupado_dict[pedido_agrupado_key]
 
                     Pedido.objects.create(
                         produto=item_cotacao.produto,
                         quantidade=item_cotacao.quantidade,
                         tipo_volume=item_cotacao.tipo_volume,
                         preco=preco_decimal,
-                        pedido_agrupado=pedido_agrupado
+                        pedido_agrupado=pedido_agrupado,
+                        observacoes="Preço alternativo selecionado" if is_alternative else ""
                     )
+
         except Exception as e:
             messages.error(request, f'Erro geral ao gerar pedidos: {str(e)}')
             has_errors = True
@@ -252,6 +268,8 @@ def gerar_pedidos(request):
             messages.success(request, 'Pedidos gerados com sucesso!')
 
     return redirect(reverse('respostas:visualizar_cotacoes', args=[cotacao_uuid]))
+
+
 
 
 class ListarPedidosView(ListView):

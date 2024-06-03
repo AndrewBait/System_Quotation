@@ -1,11 +1,11 @@
 <div class="modal fade" id="moreOffersModal{{ item.id }}" tabindex="-1" aria-labelledby="moreOffersModalLabel{{ item.id }}" aria-hidden="true">
     <div class="modal-dialog modal-lg">
-        <div class="modal-content">
+        <div class="modal-content bg-dark">
             <div class="modal-header">
-                <h5 class="modal-title" id="moreOffersModalLabel{{ item.id }}">Mais Ofertas de {{ item.produto_nome }}</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <h5 class="modal-title text-white" id="moreOffersModalLabel{{ item.id }}">Mais Ofertas de {{ item.produto_nome }}</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="modal-body">
+            <div class="modal-body text-white"> 
                 <div class="container">
                     {% for resposta in item.respostas|slice:"3:" %}
                         {% with modal_id=item.id|stringformat:"s_"|add:forloop.counter0 %}
