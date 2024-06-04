@@ -213,6 +213,7 @@ from django.db import transaction
 from django.contrib import messages
 from .models import Cotacao, ItemCotacao, PedidoAgrupado, Pedido, Supplier
 from datetime import date
+from django.db.models import Sum
 
 def gerar_pedidos(request):
     cotacao_uuid = request.POST.get('cotacao_uuid', '')
@@ -278,6 +279,15 @@ def gerar_pedidos(request):
                         prazo_alternativo=item_resposta_cotacao.prazo_alternativo if is_alternative else None 
                     )
 
+                # Verificação do valor mínimo do pedido
+                for fornecedor_id, pedido_agrupado in pedido_agrupado_dict.items():
+                    valor_total_pedido = pedido_agrupado.pedidos.aggregate(total=Sum('preco'))['total']
+                    fornecedor = Supplier.objects.get(id=fornecedor_id[0])
+                    if fornecedor.minimum_order_value and valor_total_pedido < fornecedor.minimum_order_value:
+                        messages.error(request, f'O valor total do pedido para o fornecedor {fornecedor.name} é menor que o pedido mínimo de R$ {fornecedor.minimum_order_value}.')
+                        pedido_agrupado.delete()  # Removendo o pedido agrupado se não atender ao valor mínimo
+                        has_errors = True
+
         except Exception as e:
             messages.error(request, f'Erro geral ao gerar pedidos: {str(e)}')
             has_errors = True
@@ -286,6 +296,7 @@ def gerar_pedidos(request):
             messages.success(request, 'Pedidos gerados com sucesso!')
 
     return redirect(reverse('respostas:visualizar_cotacoes', args=[cotacao_uuid]))
+
 
 from django.utils import timezone
 from datetime import datetime, timedelta
