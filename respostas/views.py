@@ -287,47 +287,66 @@ def gerar_pedidos(request):
 
     return redirect(reverse('respostas:visualizar_cotacoes', args=[cotacao_uuid]))
 
+from django.utils import timezone
+from datetime import datetime, timedelta
+from django.views.generic import ListView
+from django.db.models import Q
+from .models import PedidoAgrupado, Supplier
+
 
 class ListarPedidosView(ListView):
     model = PedidoAgrupado
-    template_name = 'respostas/listar_pedidos.html'  
+    template_name = 'respostas/listar_pedidos.html'
     context_object_name = 'pedidos_agrupados'
-    paginate_by = 10  # Número de pedidos agrupados por página
-    
+    paginate_by = 10
 
     def get_queryset(self):
         queryset = super().get_queryset()
         query = self.request.GET.get('q')
         status = self.request.GET.get('status')
+        fornecedor_id = self.request.GET.get('fornecedor')
         start_date = self.request.GET.get('start_date')
         end_date = self.request.GET.get('end_date')
+        prazo = self.request.GET.get('prazo')
 
-        # Filtros de busca
-        search_query = self.request.GET.get('q')
-        if search_query:
+        if query:
             queryset = queryset.filter(
-                Q(cotacao__nome__icontains=search_query) |
-                Q(fornecedor__name__icontains=search_query) |  
-                Q(fornecedor__company__icontains=search_query) | 
-                Q(usuario_criador__username__icontains=search_query)  
+                Q(cotacao__nome__icontains=query) |
+                Q(fornecedor__name__icontains=query) |
+                Q(fornecedor__company__icontains=query) |
+                Q(usuario_criador__username__icontains=query)
             )
 
-        # Filtros por status
-        status = self.request.GET.get('status')
         if status:
             queryset = queryset.filter(status=status)
 
-        # Filtros por datas (com tratamento de timezone)
-        start_date_str = self.request.GET.get('start_date')
-        end_date_str = self.request.GET.get('end_date')
+        if fornecedor_id:
+            queryset = queryset.filter(fornecedor_id=fornecedor_id)
 
-        if start_date_str and end_date_str:
-            start_date = timezone.make_aware(datetime.datetime.strptime(start_date_str, '%Y-%m-%d'))
-            # Adiciona um dia à data final para incluir o dia inteiro no intervalo
-            end_date = timezone.make_aware(datetime.datetime.strptime(end_date_str, '%Y-%m-%d') + datetime.timedelta(days=1)) 
+        if start_date and end_date:
+            start_date = timezone.make_aware(datetime.strptime(start_date, '%Y-%m-%d'))
+            end_date = timezone.make_aware(datetime.strptime(end_date, '%Y-%m-%d') + timedelta(days=1))
             queryset = queryset.filter(data_requisicao__range=(start_date, end_date))
 
-        return queryset
+        if prazo:
+            if prazo == "0":
+                queryset = queryset.filter(
+                    Q(pedidos__prazo_alternativo_selecionado=True, pedidos__prazo_alternativo=0) |
+                    Q(pedidos__prazo_alternativo_selecionado=False, cotacao__prazo=0)
+                )
+            else:
+                prazo_int = int(prazo)
+                queryset = queryset.filter(
+                    Q(pedidos__prazo_alternativo_selecionado=True, pedidos__prazo_alternativo=prazo_int) |
+                    Q(pedidos__prazo_alternativo_selecionado=False, cotacao__prazo=prazo_int)
+                )
+
+        return queryset.distinct()
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['fornecedores'] = Supplier.objects.all()
+        return context
     
     
 
@@ -567,3 +586,69 @@ def get_price_history(request, item_id, days):
     } for month, data in price_history_list[:days//30]]
 
     return JsonResponse({'price_history': price_history_formatted})
+
+
+
+
+import csv
+from django.http import HttpResponse
+from .models import PedidoAgrupado, Pedido
+from django.shortcuts import render
+from reportlab.lib.pagesizes import A4
+from reportlab.pdfgen import canvas
+from io import BytesIO
+
+def exportar_pedidos_csv(request):
+    pedidos_agrupados = PedidoAgrupado.objects.all()
+    
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = 'attachment; filename="pedidos.csv"'
+
+    writer = csv.writer(response)
+    writer.writerow(['Cotação', 'Fornecedor', 'Data da Requisição', 'Vendedor', 'Total de Itens', 'Preço Total', 'Prazo', 'Status'])
+
+    for pedido_agrupado in pedidos_agrupados:
+        writer.writerow([
+            pedido_agrupado.cotacao.nome,
+            pedido_agrupado.fornecedor.company,
+            pedido_agrupado.data_requisicao,
+            pedido_agrupado.fornecedor.name,
+            pedido_agrupado.total_itens,
+            f'{pedido_agrupado.preco_total:.3f}',  # Formatação para 3 casas decimais
+            pedido_agrupado.pedidos.first.prazo_alternativo if pedido_agrupado.pedidos.first.prazo_alternativo_selecionado else pedido_agrupado.cotacao.prazo,
+            pedido_agrupado.status,
+        ])
+
+    return response
+
+def exportar_pedidos_pdf(request):
+    pedidos_agrupados = PedidoAgrupado.objects.all()
+    
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = 'attachment; filename="pedidos.pdf"'
+
+    buffer = BytesIO()
+    p = canvas.Canvas(buffer, pagesize=A4)
+
+    width, height = A4
+    p.drawString(100, height - 50, 'Pedidos Gerados')
+
+    y = height - 80
+    for pedido_agrupado in pedidos_agrupados:
+        p.drawString(100, y, f'Cotação: {pedido_agrupado.cotacao.nome}')
+        p.drawString(250, y, f'Fornecedor: {pedido_agrupado.fornecedor.company}')
+        y -= 15
+        p.drawString(100, y, f'Data da Requisição: {pedido_agrupado.data_requisicao}')
+        p.drawString(250, y, f'Vendedor: {pedido_agrupado.fornecedor.name}')
+        y -= 15
+        p.drawString(100, y, f'Total de Itens: {pedido_agrupado.total_itens}')
+        p.drawString(250, y, f'Preço Total: R$ {pedido_agrupado.preco_total:.3f}')  # Formatação para 3 casas decimais
+        y -= 15
+        p.drawString(100, y, f'Prazo: {pedido_agrupado.pedidos.first.prazo_alternativo if pedido_agrupado.pedidos.first.prazo_alternativo_selecionado else pedido_agrupado.cotacao.prazo}')
+        p.drawString(250, y, f'Status: {pedido_agrupado.status}')
+        y -= 30
+
+    p.showPage()
+    p.save()
+    buffer.seek(0)
+    return HttpResponse(buffer, content_type='application/pdf')

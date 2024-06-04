@@ -7,12 +7,20 @@
         <div class="col-md-6">
             <input type="text" name="q" class="form-control" placeholder="Buscar Fornecedor ou Vendedor" value="{{ request.GET.q }}">
         </div>
-        <div class="col-md-6">
+        <div class="col-md-3">
             <select name="status" class="form-select">
                 <option value="">Todos os Status</option>
                 <option value="pendente" {% if request.GET.status == "pendente" %}selected{% endif %}>Pendente</option>
                 <option value="concluido" {% if request.GET.status == "concluido" %}selected{% endif %}>Concluído</option>
                 <option value="cancelado" {% if request.GET.status == "cancelado" %}selected{% endif %}>Cancelado</option>
+            </select>
+        </div>
+        <div class="col-md-3">
+            <select name="fornecedor" class="form-select">
+                <option value="">Todos os Fornecedores</option>
+                {% for fornecedor in fornecedores %}
+                    <option value="{{ fornecedor.id }}" {% if request.GET.fornecedor == fornecedor.id|stringformat:"s" %}selected{% endif %}>{{ fornecedor.name }}</option>
+                {% endfor %}
             </select>
         </div>
         <div class="col-md-6">
@@ -21,8 +29,24 @@
         <div class="col-md-6">
             <input type="date" name="end_date" class="form-control" placeholder="Data Fim" value="{{ request.GET.end_date }}">
         </div>
+        <div class="col-md-3">
+            <select name="prazo" class="form-select">
+                <option value="">Todos os Prazos</option>
+                <option value="0" {% if request.GET.prazo == "0" %}selected{% endif %}>À vista</option>
+                <option value="7" {% if request.GET.prazo == "7" %}selected{% endif %}>7 dias</option>
+                <option value="14" {% if request.GET.prazo == "14" %}selected{% endif %}>14 dias</option>
+                <option value="21" {% if request.GET.prazo == "21" %}selected{% endif %}>21 dias</option>
+                <option value="28" {% if request.GET.prazo == "28" %}selected{% endif %}>28 dias</option>
+            </select>
+        </div>
         <div class="col-md-1">
             <button type="submit" class="btn btn-primary w-100">Filtrar</button>
+        </div>
+        <div class="col-md-2">
+            <a href="{% url 'respostas:exportar_pedidos' %}" class="btn btn-success w-100">Exportar CSV</a>
+        </div>
+        <div class="col-md-2">
+            <a href="{% url 'respostas:exportar_pedidos_pdf' %}" class="btn btn-danger w-100">Exportar PDF</a>
         </div>
     </form>
 </div>
@@ -70,8 +94,8 @@
                     </span>
                 </td>
                 <td>
-                    <a href="{% url 'respostas:detalhes_pedido_agrupado' pedido_agrupado.pk %}" class="btn btn-primary btn-sm">Ver Detalhes</a>
-                    <a href="{% url 'respostas:deletar_pedido_agrupado' pedido_agrupado.pk %}" class="btn btn-outline-danger btn-sm">Deletar Pedido</a>
+                    <a href="{% url 'respostas:detalhes_pedido_agrupado' pedido_agrupado.pk %}" class="btn btn-primary btn-sm" data-bs-toggle="tooltip" data-bs-placement="top" title="Ver Detalhes"><i class="bi bi-eye"></i></a>
+                    <a href="{% url 'respostas:deletar_pedido_agrupado' pedido_agrupado.pk %}" class="btn btn-outline-danger btn-sm" data-bs-toggle="tooltip" data-bs-placement="top" title="Deletar Pedido"><i class="bi bi-trash"></i></a>
                 </td>
             </tr>
             {% endfor %}
@@ -83,7 +107,7 @@
         <ul class="pagination justify-content-center">
             {% if page_obj.has_previous %}
             <li class="page-item">
-                <a class="page-link" href="?{% if request.GET.q %}q={{ request.GET.q }}&{% endif %}{% if request.GET.status %}status={{ request.GET.status }}&{% endif %}{% if request.GET.start_date %}start_date={{ request.GET.start_date }}&{% endif %}{% if request.GET.end_date %}end_date={{ request.GET.end_date }}&{% endif %}page={{ page_obj.previous_page_number }}" aria-label="Previous">
+                <a class="page-link" href="?{% if request.GET.q %}q={{ request.GET.q }}&{% endif %}{% if request.GET.status %}status={{ request.GET.status }}&{% endif %}{% if request.GET.fornecedor %}fornecedor={{ request.GET.fornecedor }}&{% endif %}{% if request.GET.start_date %}start_date={{ request.GET.start_date }}&{% endif %}{% if request.GET.end_date %}end_date={{ request.GET.end_date }}&{% endif %}{% if request.GET.prazo %}prazo={{ request.GET.prazo }}&{% endif %}page={{ page_obj.previous_page_number }}" aria-label="Previous">
                     <span aria-hidden="true">&laquo;</span>
                 </a>
             </li>
@@ -99,13 +123,13 @@
                 {% if page_obj.number == num %}
                     <li class="page-item active"><a class="page-link" href="#">{{ num }}</a></li>
                 {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
-                    <li class="page-item"><a class="page-link" href="?{% if request.GET.q %}q={{ request.GET.q }}&{% endif %}{% if request.GET.status %}status={{ request.GET.status }}&{% endif %}{% if request.GET.start_date %}start_date={{ request.GET.start_date }}&{% endif %}{% if request.GET.end_date %}end_date={{ request.GET.end_date }}&{% endif %}page={{ num }}">{{ num }}</a></li>
+                    <li class="page-item"><a class="page-link" href="?{% if request.GET.q %}q={{ request.GET.q }}&{% endif %}{% if request.GET.status %}status={{ request.GET.status }}&{% endif %}{% if request.GET.fornecedor %}fornecedor={{ request.GET.fornecedor }}&{% endif %}{% if request.GET.start_date %}start_date={{ request.GET.start_date }}&{% endif %}{% if request.GET.end_date %}end_date={{ request.GET.end_date }}&{% endif %}{% if request.GET.prazo %}prazo={{ request.GET.prazo }}&{% endif %}page={{ num }}">{{ num }}</a></li>
                 {% endif %}
             {% endfor %}
 
             {% if page_obj.has_next %}
             <li class="page-item">
-                <a class="page-link" href="?{% if request.GET.q %}q={{ request.GET.q }}&{% endif %}{% if request.GET.status %}status={{ request.GET.status }}&{% endif %}{% if request.GET.start_date %}start_date={{ request.GET.start_date }}&{% endif %}{% if request.GET.end_date %}end_date={{ request.GET.end_date }}&{% endif %}page={{ page_obj.next_page_number }}" aria-label="Next">
+                <a class="page-link" href="?{% if request.GET.q %}q={{ request.GET.q }}&{% endif %}{% if request.GET.status %}status={{ request.GET.status }}&{% endif %}{% if request.GET.fornecedor %}fornecedor={{ request.GET.fornecedor }}&{% endif %}{% if request.GET.start_date %}start_date={{ request.GET.start_date }}&{% endif %}{% if request.GET.end_date %}end_date={{ request.GET.end_date }}&{% endif %}{% if request.GET.prazo %}prazo={{ request.GET.prazo }}&{% endif %}page={{ page_obj.next_page_number }}" aria-label="Next">
                     <span aria-hidden="true">&raquo;</span>
                 </a>
             </li>
@@ -122,4 +146,11 @@
     <div class="alert alert-info">Nenhum pedido encontrado.</div>
     {% endif %}
 </div>
+
+<script>
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+      return new bootstrap.Tooltip(tooltipTriggerEl)
+    })
+</script>
 {% endblock %}
