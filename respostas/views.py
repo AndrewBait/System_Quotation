@@ -599,56 +599,115 @@ from reportlab.pdfgen import canvas
 from io import BytesIO
 
 def exportar_pedidos_csv(request):
-    pedidos_agrupados = PedidoAgrupado.objects.all()
-    
+    pedidos = PedidoAgrupado.objects.all()
     response = HttpResponse(content_type='text/csv')
     response['Content-Disposition'] = 'attachment; filename="pedidos.csv"'
 
     writer = csv.writer(response)
     writer.writerow(['Cotação', 'Fornecedor', 'Data da Requisição', 'Vendedor', 'Total de Itens', 'Preço Total', 'Prazo', 'Status'])
 
-    for pedido_agrupado in pedidos_agrupados:
+    for pedido_agrupado in pedidos:
+        prazo = pedido_agrupado.pedidos.first().prazo_alternativo if pedido_agrupado.pedidos.first().prazo_alternativo_selecionado else pedido_agrupado.cotacao.prazo
         writer.writerow([
             pedido_agrupado.cotacao.nome,
             pedido_agrupado.fornecedor.company,
             pedido_agrupado.data_requisicao,
             pedido_agrupado.fornecedor.name,
             pedido_agrupado.total_itens,
-            f'{pedido_agrupado.preco_total:.3f}',  # Formatação para 3 casas decimais
-            pedido_agrupado.pedidos.first.prazo_alternativo if pedido_agrupado.pedidos.first.prazo_alternativo_selecionado else pedido_agrupado.cotacao.prazo,
-            pedido_agrupado.status,
+            '{:.3f}'.format(pedido_agrupado.preco_total),
+            prazo,
+            pedido_agrupado.status
         ])
 
     return response
 
+from django.http import HttpResponse
+from io import BytesIO
+from reportlab.lib.pagesizes import letter, landscape
+from reportlab.pdfgen import canvas
+
 def exportar_pedidos_pdf(request):
-    pedidos_agrupados = PedidoAgrupado.objects.all()
-    
+    # Aplicar os mesmos filtros usados na view ListarPedidosView
+    queryset = PedidoAgrupado.objects.all()
+    query = request.GET.get('q')
+    status = request.GET.get('status')
+    fornecedor_id = request.GET.get('fornecedor')
+    start_date = request.GET.get('start_date')
+    end_date = request.GET.get('end_date')
+    prazo = request.GET.get('prazo')
+
+    if query:
+        queryset = queryset.filter(
+            Q(cotacao__nome__icontains=query) |
+            Q(fornecedor__name__icontains=query) |
+            Q(fornecedor__company__icontains=query) |
+            Q(usuario_criador__username__icontains=query)
+        )
+
+    if status:
+        queryset = queryset.filter(status=status)
+
+    if fornecedor_id:
+        queryset = queryset.filter(fornecedor_id=fornecedor_id)
+
+    if start_date and end_date:
+        start_date = timezone.make_aware(datetime.datetime.strptime(start_date, '%Y-%m-%d'))
+        end_date = timezone.make_aware(datetime.datetime.strptime(end_date, '%Y-%m-%d') + datetime.timedelta(days=1))
+        queryset = queryset.filter(data_requisicao__range=(start_date, end_date))
+
+    if prazo:
+        prazo = int(prazo)
+        queryset = queryset.filter(
+            Q(pedidos__prazo_alternativo=prazo) |
+            Q(cotacao__prazo=prazo)
+        ).distinct()
+
     response = HttpResponse(content_type='application/pdf')
     response['Content-Disposition'] = 'attachment; filename="pedidos.pdf"'
 
     buffer = BytesIO()
-    p = canvas.Canvas(buffer, pagesize=A4)
+    p = canvas.Canvas(buffer, pagesize=landscape(letter))
+    width, height = landscape(letter)
 
-    width, height = A4
-    p.drawString(100, height - 50, 'Pedidos Gerados')
+    y = height - 40
+    p.drawString(30, y, 'Pedidos Gerados')
+    y -= 30
 
-    y = height - 80
-    for pedido_agrupado in pedidos_agrupados:
-        p.drawString(100, y, f'Cotação: {pedido_agrupado.cotacao.nome}')
-        p.drawString(250, y, f'Fornecedor: {pedido_agrupado.fornecedor.company}')
-        y -= 15
-        p.drawString(100, y, f'Data da Requisição: {pedido_agrupado.data_requisicao}')
-        p.drawString(250, y, f'Vendedor: {pedido_agrupado.fornecedor.name}')
-        y -= 15
-        p.drawString(100, y, f'Total de Itens: {pedido_agrupado.total_itens}')
-        p.drawString(250, y, f'Preço Total: R$ {pedido_agrupado.preco_total:.3f}')  # Formatação para 3 casas decimais
-        y -= 15
-        p.drawString(100, y, f'Prazo: {pedido_agrupado.pedidos.first.prazo_alternativo if pedido_agrupado.pedidos.first.prazo_alternativo_selecionado else pedido_agrupado.cotacao.prazo}')
-        p.drawString(250, y, f'Status: {pedido_agrupado.status}')
-        y -= 30
+    headers = ['Cotação', 'Fornecedor', 'Data da Requisição', 'Vendedor', 'Total de Itens', 'Preço Total', 'Prazo', 'Status']
+    x_positions = [30, 150, 270, 390, 450, 520, 600, 680]
+    for i, header in enumerate(headers):
+        p.drawString(x_positions[i], y, header)
+    y -= 20
+
+    for pedido_agrupado in queryset:
+        if y < 40:  # Check if there's enough space to add more data
+            p.showPage()
+            y = height - 40
+
+        primeiro_pedido = pedido_agrupado.pedidos.first()
+        if primeiro_pedido.prazo_alternativo_selecionado:
+            prazo_display = primeiro_pedido.prazo_alternativo
+        else:
+            prazo_display = pedido_agrupado.cotacao.prazo
+
+        data = [
+            pedido_agrupado.cotacao.nome,
+            pedido_agrupado.fornecedor.company,
+            pedido_agrupado.data_requisicao.strftime('%Y-%m-%d'),
+            pedido_agrupado.fornecedor.name,
+            str(pedido_agrupado.total_itens),
+            'R$ {:.3f}'.format(pedido_agrupado.preco_total),
+            str(prazo_display) + ' dias',
+            pedido_agrupado.status
+        ]
+        for i, item in enumerate(data):
+            p.drawString(x_positions[i], y, item)
+        y -= 20
 
     p.showPage()
     p.save()
-    buffer.seek(0)
-    return HttpResponse(buffer, content_type='application/pdf')
+
+    pdf = buffer.getvalue()
+    buffer.close()
+    response.write(pdf)
+    return response

@@ -11,8 +11,8 @@ from .views import (
     gerar_pedidos,
     EditarPedidoView,
     DeletarPedidoAgrupadoView,
-    exportar_pedidos_csv,  # Adicionado
-    exportar_pedidos_pdf 
+    exportar_pedidos_csv,
+    exportar_pedidos_pdf
 )
 
 app_name = 'respostas'
@@ -29,6 +29,6 @@ urlpatterns = [
     path('pedidos/deletar/<int:pk>/', DeletarPedidoAgrupadoView.as_view(), name='deletar_pedido_agrupado'),
     path('pedido/editar/<int:pk>/', EditarPedidoView.as_view(), name='editar_pedido_individual'),
     path('pedido/deletar/<int:pk>/', DeletarPedidoView.as_view(), name='deletar_pedido_individual'),
-    path('exportar-pedidos/', exportar_pedidos_csv, name='exportar_pedidos'),  # Adicionado
-    path('exportar-pedidos-pdf/', exportar_pedidos_pdf, name='exportar_pedidos_pdf'),  # Adicionado
+    path('exportar-pedidos/', exportar_pedidos_csv, name='exportar_pedidos'),
+    path('exportar-pedidos-pdf/', exportar_pedidos_pdf, name='exportar_pedidos_pdf'),
 ]
