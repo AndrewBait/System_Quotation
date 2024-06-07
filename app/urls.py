@@ -14,6 +14,7 @@ if settings.DEBUG:
         path('suppliers/', include('suppliers.urls')),
         path('cotacoes/', include(('cotacao.urls', 'cotacao'), namespace='cotacao')),
         path('respostas/', include(('respostas.urls', 'respostas'), namespace='respostas')),
+        path('relatorios/', include('relatorios.urls')),
         path('', RedirectView.as_view(url='/accounts/login/', permanent=True), name='home'),
         
         path('__debug__/', include(debug_toolbar.urls)),

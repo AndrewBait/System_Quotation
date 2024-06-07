@@ -63,6 +63,7 @@ INSTALLED_APPS = [
     'suppliers',
     'cotacao',
     "respostas",
+    'relatorios',
 ]
 
 # JAZZMIN_UI_TWEAKS = {
