@@ -2,6 +2,19 @@
 {% block content %}
 <h2 class="my-4">Pedidos Gerados</h2>
 
+<!-- Área de mensagens -->
+{% if messages %}
+<div class="container">
+    <div class="alert alert-dismissible fade show" role="alert">
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }}">
+                {{ message }}
+            </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
 <div class="container mb-4">
     <form method="get" class="row g-3">
         <div class="col-md-6">
@@ -101,7 +114,7 @@
                     {% endif %}
                     <a href="{% url 'respostas:detalhes_pedido_agrupado' pedido_agrupado.pk %}" class="btn btn-primary btn-sm" data-bs-toggle="tooltip" data-bs-placement="top" title="Ver Detalhes"><i class="bi bi-eye"></i></a>
                     <a href="{% url 'respostas:deletar_pedido_agrupado' pedido_agrupado.pk %}" class="btn btn-outline-danger btn-sm" data-bs-toggle="tooltip" data-bs-placement="top" title="Deletar Pedido"><i class="bi bi-trash"></i></a>
-                    <a href="{#}" class="btn btn-outline-success btn-sm" data-bs-toggle="tooltip" data-bs-placement="top" title="Enviar Pedido"><i class="bi bi-send"></i></a>
+                    <a href="{% url 'respostas:enviar_pedido' pedido_agrupado.pk %}" class="btn btn-outline-success btn-sm" data-bs-toggle="tooltip" data-bs-placement="top" title="Enviar Pedido"><i class="bi bi-send"></i></a>
                 </td>
             </tr>
             {% endfor %}

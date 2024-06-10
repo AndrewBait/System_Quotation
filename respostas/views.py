@@ -736,3 +736,116 @@ def exportar_pedidos_pdf(request):
     buffer.close()
     response.write(pdf)
     return response
+
+
+from django.shortcuts import get_object_or_404, redirect
+from django.core.mail import EmailMessage
+from django.urls import reverse
+from django.views import View
+from django.contrib import messages
+from io import BytesIO
+from reportlab.lib.pagesizes import A4
+from reportlab.pdfgen import canvas
+from .models import PedidoAgrupado
+from reportlab.lib.units import inch
+from reportlab.lib import colors
+from django.conf import settings
+import os
+
+class EnviarPedidoEmailView(View):
+    def get(self, request, pk):
+        pedido_agrupado = get_object_or_404(PedidoAgrupado, pk=pk)
+        
+        # Buffer para criar o PDF
+        buffer = BytesIO()
+        p = canvas.Canvas(buffer, pagesize=A4)
+        width, height = A4
+        
+        # Margens
+        margin = 0.5 * inch
+        
+        # Adiciona logo
+        logo_path = os.path.join(settings.MEDIA_ROOT, 'products/logo.png')  # Ajuste o caminho para a logo
+        logo_loaded = True
+        try:
+            p.drawImage(logo_path, margin, height - margin - 1.5 * inch, width=2 * inch, preserveAspectRatio=True, mask='auto')  # Utilização correta de inch
+        except Exception as e:
+            logo_loaded = False
+            print(f"Erro ao carregar a imagem: {e}")
+        
+        # Título
+        p.setFont("Helvetica-Bold", 16)
+        p.drawString(margin, height - margin - 1.75 * inch, f'Pedido #{pedido_agrupado.pk}')
+        
+        # Informações do fornecedor
+        p.setFont("Helvetica", 12)
+        p.drawString(margin, height - margin - 2.5 * inch, f'Fornecedor: {pedido_agrupado.fornecedor.name}')
+        p.drawString(margin, height - margin - 2.75 * inch, f'Data da Requisição: {pedido_agrupado.data_requisicao}')
+        p.drawString(margin, height - margin - 3.0 * inch, f'Status: {pedido_agrupado.status}')
+
+        # Cabeçalho da tabela
+        y = height - margin - 3.5 * inch
+        headers = ['Produto', 'Quantidade', 'Tipo de Volume', 'Preço Unitário', 'Preço Total']
+        x_positions = [margin, margin + 1.5 * inch, margin + 3 * inch, margin + 4.5 * inch, margin + 6 * inch]
+        
+        p.setFont("Helvetica-Bold", 10)
+        for i, header in enumerate(headers):
+            p.drawString(x_positions[i], y, header)
+        y -= 15
+        
+        # Linha
+        p.setStrokeColor(colors.black)
+        p.line(margin, y, width - margin, y)
+        y -= 15
+
+        # Dados dos pedidos
+        p.setFont("Helvetica", 10)
+        for pedido in pedido_agrupado.pedidos.all():
+            if y < margin + 50:
+                p.showPage()
+                y = height - margin - 1 * inch
+
+            data = [
+                pedido.produto.name,
+                str(pedido.quantidade),
+                pedido.get_tipo_volume_display(),
+                f'R$ {pedido.preco}',
+                f'R$ {pedido.preco_total}'
+            ]
+            for i, item in enumerate(data):
+                p.drawString(x_positions[i], y, item)
+            y -= 15
+
+        # Total Geral
+        p.setFont("Helvetica-Bold", 12)
+        p.drawString(margin, y, f'Total Geral: R$ {pedido_agrupado.preco_total}')
+
+        # Rodapé
+        p.setFont("Helvetica", 10)
+        p.setFillColor(colors.grey)
+        p.drawString(margin, margin, 'Empresa XYZ - Endereço: Rua Exemplo, 123 - Tel: (11) 1234-5678 - Email: contato@empresa.com')
+        
+        p.showPage()
+        p.save()
+        
+        pdf = buffer.getvalue()
+        buffer.close()
+        
+        email = EmailMessage(
+            subject=f'Pedido #{pedido_agrupado.pk}',
+            body=f'Olá {pedido_agrupado.fornecedor.name},\n\nSegue o pedido #{pedido_agrupado.pk} em anexo.',
+            from_email='seuemail@dominio.com',
+            to=[pedido_agrupado.fornecedor.email],
+        )
+        email.attach(f'pedido_{pedido_agrupado.pk}.pdf', pdf, 'application/pdf')
+        
+        try:
+            email.send()
+            if logo_loaded:
+                messages.success(request, 'Pedido enviado com sucesso!')
+            else:
+                messages.warning(request, 'Pedido enviado com sucesso, mas houve um problema ao carregar a logo no PDF.')
+        except Exception as e:
+            messages.error(request, f'Erro ao enviar o pedido: {e}')
+
+        return redirect(reverse('respostas:listar_pedidos'))
