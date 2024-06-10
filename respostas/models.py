@@ -57,7 +57,7 @@ class PedidoAgrupado(models.Model):
 
     @property
     def preco_total(self):
-        return sum(item.preco * item.quantidade for item in self.pedidos.all())
+        return sum(item.preco_total for item in self.pedidos.all())
 
     def __str__(self):
         return f"{self.cotacao.nome} - {self.fornecedor.name}"
@@ -75,6 +75,7 @@ class Pedido(models.Model):
     def __str__(self):
         return f"{self.produto.name} - Quantidade: {self.quantidade}"
 
+
     @property
     def preco_total(self):
         if self.tipo_volume in ['Cx', 'Dp', 'Fd', 'Pct', 'Tp']:  # Tipos de volume que consideram quantidade por volume
@@ -84,7 +85,6 @@ class Pedido(models.Model):
             return self.preco * self.quantidade
         else:
             return self.preco * self.quantidade
-    
 
 
     class Meta:

@@ -4,7 +4,7 @@
 {% block content %}
 <div class="container my-4">
     <div class="card shadow-sm">
-        <div class="card-header bg-success text-white">
+        <div id="card-header" class="card-header text-white">
             <h4 class="card-title mb-0">Editar Pedido</h4>
         </div>
         <div class="card-body">
@@ -12,8 +12,12 @@
                 {% csrf_token %}
                 {{ formset.management_form }}
 
+                <div class="alert alert-warning" role="alert" id="min-order-alert" style="display: none;">
+                    O valor mínimo do pedido não foi atingido. O valor mínimo é R$ {{ pedido_agrupado.fornecedor.minimum_order_value }}.
+                </div>
+
                 <div class="table-responsive">
-                    <table class="table table-hover table-sm align-middle"> 
+                    <table class="table table-hover table-sm align-middle">
                         <thead>
                             <tr>
                                 <th>Item</th>
@@ -74,13 +78,14 @@
                 </div>
 
                 <div class="d-flex justify-content-end gap-2 mt-3">
-                    <button type="submit" class="btn btn-success">Salvar Alterações</button>
+                    <button type="submit" class="btn btn-success" id="submit-button">Salvar Alterações</button>
                     <a href="{% url 'respostas:listar_pedidos' %}" class="btn btn-outline-secondary">Voltar aos Pedidos</a>
                 </div>
             </form>
         </div>
     </div>
 </div>
+
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     function calculateTotal() {
@@ -108,6 +113,19 @@ document.addEventListener('DOMContentLoaded', function() {
             totalGeral += totalProduto;
         });
         document.getElementById('total-geral').textContent = totalGeral.toFixed(3);
+
+        let minimumOrderValue = parseFloat("{{ pedido_agrupado.fornecedor.minimum_order_value }}") || 0;
+        if (totalGeral < minimumOrderValue) {
+            document.getElementById('card-header').classList.add('bg-danger');
+            document.getElementById('card-header').classList.remove('bg-success');
+            document.getElementById('min-order-alert').style.display = 'block';
+            document.getElementById('submit-button').disabled = true;
+        } else {
+            document.getElementById('card-header').classList.add('bg-success');
+            document.getElementById('card-header').classList.remove('bg-danger');
+            document.getElementById('min-order-alert').style.display = 'none';
+            document.getElementById('submit-button').disabled = false;
+        }
     }
 
     document.querySelectorAll('[name$="quantidade"], [name$="preco"]').forEach(function(input) {
