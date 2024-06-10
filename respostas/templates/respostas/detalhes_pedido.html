@@ -14,13 +14,30 @@
                     <table class="table table-bordered">
                         <thead>
                             <tr>
+                                <th>Item</th>
+                                <th>Fornecedor</th>
+                                <th>Vendedor</th>
+                                <th>Prazo</th>
+                                <th>Tipo de Volume</th>
                                 <th>Quantidade</th>
                                 <th>Preço</th>
+                                <th>Total por Produto</th>
                             </tr>
                         </thead>
                         <tbody>
                             {% for form in formset %}
                             <tr>
+                                <td>{{ form.instance.produto.name }}</td>
+                                <td>{{ pedido_agrupado.fornecedor.company }}</td>
+                                <td>{{ pedido_agrupado.fornecedor.name }}</td>
+                                <td>
+                                    {% if pedido_agrupado.pedidos.first.prazo_alternativo_selecionado and pedido_agrupado.pedidos.first.prazo_alternativo %}
+                                        {{ pedido_agrupado.pedidos.first.prazo_alternativo }} dias (Alternativo)
+                                    {% else %}
+                                        {{ pedido_agrupado.cotacao.prazo }} dias
+                                    {% endif %}
+                                </td>
+                                <td>{{ form.instance.get_tipo_volume_display }}</td>
                                 <td>
                                     <div class="form-group">
                                         {{ form.quantidade.errors }}
@@ -33,9 +50,18 @@
                                         {{ form.preco }}
                                     </div>
                                 </td>
+                                <td class="product-total">
+                                    0.000
+                                </td>
                             </tr>
                             {% endfor %}
                         </tbody>
+                        <tfoot>
+                            <tr>
+                                <td colspan="7" class="text-end"><strong>Total Geral:</strong></td>
+                                <td id="total-geral">0.000</td>
+                            </tr>
+                        </tfoot>
                     </table>
                 </div>
                 <div class="d-grid gap-2 mt-3">
@@ -46,4 +72,28 @@
         </div>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    function calculateTotal() {
+        let totalGeral = 0.000;
+        document.querySelectorAll('tbody tr').forEach(function(row) {
+            let quantidadeInput = row.querySelector('[name$="quantidade"]');
+            let precoInput = row.querySelector('[name$="preco"]');
+            let quantidade = parseFloat(quantidadeInput ? quantidadeInput.value : 0) || 0;
+            let preco = parseFloat(precoInput ? precoInput.value : 0) || 0;
+            let totalProduto = quantidade * preco;
+            row.querySelector('.product-total').textContent = totalProduto.toFixed(3);
+            totalGeral += totalProduto;
+        });
+        document.getElementById('total-geral').textContent = totalGeral.toFixed(3);
+    }
+
+    document.querySelectorAll('[name$="quantidade"], [name$="preco"]').forEach(function(input) {
+        input.addEventListener('input', calculateTotal);
+    });
+
+    calculateTotal();  // Calculate total on page load
+});
+</script>
 {% endblock %}

@@ -48,6 +48,10 @@ class PedidoAgrupado(models.Model):
     usuario_criador = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True)
 
     @property
+    def vendedor(self):
+        return self.fornecedor.vendedor
+
+    @property
     def total_itens(self):
         return self.pedidos.count()
 
@@ -80,6 +84,8 @@ class Pedido(models.Model):
             return self.preco * self.quantidade
         else:
             return self.preco * self.quantidade
+    
+
 
     class Meta:
         verbose_name = "Pedido"
