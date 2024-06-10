@@ -1,34 +1,40 @@
 {% extends 'base.html' %}
 {% load static %}
+
 {% block content %}
 <div class="container my-4">
-    <div class="card">
-        <div class="card-header">
-            <h4 class="card-title">Editar Pedido</h4>
+    <div class="card shadow-sm">
+        <div class="card-header bg-success text-white">
+            <h4 class="card-title mb-0">Editar Pedido</h4>
         </div>
         <div class="card-body">
             <form method="post">
                 {% csrf_token %}
                 {{ formset.management_form }}
+
                 <div class="table-responsive">
-                    <table class="table table-bordered">
+                    <table class="table table-hover table-sm align-middle"> 
                         <thead>
                             <tr>
                                 <th>Item</th>
+                                <th>Qtd. por Fardo</th>
                                 <th>Fornecedor</th>
                                 <th>Vendedor</th>
                                 <th>Prazo</th>
                                 <th>Tipo de Volume</th>
                                 <th>Quantidade</th>
-                                <th>Quantidade Total</th>
+                                <th>Qtd. Total</th>
                                 <th>Preço</th>
                                 <th>Total por Produto</th>
                             </tr>
                         </thead>
                         <tbody>
                             {% for form in formset %}
-                            <tr data-quantidade-por-volume="{{ form.instance.quantidade_por_volume|default_if_none:1 }}">
+                            <tr data-quantidade-por-volume="{{ form.instance.produto.quantidade_por_volume|default_if_none:1 }}">
                                 <td>{{ form.instance.produto.name }}</td>
+                                <td class="quantidade-por-fardo">
+                                    {{ form.instance.produto.quantidade_por_volume|default:'-' }} und
+                                </td>
                                 <td>{{ pedido_agrupado.fornecedor.company }}</td>
                                 <td>{{ pedido_agrupado.fornecedor.name }}</td>
                                 <td>
@@ -40,43 +46,41 @@
                                 </td>
                                 <td>{{ form.instance.get_tipo_volume_display }}</td>
                                 <td>
-                                    <div class="form-group">
-                                        {{ form.quantidade.errors }}
+                                    <div class="form-floating">
                                         {{ form.quantidade }}
+                                        <label for="{{ form.quantidade.id_for_label }}"></label>
+                                        {{ form.quantidade.errors }}
                                     </div>
                                 </td>
-                                <td class="quantidade-total">
-                                    0
-                                </td>
+                                <td class="quantidade-total">0</td>
                                 <td>
-                                    <div class="form-group">
-                                        {{ form.preco.errors }}
+                                    <div class="form-floating">
                                         {{ form.preco }}
+                                        <label for="{{ form.preco.id_for_label }}"></label>
+                                        {{ form.preco.errors }}
                                     </div>
                                 </td>
-                                <td class="product-total">
-                                    0.000
-                                </td>
+                                <td class="product-total">0.000</td>
                             </tr>
                             {% endfor %}
                         </tbody>
                         <tfoot>
                             <tr>
-                                <td colspan="8" class="text-end"><strong>Total Geral:</strong></td>
-                                <td id="total-geral">0.000</td>
+                                <td colspan="9" class="text-end fw-bold">Total Geral:</td>
+                                <td id="total-geral" class="fw-bold">0.000</td>
                             </tr>
                         </tfoot>
                     </table>
                 </div>
-                <div class="d-grid gap-2 mt-3">
+
+                <div class="d-flex justify-content-end gap-2 mt-3">
                     <button type="submit" class="btn btn-success">Salvar Alterações</button>
-                    <a href="{% url 'respostas:listar_pedidos' %}" class="btn btn-secondary">Voltar aos Pedidos</a>
+                    <a href="{% url 'respostas:listar_pedidos' %}" class="btn btn-outline-secondary">Voltar aos Pedidos</a>
                 </div>
             </form>
         </div>
     </div>
 </div>
-
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     function calculateTotal() {
@@ -84,7 +88,7 @@ document.addEventListener('DOMContentLoaded', function() {
         document.querySelectorAll('tbody tr').forEach(function(row) {
             let quantidadeInput = row.querySelector('[name$="quantidade"]');
             let precoInput = row.querySelector('[name$="preco"]');
-            let tipoVolume = row.querySelector('td:nth-child(5)').textContent.trim();
+            let tipoVolume = row.querySelector('td:nth-child(6)').textContent.trim(); // Mudou para a coluna correta
 
             let quantidade = parseFloat(quantidadeInput ? quantidadeInput.value : 0) || 0;
             let preco = parseFloat(precoInput ? precoInput.value : 0) || 0;
