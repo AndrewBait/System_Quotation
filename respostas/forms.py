@@ -142,4 +142,8 @@ class PedidoForm(forms.ModelForm):
         model = Pedido
         fields = ['quantidade', 'preco', 'produto']
 
-PedidoFormSet = inlineformset_factory(PedidoAgrupado, Pedido, form=PedidoForm, extra=0)
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['produto'].queryset = self.fields['produto'].queryset.select_related('produto')
+
+PedidoFormSet = forms.inlineformset_factory(PedidoAgrupado, Pedido, form=PedidoForm, extra=0)

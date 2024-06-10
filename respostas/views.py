@@ -368,6 +368,14 @@ class EditarPedidoView(UpdateView):
     success_url = reverse_lazy('respostas:listar_pedidos')
 
 
+
+
+from django import forms
+from django.shortcuts import render, get_object_or_404, redirect
+from django.views.generic import DetailView
+from .models import PedidoAgrupado, Pedido
+from .forms import PedidoFormSet
+
 class DetalhesPedidoAgrupadoView(DetailView):
     model = PedidoAgrupado
     template_name = 'respostas/detalhes_pedido.html'
@@ -375,11 +383,19 @@ class DetalhesPedidoAgrupadoView(DetailView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        PedidoFormSet = inlineformset_factory(PedidoAgrupado, Pedido, fields=('quantidade', 'preco'), extra=0)
+        PedidoFormSet = forms.inlineformset_factory(PedidoAgrupado, Pedido, fields=('quantidade', 'preco'), extra=0)
         if self.request.method == 'POST':
             context['formset'] = PedidoFormSet(self.request.POST, instance=self.object)
         else:
             context['formset'] = PedidoFormSet(instance=self.object)
+
+        # Adicionar quantidade por volume ao contexto
+        for form in context['formset']:
+            produto = form.instance.produto
+            if produto:
+                form.instance.quantidade_por_volume = produto.quantidade_por_volume or 1
+                form.fields['quantidade'].widget.attrs['data-quantidade-por-volume'] = form.instance.quantidade_por_volume
+
         return context
 
     def post(self, request, *args, **kwargs):
@@ -391,9 +407,7 @@ class DetalhesPedidoAgrupadoView(DetailView):
             return redirect('respostas:listar_pedidos')
         else:
             return self.render_to_response(self.get_context_data(form=formset))
-    
 
-logger = logging.getLogger(__name__)
 
 class EditarPedidoAgrupadoView(UpdateView):
     model = PedidoAgrupado

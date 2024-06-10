@@ -20,13 +20,14 @@
                                 <th>Prazo</th>
                                 <th>Tipo de Volume</th>
                                 <th>Quantidade</th>
+                                <th>Quantidade Total</th>
                                 <th>Preço</th>
                                 <th>Total por Produto</th>
                             </tr>
                         </thead>
                         <tbody>
                             {% for form in formset %}
-                            <tr>
+                            <tr data-quantidade-por-volume="{{ form.instance.quantidade_por_volume|default_if_none:1 }}">
                                 <td>{{ form.instance.produto.name }}</td>
                                 <td>{{ pedido_agrupado.fornecedor.company }}</td>
                                 <td>{{ pedido_agrupado.fornecedor.name }}</td>
@@ -44,6 +45,9 @@
                                         {{ form.quantidade }}
                                     </div>
                                 </td>
+                                <td class="quantidade-total">
+                                    0
+                                </td>
                                 <td>
                                     <div class="form-group">
                                         {{ form.preco.errors }}
@@ -58,7 +62,7 @@
                         </tbody>
                         <tfoot>
                             <tr>
-                                <td colspan="7" class="text-end"><strong>Total Geral:</strong></td>
+                                <td colspan="8" class="text-end"><strong>Total Geral:</strong></td>
                                 <td id="total-geral">0.000</td>
                             </tr>
                         </tfoot>
@@ -80,10 +84,23 @@ document.addEventListener('DOMContentLoaded', function() {
         document.querySelectorAll('tbody tr').forEach(function(row) {
             let quantidadeInput = row.querySelector('[name$="quantidade"]');
             let precoInput = row.querySelector('[name$="preco"]');
+            let tipoVolume = row.querySelector('td:nth-child(5)').textContent.trim();
+
             let quantidade = parseFloat(quantidadeInput ? quantidadeInput.value : 0) || 0;
             let preco = parseFloat(precoInput ? precoInput.value : 0) || 0;
-            let totalProduto = quantidade * preco;
+
+            // Calcular a quantidade total com base no tipo de volume
+            let quantidadeTotal = quantidade;
+            if (!['Unidade', 'Quilo', 'Un'].includes(tipoVolume)) {  // Considerando 'Un' para unidade
+                let quantidadePorVolume = parseFloat(row.dataset.quantidadePorVolume) || 1;
+                quantidadeTotal = quantidade * quantidadePorVolume;
+            }
+
+            let totalProduto = quantidadeTotal * preco;
+
+            row.querySelector('.quantidade-total').textContent = quantidadeTotal.toFixed(3);
             row.querySelector('.product-total').textContent = totalProduto.toFixed(3);
+
             totalGeral += totalProduto;
         });
         document.getElementById('total-geral').textContent = totalGeral.toFixed(3);
