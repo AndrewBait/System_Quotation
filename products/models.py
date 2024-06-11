@@ -145,6 +145,13 @@ class Product(models.Model):
         
         if query.exists():
             raise ValidationError("Um produto com este nome, categoria e subcategoria já existe.")
+        
+        if Product.objects.filter(ean=self.ean).exclude(pk=self.pk).exists():
+            raise ValidationError({'ean': "Um produto com este código EAN já existe."})
+        
+        if Product.objects.filter(sku=self.sku).exclude(pk=self.pk).exists():
+            raise ValidationError({'sku': "Um produto com este código SKU já existe."})
+        
 
     def save(self, *args, **kwargs):
         self.full_clean()
