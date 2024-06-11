@@ -22,6 +22,8 @@ from django.core.paginator import Paginator
 from django.http import HttpResponse
 from django.db.models import Q
 import re
+from django.contrib import messages
+
 
 
 
@@ -211,19 +213,25 @@ class ProductDetailView(DetailView):
     template_name = 'product_detail.html'
     
 
-@method_decorator(login_required(login_url='login'), name='dispatch')#decorator
+@method_decorator(login_required(login_url='login'), name='dispatch')
 class NewProductCreateView(CreateView):
     model = Product
     form_class = ProductModelForm
     template_name = 'new_product.html'
-    success_url = reverse_lazy('products:products_list')
+    success_url = reverse_lazy('products:new_product')
 
     def form_valid(self, form):
         new_brand_name = self.request.POST.get('new_brand')
         if new_brand_name:
             brand, created = Brand.objects.get_or_create(name=new_brand_name.strip())
             form.instance.brand = brand
-        return super(NewProductCreateView, self).form_valid(form) 
+        response = super(NewProductCreateView, self).form_valid(form)
+        messages.success(self.request, 'Produto cadastrado com sucesso!')
+        return response
+
+    def form_invalid(self, form):
+        messages.error(self.request, 'Erro ao cadastrar o produto. Por favor, verifique os campos e tente novamente.')
+        return super().form_invalid(form)
     
 
 @method_decorator(login_required(login_url='login'), name='dispatch')#decorator

@@ -29,7 +29,18 @@
 
 {% block content %}
 <div class="container-fluid">
-  <form action="" method="post" enctype="multipart/form-data" class="needs-validation" novalidate>
+  {% if messages %}
+  <div class="container my-3">
+      <div class="alert alert-dismissible fade show" role="alert">
+          {% for message in messages %}
+              <div class="alert alert-{{ message.tags }} mb-2">
+                  {{ message }}
+              </div>
+          {% endfor %}
+      </div>
+  </div>
+  {% endif %}
+  <form id="productForm" action="" method="post" enctype="multipart/form-data" class="needs-validation" novalidate>
     {% csrf_token %}
     <h1 style="font-size: 2rem; margin-bottom: 20px;">Cadastrar Produto</h1>
     <p><small>* Campos obrigatórios</small></p>
@@ -145,22 +156,34 @@
 
         <div class="text-end mt-5">
           <a href="{% url 'products:import_products' %}" class="btn btn-outline-success me-2">Importar</a>
-          <input type="submit" value="Cadastrar" class="btn btn-primary me-2">
+          <button type="button" class="btn btn-primary me-2" data-bs-toggle="modal" data-bs-target="#confirmModal">Cadastrar</button>
           <a href="{% url 'products:products_list' %}" class="btn btn-secondary me-2">Voltar</a>
         </div>
       </div>
     </div>
   </form>
 </div>
-        
-        
 
-
-
+<!-- Modal de Confirmação -->
+<div class="modal fade" id="confirmModal" tabindex="-1" aria-labelledby="confirmModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="confirmModalLabel">Confirmar Cadastro</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                Tem certeza que deseja cadastrar este produto?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" id="confirmButton">Cadastrar</button>
+            </div>
+        </div>
+    </div>
+</div>
 
 <script>
-
-
   function toggleQuantidadePorVolume() {
     var unidadeDeMedida = document.getElementById('id_unidade_de_medida').value;
     var quantidadePorVolumeContainer = document.getElementById('quantidadePorVolumeContainer');
@@ -174,45 +197,46 @@
   document.getElementById('id_unidade_de_medida').addEventListener('change', toggleQuantidadePorVolume);
   toggleQuantidadePorVolume();  // Initial call
 
-
-
-    document.getElementById('id_department').addEventListener('change', function() {
-        var departmentId = this.value;
-        fetch(`/products/get-categories/?department_id=${departmentId}`) // Ajuste o caminho conforme a necessidade
-            .then(response => response.json())
-            .then(data => {
-                var categorySelect = document.getElementById('id_category');
-                var subcategorySelect = document.getElementById('id_subcategory');
-                categorySelect.innerHTML = '<option value="">---------</option>';
-                subcategorySelect.innerHTML = '<option value="">---------</option>'; // Adicionado para resetar as subcategorias
-                data.forEach(function(category) {
-                    var option = new Option(category.name, category.id);
-                    categorySelect.add(option);
-                });
+  document.getElementById('id_department').addEventListener('change', function() {
+    var departmentId = this.value;
+    fetch(`/products/get-categories/?department_id=${departmentId}`) // Ajuste o caminho conforme a necessidade
+        .then(response => response.json())
+        .then(data => {
+            var categorySelect = document.getElementById('id_category');
+            var subcategorySelect = document.getElementById('id_subcategory');
+            categorySelect.innerHTML = '<option value="">---------</option>';
+            subcategorySelect.innerHTML = '<option value="">---------</option>'; // Adicionado para resetar as subcategorias
+            data.forEach(function(category) {
+                var option = new Option(category.name, category.id);
+                categorySelect.add(option);
             });
-    });
-    
-    document.getElementById('id_category').addEventListener('change', function() {
-        var categoryId = this.value;
-        fetch(`/products/get-subcategories/?category_id=${categoryId}`) // Ajuste o caminho conforme a necessidade
-            .then(response => response.json())
-            .then(data => {
-                var subcategorySelect = document.getElementById('id_subcategory');
-                subcategorySelect.innerHTML = '<option value="">---------</option>';
-                data.forEach(function(subcategory) {
-                    var option = new Option(subcategory.name, subcategory.id);
-                    subcategorySelect.add(option);
-                });
+        });
+  });
+  
+  document.getElementById('id_category').addEventListener('change', function() {
+    var categoryId = this.value;
+    fetch(`/products/get-subcategories/?category_id=${categoryId}`) // Ajuste o caminho conforme a necessidade
+        .then(response => response.json())
+        .then(data => {
+            var subcategorySelect = document.getElementById('id_subcategory');
+            subcategorySelect.innerHTML = '<option value="">---------</option>';
+            data.forEach(function(subcategory) {
+                var option = new Option(subcategory.name, subcategory.id);
+                subcategorySelect.add(option);
             });
-    });
+        });
+  });
 
-    const form = document.querySelector('form');
+  // JavaScript para a modal de confirmação
+  document.getElementById('confirmButton').addEventListener('click', function() {
+    document.getElementById('productForm').submit();
+  });
 
-    form.addEventListener('submit', (event) => {
+  const form = document.querySelector('form');
+
+  form.addEventListener('submit', (event) => {
     const nameField = document.getElementById('id_name');
     const statusField = document.getElementById('id_status');
-
-    
-});
+  });
 </script>
 {% endblock %}
