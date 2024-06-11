@@ -103,7 +103,7 @@ class ProductModelForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super(ProductModelForm, self).__init__(*args, **kwargs)
-        self.fields['product_line'].widget.attrs['class'] = 'form-control'  # Adicione classes CSS ao campo se desejar
+        self.fields['product_line'].widget.attrs['class'] = 'form-control'  
         # Inicializa as querysets para edição
         if self.instance.pk:
             self.fields['category'].queryset = Category.objects.filter(department=self.instance.department)
