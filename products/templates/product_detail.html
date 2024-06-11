@@ -1,13 +1,11 @@
 {% extends "base.html" %}
 
 {% block content %}
-
 <div class="container mt-0">
   <div class="row">
     <div class="col-md-6 mx-auto">
       <div class="card">
         <div class="card-header bg-dark text-white">
-          
           <h4 class="card-title">{{ object.name }} - {{ object.brand.name|default:"" }}</h4>
         </div>
         <div class="card-body">
@@ -18,32 +16,95 @@
           {% endif %}
 
           <dl class="row">
+            {% if object.ean %}
             <dt class="col-sm-4">EAN:</dt>
-            <dd class="col-sm-8">{{ object.ean|default:"Não especificado" }}</dd>
+            <dd class="col-sm-8">{{ object.ean }}</dd>
+            {% endif %}
 
+            {% if object.sku %}
             <dt class="col-sm-4">SKU:</dt>
-            <dd class="col-sm-8">{{ object.sku|default:"Não especificado" }}</dd>
+            <dd class="col-sm-8">{{ object.sku }}</dd>
+            {% endif %}
 
+            {% if object.department %}
             <dt class="col-sm-4">Departamento:</dt>
-            <dd class="col-sm-8">{{ object.department.nome|default:"Não especificado" }}</dd>
+            <dd class="col-sm-8">{{ object.department.nome }}</dd>
+            {% endif %}
 
+            {% if object.category %}
             <dt class="col-sm-4">Categoria:</dt>
-            <dd class="col-sm-8">{{ object.category.name|default:"Não especificado" }}</dd>
+            <dd class="col-sm-8">{{ object.category.name }}</dd>
+            {% endif %}
 
+            {% if object.subcategory %}
             <dt class="col-sm-4">Subcategoria:</dt>
-            <dd class="col-sm-8">{{ object.subcategory.name|default:"Não especificado" }}</dd>
+            <dd class="col-sm-8">{{ object.subcategory.name }}</dd>
+            {% endif %}
 
+            {% if object.product_line %}
             <dt class="col-sm-4">Linha de produto:</dt>
-            <dd class="col-sm-8">{{ object.product_line.name|default:"Não especificado" }}</dd>
+            <dd class="col-sm-8">{{ object.product_line.name }}</dd>
+            {% endif %}
 
             <dt class="col-sm-4">Status:</dt>
             <dd class="col-sm-8">{% if object.status %}Ativo{% else %}Inativo{% endif %}</dd>
 
+            {% if object.descricao %}
             <dt class="col-sm-4">Descrição:</dt>
-            <dd class="col-sm-8">{{ object.descricao|default:"Não especificada" }}</dd>
+            <dd class="col-sm-8">{{ object.descricao }}</dd>
+            {% endif %}
 
+            {% if object.notas %}
             <dt class="col-sm-4">Notas:</dt>
-            <dd class="col-sm-8">{{ object.notas|default:"Não especificado" }}</dd>
+            <dd class="col-sm-8">{{ object.notas }}</dd>
+            {% endif %}
+
+            {% if object.preco_de_custo %}
+            <dt class="col-sm-4">Preço de Custo:</dt>
+            <dd class="col-sm-8">R$ {{ object.preco_de_custo }}</dd>
+            {% endif %}
+
+            {% if object.altura_embalagem %}
+            <dt class="col-sm-4">Altura da Embalagem:</dt>
+            <dd class="col-sm-8">{{ object.altura_embalagem }} {{ object.unidade_altura }}</dd>
+            {% endif %}
+
+            {% if object.largura_embalagem %}
+            <dt class="col-sm-4">Largura da Embalagem:</dt>
+            <dd class="col-sm-8">{{ object.largura_embalagem }} {{ object.unidade_largura }}</dd>
+            {% endif %}
+
+            {% if object.comprimento_embalagem %}
+            <dt class="col-sm-4">Comprimento da Embalagem:</dt>
+            <dd class="col-sm-8">{{ object.comprimento_embalagem }} {{ object.unidade_comprimento }}</dd>
+            {% endif %}
+
+            {% if object.espessura_embalagem %}
+            <dt class="col-sm-4">Espessura da Embalagem:</dt>
+            <dd class="col-sm-8">{{ object.espessura_embalagem }} {{ object.unidade_espessura }}</dd>
+            {% endif %}
+
+            {% if object.raio_embalagem %}
+            <dt class="col-sm-4">Raio da Embalagem:</dt>
+            <dd class="col-sm-8">{{ object.raio_embalagem }} {{ object.unidade_raio }}</dd>
+            {% endif %}
+
+            {% if object.unidade_de_medida %}
+            <dt class="col-sm-4">Unidade de Medida:</dt>
+            <dd class="col-sm-8">{{ object.get_unidade_de_medida_display }}</dd>
+            {% endif %}
+
+            {% if object.quantidade_por_volume %}
+            <dt class="col-sm-4">Quantidade por Volume:</dt>
+            <dd class="col-sm-8">{{ object.quantidade_por_volume }} unidades</dd>
+            {% endif %}
+
+            {% if object.data_de_validade %}
+            <dt class="col-sm-4">Data de Validade:</dt>
+            <dd class="col-sm-8">{{ object.data_de_validade }}</dd>
+            {% endif %}
+
+            
           </dl>
 
           {% if user.is_authenticated %}
@@ -57,5 +118,4 @@
     </div>
   </div>
 </div>
-
 {% endblock %}

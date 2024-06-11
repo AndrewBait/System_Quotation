@@ -23,12 +23,26 @@
         font-size: smaller;
       }
     }
+    .required-field label::after {
+      content: " *";
+      color: red;
+    }
   </style>
 {% endblock %}
 
 {% block content %}
 <div class="container-fluid mt-4">
-  <form action="" method="post" enctype="multipart/form-data" class="needs-validation" novalidate>
+  {% if messages %}
+  <div class="alert-container">
+    {% for message in messages %}
+      <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+      </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+  <form id="productForm" action="" method="post" enctype="multipart/form-data" class="needs-validation" novalidate>
     {% csrf_token %}
     <h1 style="font-size: 2rem; margin-bottom: 20px;">Atualizar Produto</h1>
     <div class="row">
@@ -39,7 +53,7 @@
           {{ form.name.errors }}
         </div>
         <div class="mb-3">
-          <label for="id_ean" min = "0" class="form-label">Código de barras - EAN:</label>
+          <label for="id_ean" class="form-label">Código de barras - EAN:</label>
           {{ form.ean|add_class:'form-control' }}
           {{ form.ean.errors }}
         </div>
@@ -54,12 +68,12 @@
           {{ form.unidade_de_medida.errors }}
         </div>
         <div class="mb-3" id="quantidadePorVolumeContainer" style="display: none;">
-          <label for="id_quantidade_por_volume" min = "0" class="form-label">Quantidade por Volume:</label>
+          <label for="id_quantidade_por_volume" class="form-label">Quantidade por Volume:</label>
           {{ form.quantidade_por_volume|add_class:'form-control' }}
           {{ form.quantidade_por_volume.errors }}
         </div>
         <div class="mb-3">
-          <label for="id_status" class="form-label">Status:<span style="color: red;">*</span></label>
+          <label for="id_status" class="form-label">Status:</label>
           {{ form.status|add_class:'form-control' }}
           {{ form.status.errors }}
         </div>
@@ -77,11 +91,6 @@
           <label for="id_subcategory" class="form-label">Subcategoria:</label>
           <select id="id_subcategory" name="subcategory" class="form-control" data-selected="{{ form.instance.subcategory_id|default_if_none:'' }}"></select>
           {{ form.subcategory.errors }}
-        </div>
-        <div class="mb-3">
-          <label for="id_status" class="form-label">Status:</label>
-          {{ form.status|add_class:'form-control' }}
-          {{ form.status.errors }}
         </div>
       </div>
       <div class="col-md-4">
@@ -118,36 +127,55 @@
           {{ form.unidade_dimensao.errors }}
         </div>
         <div class="mb-3">
-          <label for="id_altura_embalagem" min = "0" class="form-label">Altura da Embalagem:</label>
+          <label for="id_altura_embalagem" class="form-label">Altura da Embalagem:</label>
           {{ form.altura_embalagem|add_class:'form-control' }}
           {{ form.altura_embalagem.errors }}
         </div>
         <div class="mb-3">
-          <label for="id_largura_embalagem" min = "0" class="form-label">Largura da Embalagem:</label>
+          <label for="id_largura_embalagem" class="form-label">Largura da Embalagem:</label>
           {{ form.largura_embalagem|add_class:'form-control' }}
           {{ form.largura_embalagem.errors }}
         </div>
         <div class="mb-3">
-          <label for="id_comprimento_embalagem" min = "0" class="form-label">Comprimento da Embalagem:</label>
+          <label for="id_comprimento_embalagem" class="form-label">Comprimento da Embalagem:</label>
           {{ form.comprimento_embalagem|add_class:'form-control' }}
           {{ form.comprimento_embalagem.errors }}
         </div>
         <div class="mb-3">
-          <label for="id_espessura_embalagem" min = "0" class="form-label">Espessura da Embalagem:</label>
+          <label for="id_espessura_embalagem" class="form-label">Espessura da Embalagem:</label>
           {{ form.espessura_embalagem|add_class:'form-control' }}
           {{ form.espessura_embalagem.errors }}
         </div>
         <div class="mb-3">
-          <label for="id_raio_embalagem" min = "0" class="form-label">Raio da Embalagem:</label>
+          <label for="id_raio_embalagem" class="form-label">Raio da Embalagem:</label>
           {{ form.raio_embalagem|add_class:'form-control' }}
           {{ form.raio_embalagem.errors }}
         </div>
-
-        <input type="submit" value="Atualizar" class="btn btn-primary me-2">
+        
+        <button type="button" class="btn btn-primary me-2" data-bs-toggle="modal" data-bs-target="#confirmModal">Atualizar</button>
         <a href="{% url 'products:products_list' %}" class="btn btn-outline-success">Voltar</a>
       </div>
     </div>
   </form>
+</div>
+
+<!-- Modal de Confirmação -->
+<div class="modal fade" id="confirmModal" tabindex="-1" role="dialog" aria-labelledby="confirmModalLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="confirmModalLabel">Confirmação</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        Tem certeza de que deseja atualizar este produto?
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-primary" id="confirmUpdateButton">Confirmar</button>
+      </div>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -206,6 +234,12 @@
       
         document.getElementById('id_unidade_de_medida').addEventListener('change', toggleQuantidadePorVolume);
         toggleQuantidadePorVolume();
+
+        // Modal confirmation
+        const confirmUpdateButton = document.getElementById('confirmUpdateButton');
+        confirmUpdateButton.addEventListener('click', function() {
+            document.getElementById('productForm').submit();
+        });
     });
 </script>
 {% endblock %}

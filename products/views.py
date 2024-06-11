@@ -234,7 +234,9 @@ class NewProductCreateView(CreateView):
         return super().form_invalid(form)
     
 
-@method_decorator(login_required(login_url='login'), name='dispatch')#decorator
+from django.urls import reverse
+
+@method_decorator(login_required(login_url='login'), name='dispatch')
 class ProductUpdateView(UpdateView):
     model = Product
     form_class = ProductModelForm
@@ -245,20 +247,17 @@ class ProductUpdateView(UpdateView):
         if new_brand_name:
             brand, created = Brand.objects.get_or_create(name=new_brand_name.strip())
             form.instance.brand = brand
-        return super(ProductUpdateView, self).form_valid(form)
-    
-    def get_initial(self):
-        initial = super().get_initial()
-        if self.object.department:
-            initial['department'] = self.object.department.id
-        if self.object.category:
-            initial['category'] = self.object.category.id
-        if self.object.subcategory:
-            initial['subcategory'] = self.object.subcategory.id
-        return initial
+        response = super(ProductUpdateView, self).form_valid(form)
+        messages.success(self.request, 'Produto atualizado com sucesso!')
+        return response
+
+    def form_invalid(self, form):
+        messages.error(self.request, 'Erro ao atualizar o produto. Por favor, verifique os campos e tente novamente.')
+        return super().form_invalid(form)
 
     def get_success_url(self):
-        return reverse_lazy('products:product_detail', kwargs={'pk': self.object.pk})
+        return reverse('products:product_update', kwargs={'pk': self.object.pk})
+
 
 
 @method_decorator(login_required(login_url='login'), name='dispatch')#decorator
