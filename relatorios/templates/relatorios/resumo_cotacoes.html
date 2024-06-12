@@ -1,0 +1,75 @@
+<!-- templates/relatorios/resumo_cotacoes.html -->
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container my-4">
+    <h2 class="text-center">Resumo de Cotações por Período</h2>
+    <form method="get" class="row g-3">
+        <div class="col-md-3">
+            <label for="data_inicio" class="form-label">Data Início</label>
+            <input type="date" id="data_inicio" name="data_inicio" class="form-control" required>
+        </div>
+        <div class="col-md-3">
+            <label for="data_fim" class="form-label">Data Fim</label>
+            <input type="date" id="data_fim" name="data_fim" class="form-control" required>
+        </div>
+        <div class="col-md-3 d-flex align-items-end">
+            <button type="submit" class="btn btn-primary w-100">Gerar Relatório</button>
+        </div>
+    </form>
+    <div class="row mt-4">
+        <div class="col-md-12">
+            <h4 class="text-center">Resumo</h4>
+            <p>Total de Cotações: {{ total_cotacoes }}</p>
+            <p>Total de Itens: {{ total_itens }}</p>
+            <p>Valor Total: R$ {{ valor_total }}</p>
+        </div>
+        <div class="col-md-12 mt-3">
+            <h4 class="text-center">Detalhes</h4>
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Nome</th>
+                        <th>Departamento</th>
+                        <th>Data Abertura</th>
+                        <th>Data Fechamento</th>
+                        <th>Status</th>
+                        <th>Prazo</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for cotacao in cotacoes %}
+                    <tr>
+                        <td>{{ cotacao.nome }}</td>
+                        <td>{{ cotacao.departamento.nome }}</td>
+                        <td>{{ cotacao.data_abertura }}</td>
+                        <td>{{ cotacao.data_fechamento }}</td>
+                        <td>{{ cotacao.status }}</td>
+                        <td>{{ cotacao.prazo }} dias</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <div class="row mt-4">
+        <div class="col-md-12">
+            <h4 class="text-center">Exportar Relatório</h4>
+            <form method="post" class="row g-3">
+                {% csrf_token %}
+                <input type="hidden" name="data_inicio" value="{{ request.GET.data_inicio }}">
+                <input type="hidden" name="data_fim" value="{{ request.GET.data_fim }}">
+                <div class="col-md-4">
+                    <button type="submit" name="formato" value="csv" class="btn btn-primary w-100">Exportar para CSV</button>
+                </div>
+                <div class="col-md-4">
+                    <button type="submit" name="formato" value="xml" class="btn btn-secondary w-100">Exportar para XML</button>
+                </div>
+                <div class="col-md-4">
+                    <button type="submit" name="formato" value="pdf" class="btn btn-danger w-100">Exportar para PDF</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

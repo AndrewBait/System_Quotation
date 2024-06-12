@@ -5,57 +5,51 @@
     <h2 class="text-center">Gerar Relatórios</h2>
     <div class="row mt-4">
         <div class="col-md-6 mb-4">
-            <button class="btn btn-primary w-100 py-3" onclick="generateReport('resumo-cotacoes')">
+            <a href="{% url 'relatorios:resumo_cotacoes' %}" class="btn btn-primary w-100 py-3">
                 <i class="bi bi-graph-up"></i> Resumo de Cotações por Período
-            </button>
+            </a>
         </div>
         <div class="col-md-6 mb-4">
-            <button class="btn btn-primary w-100 py-3" onclick="generateReport('cotacoes-departamento-categoria')">
+            <a href="{% url 'relatorios:cotacoes_departamento_categoria' %}" class="btn btn-primary w-100 py-3">
                 <i class="bi bi-diagram-3"></i> Cotações por Departamento e Categoria
-            </button>
+            </a>
         </div>
         <div class="col-md-6 mb-4">
-            <button class="btn btn-primary w-100 py-3" onclick="generateReport('comparativo-precos-fornecedor')">
+            <a href="{% url 'relatorios:comparativo_precos_fornecedor' %}" class="btn btn-primary w-100 py-3">
                 <i class="bi bi-bar-chart"></i> Comparativo de Preços por Fornecedor
-            </button>
+            </a>
         </div>
         <div class="col-md-6 mb-4">
-            <button class="btn btn-primary w-100 py-3" onclick="generateReport('desempenho-fornecedores')">
+            <a href="{% url 'relatorios:desempenho_fornecedores' %}" class="btn btn-primary w-100 py-3">
                 <i class="bi bi-people"></i> Desempenho de Fornecedores
-            </button>
+            </a>
         </div>
         <div class="col-md-6 mb-4">
-            <button class="btn btn-secondary w-100 py-3" onclick="generateReport('produtos-mais-cotados')">
+            <a href="{% url 'relatorios:produtos_mais_cotados' %}" class="btn btn-secondary w-100 py-3">
                 <i class="bi bi-box"></i> Produtos Mais Cotados
-            </button>
+            </a>
         </div>
         <div class="col-md-6 mb-4">
-            <button class="btn btn-secondary w-100 py-3" onclick="generateReport('produtos-maior-variacao-preco')">
+            <a href="{% url 'relatorios:produtos_maior_variacao_preco' %}" class="btn btn-secondary w-100 py-3">
                 <i class="bi bi-arrow-up-down"></i> Produtos com Maior Variação de Preço
-            </button>
+            </a>
         </div>
         <div class="col-md-6 mb-4">
-            <button class="btn btn-secondary w-100 py-3" onclick="generateReport('produtos-sem-fornecedor')">
+            <a href="{% url 'relatorios:produtos_sem_fornecedor' %}" class="btn btn-secondary w-100 py-3">
                 <i class="bi bi-question-circle"></i> Produtos sem Fornecedor
-            </button>
+            </a>
         </div>
         <div class="col-md-6 mb-4">
-            <button class="btn btn-success w-100 py-3" onclick="generateReport('pedidos-agrupados-fornecedor')">
+            <a href="{% url 'relatorios:pedidos_agrupados_fornecedor' %}" class="btn btn-success w-100 py-3">
                 <i class="bi bi-cart"></i> Pedidos Agrupados por Fornecedor
-            </button>
+            </a>
         </div>
         <div class="col-md-6 mb-4">
-            <button class="btn btn-success w-100 py-3" onclick="generateReport('historico-pedidos-agrupados')">
+            <a href="{% url 'relatorios:historico_pedidos_agrupados' %}" class="btn btn-success w-100 py-3">
                 <i class="bi bi-clock-history"></i> Histórico de Pedidos Agrupados
-            </button>
+            </a>
         </div>
     </div>
 </div>
 
-<script>
-    function generateReport(reportType) {
-        alert('Gerando relatório: ' + reportType);
-        // Aqui você pode adicionar a lógica para gerar o relatório
-    }
-</script>
 {% endblock %}
