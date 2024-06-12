@@ -1,11 +1,11 @@
 {% extends 'base.html' %}
 {% block content %}
-<!-- Modal de Confirmação -->
-<div class="modal fade" id="confirmModal" tabindex="-1" aria-labelledby="confirmModalLabel" aria-hidden="true">
+<!-- Modal de Confirmação para Envio -->
+<div class="modal fade" id="confirmSendModal" tabindex="-1" aria-labelledby="confirmSendModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="confirmModalLabel">Confirmar Envio</h5>
+                <h5 class="modal-title" id="confirmSendModalLabel">Confirmar Envio</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
@@ -13,7 +13,26 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                <a id="confirmButton" href="#" class="btn btn-outline-success">Confirmar</a>
+                <a id="confirmSendButton" href="#" class="btn btn-outline-success">Confirmar</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Confirmação para Deletar -->
+<div class="modal fade" id="confirmDeleteModal" tabindex="-1" aria-labelledby="confirmDeleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="confirmDeleteModalLabel">Confirmar Exclusão</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                Tem certeza que deseja deletar este pedido?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <a id="confirmDeleteButton" href="#" class="btn btn-outline-danger">Deletar</a>
             </div>
         </div>
     </div>
@@ -101,6 +120,7 @@
         </thead>
         <tbody>
             {% for pedido_agrupado in pedidos_agrupados %}
+            {% if pedido_agrupado.pk %}
             <tr class="text-center align-middle">
                 <td>{{ pedido_agrupado.cotacao.nome }}</td>
                 <td>{{ pedido_agrupado.fornecedor.company }}</td>
@@ -134,12 +154,15 @@
                                 <span class="badge bg-success" data-bs-toggle="tooltip" data-bs-placement="top" title="Pedido mínimo: R$ {{ pedido_agrupado.fornecedor.minimum_order_value|floatformat:3 }}">Atende pedido mínimo</span>
                             {% endif %}
                         </div>
+                        {% if pedido_agrupado.pk %}
                         <a href="{% url 'respostas:detalhes_pedido_agrupado' pedido_agrupado.pk %}" class="btn btn-primary btn-sm me-1" data-bs-toggle="tooltip" data-bs-placement="top" title="Ver Detalhes"><i class="bi bi-eye"></i></a>
-                        <a href="{% url 'respostas:deletar_pedido_agrupado' pedido_agrupado.pk %}" class="btn btn-outline-danger btn-sm me-1" data-bs-toggle="tooltip" data-bs-placement="top" title="Deletar Pedido"><i class="bi bi-trash"></i></a>
-                        <button type="button" class="btn btn-outline-success btn-sm" data-bs-toggle="modal" data-bs-target="#confirmModal" data-url="{% url 'respostas:enviar_pedido' pedido_agrupado.pk %}" data-bs-placement="top" title="Enviar Pedido"><i class="bi bi-send"></i></button>
+                        <button type="button" class="btn btn-outline-danger btn-sm me-1" data-bs-toggle="modal" data-bs-target="#confirmDeleteModal" data-url="{% url 'respostas:deletar_pedido_agrupado' pedido_agrupado.pk %}" data-bs-placement="top" title="Deletar Pedido"><i class="bi bi-trash"></i></button>
+                        <button type="button" class="btn btn-outline-success btn-sm" data-bs-toggle="modal" data-bs-target="#confirmSendModal" data-url="{% url 'respostas:enviar_pedido' pedido_agrupado.pk %}" data-bs-placement="top" title="Enviar Pedido"><i class="bi bi-send"></i></button>
+                        {% endif %}
                     </div>
                 </td>
             </tr>
+            {% endif %}
             {% endfor %}
         </tbody>
     </table>
@@ -195,12 +218,46 @@
       return new bootstrap.Tooltip(tooltipTriggerEl)
     });
 
-    // Adiciona a URL ao botão de confirmação da modal
-    document.getElementById('confirmModal').addEventListener('show.bs.modal', function (event) {
+    // Adiciona a URL ao botão de confirmação da modal de envio
+    document.getElementById('confirmSendModal').addEventListener('show.bs.modal', function (event) {
         var button = event.relatedTarget; // Botão que acionou a modal
         var url = button.getAttribute('data-url'); // Extrai a URL dos atributos data
-        var confirmButton = document.getElementById('confirmButton');
+        var confirmButton = document.getElementById('confirmSendButton');
         confirmButton.href = url;
     });
+
+    // Adiciona a URL ao botão de confirmação da modal de exclusão
+    document.getElementById('confirmDeleteModal').addEventListener('show.bs.modal', function (event) {
+        var button = event.relatedTarget; // Botão que acionou a modal
+        var url = button.getAttribute('data-url'); // Extrai a URL dos atributos data
+        var confirmButton = document.getElementById('confirmDeleteButton');
+        confirmButton.addEventListener('click', function() {
+            fetch(url, {
+                method: 'DELETE',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Fecha a modal
+                    var deleteModal = bootstrap.Modal.getInstance(document.getElementById('confirmDeleteModal'));
+                    deleteModal.hide();
+                    // Recarrega a página
+                    location.reload();
+                } else {
+                    // Exibe uma mensagem de erro
+                    var alertPlaceholder = document.querySelector('.alert-dismissible');
+                    var alert = document.createElement('div');
+                    alert.className = 'alert alert-danger';
+                    alert.innerHTML = data.message;
+                    alertPlaceholder.appendChild(alert);
+                }
+            });
+        });
+    });
 </script>
+
 {% endblock %}

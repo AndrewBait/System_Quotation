@@ -452,15 +452,30 @@ class EditarPedidoAgrupadoView(UpdateView):
     
 logger = logging.getLogger(__name__)
 
+from django.http import JsonResponse
+from django.http import JsonResponse
+from django.views.generic import DeleteView
+from django.urls import reverse_lazy
+from .models import PedidoAgrupado
+
 class DeletarPedidoAgrupadoView(DeleteView):
     model = PedidoAgrupado
-    template_name = 'respostas/deletar_pedido_agrupado.html'
     success_url = reverse_lazy('respostas:listar_pedidos')
 
-    def get_object(self):
-        pk = self.kwargs.get('pk')
-        logger.debug(f"Tentando deletar PedidoAgrupado com pk={pk}")
-        return get_object_or_404(PedidoAgrupado, pk=pk)
+    def get(self, request, *args, **kwargs):
+        if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            return self.post(request, *args, **kwargs)
+        return super().get(request, *args, **kwargs)
+
+    def delete(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        self.object.delete()
+        response_data = {
+            'success': True,
+            'message': 'Pedido agrupado deletado com sucesso.'
+        }
+        return JsonResponse(response_data)
+    
     
 class DeletarPedidoView(DeleteView):
     model = Pedido
