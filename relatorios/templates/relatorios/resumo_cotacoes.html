@@ -3,8 +3,8 @@
 
 {% block content %}
 <div class="container my-4">
-    <h2 class="text-center">Resumo de Cotações por Período</h2>
-    <form method="get" class="row g-3">
+    <h2 class="text-center mb-4">Resumo de Cotações por Período</h2>
+    <form method="get" class="row g-3 justify-content-center">
         <div class="col-md-3">
             <label for="data_inicio" class="form-label">Data Início</label>
             <input type="date" id="data_inicio" name="data_inicio" class="form-control" required>
@@ -13,62 +13,97 @@
             <label for="data_fim" class="form-label">Data Fim</label>
             <input type="date" id="data_fim" name="data_fim" class="form-control" required>
         </div>
-        <div class="col-md-3 d-flex align-items-end">
+        <div class="col-md-2 d-flex align-items-end">
             <button type="submit" class="btn btn-primary w-100">Gerar Relatório</button>
         </div>
     </form>
-    <div class="row mt-4">
-        <div class="col-md-12">
-            <h4 class="text-center">Resumo</h4>
-            <p>Total de Cotações: {{ total_cotacoes }}</p>
-            <p>Total de Itens: {{ total_itens }}</p>
-            <p>Valor Total: R$ {{ valor_total }}</p>
+    <div class="row mt-5">
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-header text-center">
+                    <h4 class="mb-0">Resumo</h4>
+                </div>
+                <div class="card-body">
+                    <p><strong>Total de Cotações:</strong> {{ total_cotacoes }}</p>
+                    <p><strong>Total de Itens:</strong> {{ total_itens }}</p>
+                    <p><strong>Valor Total:</strong> R$ {{ valor_total }}</p>
+                    <p><strong>Valor Médio dos Itens:</strong> R$ {{ valor_medio_itens }}</p>
+                    <p><strong>Número de Fornecedores Envolvidos:</strong> {{ numero_fornecedores }}</p>
+                </div>
+            </div>
         </div>
-        <div class="col-md-12 mt-3">
-            <h4 class="text-center">Detalhes</h4>
-            <table class="table table-striped">
-                <thead>
-                    <tr>
-                        <th>Nome</th>
-                        <th>Departamento</th>
-                        <th>Data Abertura</th>
-                        <th>Data Fechamento</th>
-                        <th>Status</th>
-                        <th>Prazo</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for cotacao in cotacoes %}
-                    <tr>
-                        <td>{{ cotacao.nome }}</td>
-                        <td>{{ cotacao.departamento.nome }}</td>
-                        <td>{{ cotacao.data_abertura }}</td>
-                        <td>{{ cotacao.data_fechamento }}</td>
-                        <td>{{ cotacao.status }}</td>
-                        <td>{{ cotacao.prazo }} dias</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-header text-center">
+                    <h4 class="mb-0">Itens Mais Cotados</h4>
+                </div>
+                <div class="card-body">
+                    <ul class="list-group">
+                        {% for item in itens_mais_cotados %}
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            {{ item.produto__name }}
+                            <span class="badge bg-primary rounded-pill">{{ item.total }} cotações</span>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
         </div>
-    </div>
-    <div class="row mt-4">
         <div class="col-md-12">
-            <h4 class="text-center">Exportar Relatório</h4>
-            <form method="post" class="row g-3">
-                {% csrf_token %}
-                <input type="hidden" name="data_inicio" value="{{ request.GET.data_inicio }}">
-                <input type="hidden" name="data_fim" value="{{ request.GET.data_fim }}">
-                <div class="col-md-4">
-                    <button type="submit" name="formato" value="csv" class="btn btn-primary w-100">Exportar para CSV</button>
+            <div class="card mb-4">
+                <div class="card-header text-center">
+                    <h4 class="mb-0">Detalhes</h4>
                 </div>
-                <div class="col-md-4">
-                    <button type="submit" name="formato" value="xml" class="btn btn-secondary w-100">Exportar para XML</button>
+                <div class="card-body">
+                    <table class="table table-striped">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Nome</th>
+                                <th>Departamento</th>
+                                <th>Data Abertura</th>
+                                <th>Data Fechamento</th>
+                                <th>Status</th>
+                                <th>Prazo</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for cotacao in cotacoes %}
+                            <tr>
+                                <td>{{ cotacao.nome }}</td>
+                                <td>{{ cotacao.departamento.nome }}</td>
+                                <td>{{ cotacao.data_abertura }}</td>
+                                <td>{{ cotacao.data_fechamento }}</td>
+                                <td>{{ cotacao.status }}</td>
+                                <td>{{ cotacao.prazo }} dias</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
                 </div>
-                <div class="col-md-4">
-                    <button type="submit" name="formato" value="pdf" class="btn btn-danger w-100">Exportar para PDF</button>
+            </div>
+        </div>
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header text-center">
+                    <h4 class="mb-0">Exportar Relatório</h4>
                 </div>
-            </form>
+                <div class="card-body">
+                    <form method="post" class="row g-3 justify-content-center">
+                        {% csrf_token %}
+                        <input type="hidden" name="data_inicio" value="{{ request.GET.data_inicio }}">
+                        <input type="hidden" name="data_fim" value="{{ request.GET.data_fim }}">
+                        <div class="col-md-3">
+                            <button type="submit" name="formato" value="csv" class="btn btn-primary w-100">Exportar para CSV</button>
+                        </div>
+                        <div class="col-md-3">
+                            <button type="submit" name="formato" value="xml" class="btn btn-secondary w-100">Exportar para XML</button>
+                        </div>
+                        <div class="col-md-3">
+                            <button type="submit" name="formato" value="pdf" class="btn btn-danger w-100">Exportar para PDF</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
         </div>
     </div>
 </div>
