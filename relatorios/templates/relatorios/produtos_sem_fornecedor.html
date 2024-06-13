@@ -1,9 +1,40 @@
-<!-- relatorios/templates/relatorios/produtos_sem_fornecedor.html -->
+<!-- templates/relatorios/produtos_sem_fornecedor.html -->
 {% extends 'base.html' %}
 
 {% block content %}
 <div class="container my-4">
-    <h2 class="text-center">Produtos sem Fornecedor</h2>
-    <!-- Conteúdo do relatório -->
+    <h2 class="text-center">Produtos Sem Fornecedor</h2>
+    <div class="row mt-4">
+        <div class="col-md-12">
+            <h4 class="text-center">Lista de Produtos</h4>
+            <ul class="list-group">
+                {% for produto in produtos_sem_fornecedor %}
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    {{ produto.name }}
+                    <span class="badge bg-primary rounded-pill">
+                        Categoria: {{ produto.category.name }} | Departamento: {{ produto.department.name }}
+                    </span>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+    <div class="row mt-4">
+        <div class="col-md-12">
+            <h4 class="text-center">Exportar Relatório</h4>
+            <form method="post" class="row g-3">
+                {% csrf_token %}
+                <div class="col-md-4">
+                    <button type="submit" name="formato" value="csv" class="btn btn-primary w-100">Exportar para CSV</button>
+                </div>
+                <div class="col-md-4">
+                    <button type="submit" name="formato" value="xml" class="btn btn-secondary w-100">Exportar para XML</button>
+                </div>
+                <div class="col-md-4">
+                    <button type="submit" name="formato" value="pdf" class="btn btn-danger w-100">Exportar para PDF</button>
+                </div>
+            </form>
+        </div>
+    </div>
 </div>
 {% endblock %}

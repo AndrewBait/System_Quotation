@@ -4,6 +4,7 @@ from django.db.models import Sum, Count, Avg
 from django.http import FileResponse, JsonResponse, HttpResponse
 from cotacao.models import Cotacao, ItemCotacao
 from suppliers.models import Supplier
+from products.models import Product, ProductPriceHistory
 from respostas.models import RespostaCotacao, ItemRespostaCotacao
 from django.template.loader import render_to_string
 import csv
@@ -771,6 +772,103 @@ class ProdutosMaiorVariacaoPrecoView(TemplateView):
 
 class ProdutosSemFornecedorView(TemplateView):
     template_name = 'relatorios/produtos_sem_fornecedor.html'
+
+    def get(self, request):
+        produtos_com_fornecedor = ProductPriceHistory.objects.values_list('product_id', flat=True).distinct()
+        produtos_sem_fornecedor = Product.objects.exclude(id__in=produtos_com_fornecedor)
+
+        context = {
+            'produtos_sem_fornecedor': produtos_sem_fornecedor,
+        }
+        return render(request, self.template_name, context)
+
+    def post(self, request):
+        formato = request.POST.get('formato')
+
+        produtos_com_fornecedor = ProductPriceHistory.objects.values_list('product_id', flat=True).distinct()
+        produtos_sem_fornecedor = Product.objects.exclude(id__in=produtos_com_fornecedor)
+
+        if formato == 'csv':
+            return self.exportar_csv(produtos_sem_fornecedor)
+        elif formato == 'xml':
+            return self.exportar_xml(produtos_sem_fornecedor)
+        elif formato == 'pdf':
+            return self.exportar_pdf(produtos_sem_fornecedor)
+        else:
+            return JsonResponse({'erro': 'Formato inválido'})
+
+    def exportar_csv(self, produtos):
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = 'attachment; filename="produtos_sem_fornecedor.csv"'
+
+        writer = csv.writer(response)
+        writer.writerow(['Nome do Produto', 'Categoria', 'Departamento'])
+
+        for produto in produtos:
+            writer.writerow([produto.name, produto.category.name, produto.department.name])
+
+        return response
+
+    def exportar_xml(self, produtos):
+        response = HttpResponse(content_type='application/xml')
+        response['Content-Disposition'] = 'attachment; filename="produtos_sem_fornecedor.xml"'
+
+        root = ET.Element('ProdutosSemFornecedor')
+        for produto in produtos:
+            produto_element = ET.SubElement(root, 'Produto')
+            ET.SubElement(produto_element, 'Nome').text = produto.name
+            ET.SubElement(produto_element, 'Categoria').text = produto.category.name
+            ET.SubElement(produto_element, 'Departamento').text = produto.department.name
+
+        tree = ET.ElementTree(root)
+        tree.write(response, encoding='utf-8', xml_declaration=True)
+
+        return response
+
+    def exportar_pdf(self, produtos):
+        buffer = io.BytesIO()
+        doc = SimpleDocTemplate(buffer, pagesize=A4)
+        elements = []
+
+        styles = getSampleStyleSheet()
+        subtitle_style = ParagraphStyle(name='Subtitle', fontSize=12, spaceAfter=10)
+
+        title = "Produtos Sem Fornecedor"
+        elements.append(Paragraph(title, styles['Title']))
+        elements.append(Spacer(1, 12))
+
+        data = [['Nome do Produto', 'Categoria', 'Departamento']]
+        for produto in produtos:
+            data.append([
+                produto.name,
+                produto.category.name,
+                produto.department.name
+            ])
+
+        table = Table(data)
+        table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, 0), 12),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+            ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+            ('GRID', (0, 0), (-1, -1), 1, colors.black),
+        ]))
+        elements.append(table)
+
+        doc.build(elements, onFirstPage=self.add_page_number, onLaterPages=self.add_page_number)
+
+        buffer.seek(0)
+        return FileResponse(buffer, as_attachment=True, filename='produtos_sem_fornecedor.pdf')
+
+    def add_page_number(self, canvas, doc):
+        page_num = canvas.getPageNumber()
+        text = f"Page {page_num}"
+        canvas.drawRightString(200 * mm, 20 * mm, text)
+
+
 
 class PedidosAgrupadosFornecedorView(TemplateView):
     template_name = 'relatorios/pedidos_agrupados_fornecedor.html'
