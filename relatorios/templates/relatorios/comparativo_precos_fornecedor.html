@@ -1,9 +1,63 @@
-<!-- relatorios/templates/relatorios/comparativo_precos_fornecedor.html -->
+<!-- templates/relatorios/comparativo_precos_fornecedor.html -->
 {% extends 'base.html' %}
 
 {% block content %}
 <div class="container my-4">
     <h2 class="text-center">Comparativo de Preços por Fornecedor</h2>
-    <!-- Conteúdo do relatório -->
+    <form method="get" class="row g-3">
+        <div class="col-md-3">
+            <label for="data_inicio" class="form-label">Data Início</label>
+            <input type="date" id="data_inicio" name="data_inicio" class="form-control" required>
+        </div>
+        <div class="col-md-3">
+            <label for="data_fim" class="form-label">Data Fim</label>
+            <input type="date" id="data_fim" name="data_fim" class="form-control" required>
+        </div>
+        <div class="col-md-3 d-flex align-items-end">
+            <button type="submit" class="btn btn-primary w-100">Gerar Relatório</button>
+        </div>
+    </form>
+    <div class="row mt-4">
+        <div class="col-md-12">
+            <h4 class="text-center">Comparativo de Preços</h4>
+            <table class="table table-striped table-bordered">
+                <thead>
+                    <tr>
+                        <th>Fornecedor</th>
+                        <th>Média de Preço</th>
+                        <th>Total de Itens</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in comparativo_precos %}
+                    <tr>
+                        <td>{{ item.fornecedor__name }}</td>
+                        <td>R$ {{ item.media_preco|floatformat:2 }}</td>
+                        <td>{{ item.total_itens }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <div class="row mt-4">
+        <div class="col-md-12">
+            <h4 class="text-center">Exportar Relatório</h4>
+            <form method="post" class="row g-3">
+                {% csrf_token %}
+                <input type="hidden" name="data_inicio" value="{{ request.GET.data_inicio }}">
+                <input type="hidden" name="data_fim" value="{{ request.GET.data_fim }}">
+                <div class="col-md-4">
+                    <button type="submit" name="formato" value="csv" class="btn btn-primary w-100">Exportar para CSV</button>
+                </div>
+                <div class="col-md-4">
+                    <button type="submit" name="formato" value="xml" class="btn btn-secondary w-100">Exportar para XML</button>
+                </div>
+                <div class="col-md-4">
+                    <button type="submit" name="formato" value="pdf" class="btn btn-danger w-100">Exportar para PDF</button>
+                </div>
+            </form>
+        </div>
+    </div>
 </div>
 {% endblock %}
