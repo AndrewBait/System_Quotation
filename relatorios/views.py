@@ -638,9 +638,136 @@ class ProdutosMaisCotadosView(TemplateView):
         page_num = canvas.getPageNumber()
         text = f"Page {page_num}"
         canvas.drawRightString(200 * mm, 20 * mm, text)
+        
+
+from django.db.models import Min, Max, F
+from products.models import ProductPriceHistory
 
 class ProdutosMaiorVariacaoPrecoView(TemplateView):
     template_name = 'relatorios/produtos_maior_variacao_preco.html'
+
+    def get(self, request):
+        # Lógica para obter dados do relatório
+        data_inicio = request.GET.get('data_inicio')
+        data_fim = request.GET.get('data_fim')
+
+        if data_inicio and data_fim:
+            historico_precos = ProductPriceHistory.objects.filter(date__gte=data_inicio, date__lte=data_fim)
+        else:
+            historico_precos = ProductPriceHistory.objects.all()
+
+        variacao_precos = historico_precos.values('product__name').annotate(
+            preco_minimo=Min('price'), preco_maximo=Max('price')
+        ).annotate(variacao=F('preco_maximo') - F('preco_minimo')).order_by('-variacao')[:10]
+
+        context = {
+            'variacao_precos': variacao_precos,
+        }
+        return render(request, self.template_name, context)
+
+    def post(self, request):
+        # Lógica para exportar o relatório
+        data_inicio = request.POST.get('data_inicio')
+        data_fim = request.POST.get('data_fim')
+        formato = request.POST.get('formato')
+
+        if data_inicio and data_fim:
+            historico_precos = ProductPriceHistory.objects.filter(date__gte=data_inicio, date__lte=data_fim)
+        else:
+            historico_precos = ProductPriceHistory.objects.all()
+
+        variacao_precos = historico_precos.values('product__name').annotate(
+            preco_minimo=Min('price'), preco_maximo=Max('price')
+        ).annotate(variacao=F('preco_maximo') - F('preco_minimo')).order_by('-variacao')[:10]
+
+        if formato == 'csv':
+            return self.exportar_csv(variacao_precos)
+        elif formato == 'xml':
+            return self.exportar_xml(variacao_precos)
+        elif formato == 'pdf':
+            return self.exportar_pdf(variacao_precos)
+        else:
+            return JsonResponse({'erro': 'Formato inválido'})
+
+    def exportar_csv(self, variacao_precos):
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = 'attachment; filename="produtos_maior_variacao_preco.csv"'
+
+        writer = csv.writer(response)
+        writer.writerow(['Produto', 'Preço Mínimo', 'Preço Máximo', 'Variação'])
+
+        for produto in variacao_precos:
+            writer.writerow([
+                produto['product__name'],
+                f"{produto['preco_minimo']:.3f}",
+                f"{produto['preco_maximo']:.3f}",
+                f"{produto['variacao']:.3f}"
+            ])
+
+        return response
+
+    def exportar_xml(self, variacao_precos):
+        response = HttpResponse(content_type='application/xml')
+        response['Content-Disposition'] = 'attachment; filename="produtos_maior_variacao_preco.xml"'
+
+        root = ET.Element('ProdutosMaiorVariacaoPreco')
+        for produto in variacao_precos:
+            produto_element = ET.SubElement(root, 'Produto')
+            ET.SubElement(produto_element, 'Nome').text = produto['product__name']
+            ET.SubElement(produto_element, 'PrecoMinimo').text = f"{produto['preco_minimo']:.3f}"
+            ET.SubElement(produto_element, 'PrecoMaximo').text = f"{produto['preco_maximo']:.3f}"
+            ET.SubElement(produto_element, 'Variacao').text = f"{produto['variacao']:.3f}"
+
+        tree = ET.ElementTree(root)
+        tree.write(response, encoding='utf-8', xml_declaration=True)
+
+        return response
+
+    def exportar_pdf(self, variacao_precos):
+        buffer = io.BytesIO()
+        doc = SimpleDocTemplate(buffer, pagesize=A4)
+        elements = []
+
+        styles = getSampleStyleSheet()
+        subtitle_style = ParagraphStyle(name='Subtitle', fontSize=12, spaceAfter=10)
+
+        title = "Produtos com Maior Variação de Preço"
+        subtitle = f"Período: {self.request.POST.get('data_inicio')} a {self.request.POST.get('data_fim')}"
+        elements.append(Paragraph(title, styles['Title']))
+        elements.append(Paragraph(subtitle, subtitle_style))
+        elements.append(Spacer(1, 12))
+
+        data = [['Produto', 'Preço Mínimo', 'Preço Máximo', 'Variação']]
+        for produto in variacao_precos:
+            data.append([
+                produto['product__name'],
+                f"{produto['preco_minimo']:.3f}",
+                f"{produto['preco_maximo']:.3f}",
+                f"{produto['variacao']:.3f}"
+            ])
+
+        table = Table(data)
+        table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, 0), 12),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+            ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+            ('GRID', (0, 0), (-1, -1), 1, colors.black),
+        ]))
+        elements.append(table)
+
+        doc.build(elements, onFirstPage=self.add_page_number, onLaterPages=self.add_page_number)
+
+        buffer.seek(0)
+        return FileResponse(buffer, as_attachment=True, filename='produtos_maior_variacao_preco.pdf')
+
+    def add_page_number(self, canvas, doc):
+        page_num = canvas.getPageNumber()
+        text = f"Page {page_num}"
+        canvas.drawRightString(200 * mm, 20 * mm, text)
 
 class ProdutosSemFornecedorView(TemplateView):
     template_name = 'relatorios/produtos_sem_fornecedor.html'

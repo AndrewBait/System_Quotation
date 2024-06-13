@@ -1,9 +1,55 @@
-<!-- relatorios/templates/relatorios/produtos_maior_variacao_preco.html -->
+<!-- templates/relatorios/produtos_maior_variacao_preco.html -->
 {% extends 'base.html' %}
 
 {% block content %}
 <div class="container my-4">
     <h2 class="text-center">Produtos com Maior Variação de Preço</h2>
-    <!-- Conteúdo do relatório -->
+    <form method="get" class="row g-3">
+        <div class="col-md-3">
+            <label for="data_inicio" class="form-label">Data Início</label>
+            <input type="date" id="data_inicio" name="data_inicio" class="form-control" required>
+        </div>
+        <div class="col-md-3">
+            <label for="data_fim" class="form-label">Data Fim</label>
+            <input type="date" id="data_fim" name="data_fim" class="form-control" required>
+        </div>
+        <div class="col-md-3 d-flex align-items-end">
+            <button type="submit" class="btn btn-primary w-100">Gerar Relatório</button>
+        </div>
+    </form>
+    <div class="row mt-4">
+        <div class="col-md-12">
+            <h4 class="text-center">Variação de Preços</h4>
+            <ul class="list-group">
+                {% for produto in variacao_precos %}
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    {{ produto.product__name }} - Variação: R$ {{ produto.variacao|floatformat:3 }}
+                    <span class="badge bg-primary rounded-pill">
+                        Mín: R$ {{ produto.preco_minimo|floatformat:3 }} | Máx: R$ {{ produto.preco_maximo|floatformat:3 }}
+                    </span>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+    <div class="row mt-4">
+        <div class="col-md-12">
+            <h4 class="text-center">Exportar Relatório</h4>
+            <form method="post" class="row g-3">
+                {% csrf_token %}
+                <input type="hidden" name="data_inicio" value="{{ request.GET.data_inicio }}">
+                <input type="hidden" name="data_fim" value="{{ request.GET.data_fim }}">
+                <div class="col-md-4">
+                    <button type="submit" name="formato" value="csv" class="btn btn-primary w-100">Exportar para CSV</button>
+                </div>
+                <div class="col-md-4">
+                    <button type="submit" name="formato" value="xml" class="btn btn-secondary w-100">Exportar para XML</button>
+                </div>
+                <div class="col-md-4">
+                    <button type="submit" name="formato" value="pdf" class="btn btn-danger w-100">Exportar para PDF</button>
+                </div>
+            </form>
+        </div>
+    </div>
 </div>
 {% endblock %}
