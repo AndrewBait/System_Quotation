@@ -1,9 +1,40 @@
-<!-- relatorios/templates/relatorios/historico_pedidos_agrupados.html -->
+<!-- templates/relatorios/historico_pedidos_agrupados.html -->
 {% extends 'base.html' %}
 
 {% block content %}
 <div class="container my-4">
     <h2 class="text-center">Histórico de Pedidos Agrupados</h2>
-    <!-- Conteúdo do relatório -->
+    <div class="row mt-4">
+        <div class="col-md-12">
+            <h4 class="text-center">Resumo de Pedidos</h4>
+            <ul class="list-group">
+                {% for pedido in pedidos_agrupados %}
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    {{ pedido.fornecedor__name }}
+                    <span class="badge bg-primary rounded-pill">
+                        Total de Pedidos: {{ pedido.total_pedidos }} | Total de Itens: {{ pedido.total_itens }} | Valor Total: R$ {{ pedido.valor_total|floatformat:3 }}
+                    </span>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+    <div class="row mt-4">
+        <div class="col-md-12">
+            <h4 class="text-center">Exportar Relatório</h4>
+            <form method="post" class="row g-3">
+                {% csrf_token %}
+                <div class="col-md-4">
+                    <button type="submit" name="formato" value="csv" class="btn btn-primary w-100">Exportar para CSV</button>
+                </div>
+                <div class="col-md-4">
+                    <button type="submit" name="formato" value="xml" class="btn btn-secondary w-100">Exportar para XML</button>
+                </div>
+                <div class="col-md-4">
+                    <button type="submit" name="formato" value="pdf" class="btn btn-danger w-100">Exportar para PDF</button>
+                </div>
+            </form>
+        </div>
+    </div>
 </div>
 {% endblock %}

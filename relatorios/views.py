@@ -979,3 +979,106 @@ class PedidosAgrupadosFornecedorView(TemplateView):
 
 class HistoricoPedidosAgrupadosView(TemplateView):
     template_name = 'relatorios/historico_pedidos_agrupados.html'
+
+    def get(self, request):
+        pedidos_agrupados = PedidoAgrupado.objects.values('fornecedor__name').annotate(
+            total_pedidos=Count('id'),
+            total_itens=Sum('pedidos__quantidade'),
+            valor_total=Sum('pedidos__preco')
+        ).order_by('-total_pedidos')
+
+        context = {
+            'pedidos_agrupados': pedidos_agrupados,
+        }
+        return render(request, self.template_name, context)
+
+    def post(self, request):
+        formato = request.POST.get('formato')
+
+        pedidos_agrupados = PedidoAgrupado.objects.values('fornecedor__name').annotate(
+            total_pedidos=Count('id'),
+            total_itens=Sum('pedidos__quantidade'),
+            valor_total=Sum('pedidos__preco')
+        ).order_by('-total_pedidos')
+
+        if formato == 'csv':
+            return self.exportar_csv(pedidos_agrupados)
+        elif formato == 'xml':
+            return self.exportar_xml(pedidos_agrupados)
+        elif formato == 'pdf':
+            return self.exportar_pdf(pedidos_agrupados)
+        else:
+            return JsonResponse({'erro': 'Formato inválido'})
+
+    def exportar_csv(self, pedidos):
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = 'attachment; filename="historico_pedidos_agrupados.csv"'
+
+        writer = csv.writer(response)
+        writer.writerow(['Fornecedor', 'Total de Pedidos', 'Total de Itens', 'Valor Total'])
+
+        for pedido in pedidos:
+            writer.writerow([pedido['fornecedor__name'], pedido['total_pedidos'], pedido['total_itens'], f"{pedido['valor_total']:.3f}"])
+
+        return response
+
+    def exportar_xml(self, pedidos):
+        response = HttpResponse(content_type='application/xml')
+        response['Content-Disposition'] = 'attachment; filename="historico_pedidos_agrupados.xml"'
+
+        root = ET.Element('HistoricoPedidosAgrupados')
+        for pedido in pedidos:
+            pedido_element = ET.SubElement(root, 'Fornecedor')
+            ET.SubElement(pedido_element, 'Nome').text = pedido['fornecedor__name']
+            ET.SubElement(pedido_element, 'TotalPedidos').text = str(pedido['total_pedidos'])
+            ET.SubElement(pedido_element, 'TotalItens').text = str(pedido['total_itens'])
+            ET.SubElement(pedido_element, 'ValorTotal').text = f"{pedido['valor_total']:.3f}"
+
+        tree = ET.ElementTree(root)
+        tree.write(response, encoding='utf-8', xml_declaration=True)
+
+        return response
+
+    def exportar_pdf(self, pedidos):
+        buffer = io.BytesIO()
+        doc = SimpleDocTemplate(buffer, pagesize=A4)
+        elements = []
+
+        styles = getSampleStyleSheet()
+        subtitle_style = ParagraphStyle(name='Subtitle', fontSize=12, spaceAfter=10)
+
+        title = "Histórico de Pedidos Agrupados"
+        elements.append(Paragraph(title, styles['Title']))
+        elements.append(Spacer(1, 12))
+
+        data = [['Fornecedor', 'Total de Pedidos', 'Total de Itens', 'Valor Total']]
+        for pedido in pedidos:
+            data.append([
+                pedido['fornecedor__name'],
+                pedido['total_pedidos'],
+                pedido['total_itens'],
+                f"R$ {pedido['valor_total']:.3f}"  # Formatando com 3 casas decimais
+            ])
+
+        table = Table(data)
+        table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, 0), 12),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+            ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+            ('GRID', (0, 0), (-1, -1), 1, colors.black),
+        ]))
+        elements.append(table)
+
+        doc.build(elements, onFirstPage=self.add_page_number, onLaterPages=self.add_page_number)
+
+        buffer.seek(0)
+        return FileResponse(buffer, as_attachment=True, filename='historico_pedidos_agrupados.pdf')
+
+    def add_page_number(self, canvas, doc):
+        page_num = canvas.getPageNumber()
+        text = f"Page {page_num}"
+        canvas.drawRightString(200 * mm, 20 * mm, text)
