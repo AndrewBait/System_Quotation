@@ -1,9 +1,71 @@
-<!-- relatorios/templates/relatorios/desempenho_fornecedores.html -->
+<!-- templates/relatorios/desempenho_fornecedores.html -->
 {% extends 'base.html' %}
 
 {% block content %}
 <div class="container my-4">
     <h2 class="text-center">Desempenho de Fornecedores</h2>
-    <!-- Conteúdo do relatório -->
+    <form method="get" class="row g-3">
+        <div class="col-md-3">
+            <label for="data_inicio" class="form-label">Data Início</label>
+            <input type="date" id="data_inicio" name="data_inicio" class="form-control" required>
+        </div>
+        <div class="col-md-3">
+            <label for="data_fim" class="form-label">Data Fim</label>
+            <input type="date" id="data_fim" name="data_fim" class="form-control" required>
+        </div>
+        <div class="col-md-3 d-flex align-items-end">
+            <button type="submit" class="btn btn-primary w-100">Gerar Relatório</button>
+        </div>
+    </form>
+    <div class="row mt-4">
+        <div class="col-md-12">
+            <h4 class="text-center">Desempenho de Fornecedores</h4>
+            <table class="table table-striped table-bordered">
+                <thead>
+                    <tr>
+                        <th>Fornecedor</th>
+                        <th>Qualidade Média</th>
+                        <th>Prazo de Entrega Médio</th>
+                        <th>Preço Médio</th>
+                        <th>Confiabilidade Média</th>
+                        <th>Flexibilidade Média</th>
+                        <th>Parceria Média</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for fornecedor in desempenho_fornecedores %}
+                    <tr>
+                        <td>{{ fornecedor.name }}</td>
+                        <td>{{ fornecedor.qualidade_media|floatformat:2 }}</td>
+                        <td>{{ fornecedor.prazo_entrega_medio|floatformat:2 }}</td>
+                        <td>{{ fornecedor.preco_medio|floatformat:2 }}</td>
+                        <td>{{ fornecedor.confiabilidade_media|floatformat:2 }}</td>
+                        <td>{{ fornecedor.flexibilidade_media|floatformat:2 }}</td>
+                        <td>{{ fornecedor.parceria_media|floatformat:2 }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <div class="row mt-4">
+        <div class="col-md-12">
+            <h4 class="text-center">Exportar Relatório</h4>
+            <form method="post" class="row g-3">
+                {% csrf_token %}
+                <input type="hidden" name="data_inicio" value="{{ request.GET.data_inicio }}">
+                <input type="hidden" name="data_fim" value="{{ request.GET.data_fim }}">
+                <div class="col-md-4">
+                    <button type="submit" name="formato" value="csv" class="btn btn-primary w-100">Exportar para CSV</button>
+                </div>
+                <div class="col-md-4">
+                    <button type="submit" name="formato" value="xml" class="btn btn-secondary w-100">Exportar para XML</button>
+                </div>
+                <div class="col-md-4">
+                    <button type="submit" name="formato" value="pdf" class="btn btn-danger w-100">Exportar para PDF</button>
+                </div>
+            </form>
+        </div>
+    </div>
 </div>
 {% endblock %}
