@@ -23,10 +23,13 @@ from django.http import HttpResponse
 from django.db.models import Q
 import re
 from django.contrib import messages
+from django.contrib.auth.decorators import login_required
+from django.utils.decorators import method_decorator
 
 
 
 
+@method_decorator(login_required(login_url=''), name='dispatch')
 def products_list(request):
     products = Product.objects.all()  # Inicialmente, obtém todos os produtos
     
@@ -44,7 +47,7 @@ def products_list(request):
 
     })
 
-
+@method_decorator(login_required(login_url=''), name='dispatch')
 # Para download do modelo CSV
 def download_csv_template(request):
     response = HttpResponse(content_type='text/csv')
@@ -58,6 +61,8 @@ def download_csv_template(request):
     response.write(csv_template)
     return response
 
+
+@method_decorator(login_required(login_url=''), name='dispatch')
 # Para download do modelo XML
 def download_xml_template(request):
     response = HttpResponse(content_type='application/xml')
@@ -80,13 +85,13 @@ def download_xml_template(request):
     response.write(xml_template)
     return response
 
-
+@method_decorator(login_required(login_url=''), name='dispatch')
 def list_brands(request):
     brands = list(Brand.objects.all().values('id', 'name'))
     return JsonResponse(brands, safe=False)
 
 
-
+@method_decorator(login_required(login_url=''), name='dispatch')
 @require_http_methods(["POST"])
 def add_brand(request):
     brand_name = request.POST.get('name')
@@ -97,6 +102,7 @@ def add_brand(request):
     return JsonResponse({'id': brand.id, 'name': brand.name}, status=201 if created else 200)
 
 
+@method_decorator(login_required(login_url=''), name='dispatch')
 def brand_autocomplete(request):
     qs = Brand.objects.all()
 
@@ -107,6 +113,7 @@ def brand_autocomplete(request):
     return JsonResponse(brands, safe=False)
 
 
+@method_decorator(login_required(login_url=''), name='dispatch')
 class BrandCreateView(CreateView):
     model = Brand
     fields = ['name']
@@ -114,6 +121,7 @@ class BrandCreateView(CreateView):
     success_url = reverse_lazy('products:new_product')
 
 
+@method_decorator(login_required(login_url=''), name='dispatch')
 class BrandAutocomplete(autocomplete.Select2QuerySetView):
     def get_queryset(self):
         qs = Brand.objects.all()
@@ -122,12 +130,14 @@ class BrandAutocomplete(autocomplete.Select2QuerySetView):
         return qs[:10]
 
 
+@method_decorator(login_required(login_url=''), name='dispatch')
 def validate_query(query):
         # Remova caracteres indesejados ou limite a caracteres alfanuméricos e espaço
         query = re.sub(r'[^a-zA-Z0-9 ]', '', query)
         return query
     
-
+    
+@method_decorator(login_required(login_url=''), name='dispatch')
 class ProductListView(ListView):
     model = Product
     template_name = 'products.html'
@@ -208,12 +218,13 @@ class ProductListView(ListView):
 
     
 
+@method_decorator(login_required(login_url=''), name='dispatch')
 class ProductDetailView(DetailView):
     model = Product
     template_name = 'product_detail.html'
     
 
-@method_decorator(login_required(login_url='login'), name='dispatch')
+@method_decorator(login_required(login_url=''), name='dispatch')
 class NewProductCreateView(CreateView):
     model = Product
     form_class = ProductModelForm
@@ -236,7 +247,7 @@ class NewProductCreateView(CreateView):
 
 from django.urls import reverse
 
-@method_decorator(login_required(login_url='login'), name='dispatch')
+@method_decorator(login_required(login_url=''), name='dispatch')
 class ProductUpdateView(UpdateView):
     model = Product
     form_class = ProductModelForm
@@ -260,14 +271,15 @@ class ProductUpdateView(UpdateView):
 
 
 
-@method_decorator(login_required(login_url='login'), name='dispatch')#decorator
+@method_decorator(login_required(login_url=''), name='dispatch')
 class ProductDeleteView(DeleteView):
     model = Product
     template_name = 'product_delete.html'
     success_url = '/products/'
+    
 
 
-@login_required
+@method_decorator(login_required(login_url=''), name='dispatch')
 def import_products(request):
     if request.method == 'POST':
         form = ProductImportForm(request.POST, request.FILES)
@@ -286,6 +298,8 @@ def import_products(request):
     return render(request, 'import_products.html', {'form': form})
 
 
+
+@method_decorator(login_required(login_url=''), name='dispatch')
 def handle_csv_upload(f):
     reader = csv.DictReader(f.decode('utf-8').splitlines())
     for row in reader:
@@ -305,7 +319,11 @@ def handle_csv_upload(f):
             brand=brand,
             photo=row.get('foto')  # Assume que 'foto' é um URL ou caminho válido para a imagem
         )
+        
+        
 
+
+@method_decorator(login_required(login_url=''), name='dispatch')
 def handle_xml_upload(f):
     tree = ET.parse(f)
     root = tree.getroot()
@@ -331,18 +349,21 @@ def handle_xml_upload(f):
         )
 
 
+@method_decorator(login_required(login_url=''), name='dispatch')
 def get_categories(request):
     department_id = request.GET.get('department_id')
     categories = Category.objects.filter(department_id=department_id).values('id', 'name')
     return JsonResponse(list(categories), safe=False)
 
 
+@method_decorator(login_required(login_url=''), name='dispatch')
 def get_subcategories(request):
     category_id = request.GET.get('category_id')
     subcategories = Subcategory.objects.filter(category_id=category_id).values('id', 'name')
     return JsonResponse(list(subcategories), safe=False)
 
 
+@method_decorator(login_required(login_url=''), name='dispatch')
 class CategoryAutocomplete(autocomplete.Select2QuerySetView):
     def get_queryset(self):
         department_id = self.forwarded.get('department', None)
@@ -354,6 +375,8 @@ class CategoryAutocomplete(autocomplete.Select2QuerySetView):
             queryset = queryset.filter(name__istartswith=self.q)
         return queryset
 
+
+@method_decorator(login_required(login_url=''), name='dispatch')
 class SubcategoryAutocomplete(autocomplete.Select2QuerySetView):
     def get_queryset(self):
         category_id = self.forwarded.get('category', None)
