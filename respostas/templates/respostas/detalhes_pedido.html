@@ -64,14 +64,14 @@
                                         {{ form.preco.errors }}
                                     </div>
                                 </td>
-                                <td class="product-total">0.000</td>
+                                <td class="product-total">0</td>
                             </tr>
                             {% endfor %}
                         </tbody>
                         <tfoot>
                             <tr>
                                 <td colspan="9" class="text-end fw-bold">Total Geral:</td>
-                                <td id="total-geral" class="fw-bold">0.000</td>
+                                <td id="total-geral" class="fw-bold">0</td>
                             </tr>
                         </tfoot>
                     </table>
@@ -89,25 +89,25 @@
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     function calculateTotal() {
-        let totalGeral = 0.000;
+        let totalGeral = 0;
         document.querySelectorAll('tbody tr').forEach(function(row) {
             let quantidadeInput = row.querySelector('[name$="quantidade"]');
             let precoInput = row.querySelector('[name$="preco"]');
-            let tipoVolume = row.querySelector('td:nth-child(6)').textContent.trim(); // Mudou para a coluna correta
+            let tipoVolume = row.querySelector('td:nth-child(6)').textContent.trim();
 
-            let quantidade = parseFloat(quantidadeInput ? quantidadeInput.value : 0) || 0;
+            let quantidade = parseInt(quantidadeInput ? quantidadeInput.value : 0) || 0;
             let preco = parseFloat(precoInput ? precoInput.value : 0) || 0;
 
             // Calcular a quantidade total com base no tipo de volume
             let quantidadeTotal = quantidade;
-            if (!['Unidade', 'Quilo', 'Un'].includes(tipoVolume)) {  // Considerando 'Un' para unidade
+            if (!['Unidade', 'Quilo', 'Un'].includes(tipoVolume)) {
                 let quantidadePorVolume = parseFloat(row.dataset.quantidadePorVolume) || 1;
                 quantidadeTotal = quantidade * quantidadePorVolume;
             }
 
             let totalProduto = quantidadeTotal * preco;
 
-            row.querySelector('.quantidade-total').textContent = quantidadeTotal.toFixed(3);
+            row.querySelector('.quantidade-total').textContent = quantidadeTotal;
             row.querySelector('.product-total').textContent = totalProduto.toFixed(3);
 
             totalGeral += totalProduto;
