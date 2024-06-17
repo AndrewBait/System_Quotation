@@ -55,7 +55,7 @@ from django.utils import timezone
 from products.models import Product, Category, Brand, ProductPriceHistory
 from suppliers.models import Supplier
 from cotacao.models import Cotacao, ItemCotacao
-from datetime import datetime
+from respostas.models import RespostaCotacao
 
 def home_view(request):
     # Dados gerais
@@ -100,6 +100,9 @@ def home_view(request):
         avg_flexibility_rating=Avg('flexibility_rating'),
         avg_partnership_rating=Avg('partnership_rating'),
     )
+    
+
+
 
     context = {
         'total_products': total_products,
@@ -119,3 +122,16 @@ def home_view(request):
     }
     
     return render(request, 'home.html', context)
+
+from django.shortcuts import render, redirect
+from django.http import JsonResponse
+from django.contrib.auth.decorators import login_required
+from .models import Notification  # Assumindo que você tem um modelo de Notificação
+
+
+def mark_notification_as_read(request, notification_id):
+    notification = Notification.objects.filter(id=notification_id, user=request.user).first()
+    if notification:
+        notification.read = True
+        notification.save()
+    return JsonResponse({'success': True})

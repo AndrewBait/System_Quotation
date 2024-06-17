@@ -1,20 +1,56 @@
-<header class="header">
-  <div class="container">
-    <div class="header__content">
-      <a href="#" class="header__logo"></a>
-      <nav class="header__nav">
-        <ul class="header__nav-list">
-          <li class="header__nav-item">
-          </li>
-        </ul>
-      </nav>
-    </div>
+<!-- app/templates/components/_header.html -->
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+  <div class="container-fluid">
+      <a class="navbar-brand" href="#">SISC</a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+          <ul class="navbar-nav ms-auto">
+              <li class="nav-item dropdown">
+                  <a class="nav-link dropdown-toggle" href="#" id="notificationsDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                      <i class="bi bi-bell"></i>
+                      <span class="badge bg-danger" id="notificationsCount">{{ notifications|length }}</span>
+                  </a>
+                  <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="notificationsDropdown">
+                      {% if notifications %}
+                          {% for notification in notifications %}
+                              <li><a class="dropdown-item notification-item" href="{{ notification.url }}" data-id="{{ forloop.counter }}">{{ notification.message }}</a></li>
+                          {% endfor %}
+                      {% else %}
+                          <li><a class="dropdown-item" href="#">Nenhuma notificação</a></li>
+                      {% endif %}
+                  </ul>
+              </li>
+          </ul>
+      </div>
   </div>
-</header>
+</nav>
 
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const notificationItems = document.querySelectorAll('.notification-item');
+    const notificationsCount = document.getElementById('notificationsCount');
 
+    notificationItems.forEach(item => {
+        item.addEventListener('click', function (e) {
+            e.preventDefault();
 
+            const notificationId = this.getAttribute('data-id');
+            this.parentElement.remove(); // Remove the notification from the list
 
+            // Update the notifications count
+            let count = parseInt(notificationsCount.innerText);
+            if (count > 0) {
+                notificationsCount.innerText = count - 1;
+                if (count - 1 === 0) {
+                    notificationsCount.style.display = 'none'; // Hide the badge if no notifications left
+                }
+            }
 
-
-
+            // For now, just follow the link
+            window.location.href = this.getAttribute('href');
+        });
+    });
+});
+</script>
