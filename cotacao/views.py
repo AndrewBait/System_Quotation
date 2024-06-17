@@ -89,7 +89,10 @@ class CotacaoCreateView( LoginRequiredMixin,CreateView):
     model = Cotacao
     form_class = CotacaoForm
     template_name = 'cotacao/cotacao_create.html'
-    success_url = reverse_lazy('cotacao:cotacao_create')  # Ajuste conforme necessário
+ 
+    
+    def get_success_url(self):
+        return reverse('cotacao:cotacao_create')
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -102,7 +105,8 @@ class CotacaoCreateView( LoginRequiredMixin,CreateView):
         cotacao = form.save(commit=False)  # Não salva o formulário imediatamente
         cotacao.usuario_criador = self.request.user  # Atribui o usuário logado
         cotacao.save()
-        messages.success(self.request, "Cotação criada com sucesso!", extra_tags='success')
+        form.save_m2m()
+        messages.success(self.request, 'Cotação criada com sucesso!')
         return response
     
 
@@ -111,13 +115,16 @@ class CotacaoUpdateView(UpdateView):
     model = Cotacao
     form_class = CotacaoForm
     template_name = 'cotacao/cotacao_update.html'
-    success_url = reverse_lazy('cotacao:cotacao_list')  # ajuste para o nome correto da URL de listagem
 
+
+    def get_success_url(self):
+        return reverse('cotacao:edit_cotacao', kwargs={'pk': self.object.pk})
+    
     def form_valid(self, form):
-
         cotacao = form.save(commit=False) 
         cotacao.usuario_criador = self.request.user  # Atribui o usuário logado
         cotacao.save()
+        form.save_m2m()
         messages.success(self.request, 'Cotação atualizada com sucesso!')
         return super().form_valid(form)
 
