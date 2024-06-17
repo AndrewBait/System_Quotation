@@ -24,26 +24,16 @@
                 <a href="{% url 'cotacao:cotacao_list' %}" class="btn btn-secondary me-2">
                     <i class="bi bi-arrow-left"></i> Voltar
                 </a>
+                {% if perms.cotacao.change_cotacao %}
                 <button type="button" class="btn btn-warning me-2" data-bs-toggle="modal" data-bs-target="#fecharCotacaoModal">
                     Fechar Cotação
                 </button>
+                {% endif %}
+                {% if perms.respostas.view_pedidoagrupado %}
                 <a href="{% url 'respostas:listar_pedidos' %}" class="btn btn-primary">Visualizar Pedidos</a>
+                {% endif %}
             </div>
         </div>
-
-        {% comment %} <div class="row mb-3">
-            <div class="col-md-6">
-                <input class="form-control" id="searchInput" type="text" placeholder="Pesquisar por nome do produto...">
-            </div>
-            <div class="col-md-3">
-                <select class="form-select" id="filterSelect">
-                    <option value="">Ordenar por Nome</option>
-                    <option value="asc">A - Z</option>
-                    <option value="desc">Z - A</option>
-                </select>
-            </div>
-            <div class="col-md-3"></div>
-        </div> {% endcomment %}
 
         <div class="table-responsive">
             <table class="table table-striped table-hover align-middle" id="productsTable">
@@ -111,57 +101,29 @@
             const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
             const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl));
 
-            // Armazenar o histórico de preços de todos os produtos
-            const priceHistoryData = {}; // Inicializa o objeto fora do loop
+            const priceHistoryData = {};
 
             {% for item in itens_data %}
               priceHistoryData[{{ item.id }}] = {{ item.price_history|safe }};
             {% endfor %}
 
             function filterPriceHistory(productId, days) {
-                console.log("productId:", productId); // Verifica se o ID do produto está correto
-                console.log("days:", days); // Verifica se o valor do select está correto
+                console.log("productId:", productId);
+                console.log("days:", days);
                 const tableBody = document.getElementById(`priceHistoryBody${productId}`);
-                const rows = tableBody.querySelectorAll('tr'); // Seleciona todas as linhas, incluindo o cabeçalho
+                const rows = tableBody.querySelectorAll('tr');
                 const cutoffDate = new Date();
                 cutoffDate.setDate(cutoffDate.getDate() - days);
                 
-                rows.forEach((row, index) => { // Percorre as linhas a partir do índice 1 para ignorar o cabeçalho.
+                rows.forEach((row, index) => {
                   if (index > 0){
-                    const rowDateParts = row.cells[0].textContent.split('-'); // Divide a data da célula em ano e mês
-                    const rowDate = new Date(rowDateParts[0], rowDateParts[1]-1, 1); // Converte para um objeto Date (dia 1 do mês)
-                    row.style.display = rowDate >= cutoffDate ? '' : 'none'; // Mostra/esconde a linha
+                    const rowDateParts = row.cells[0].textContent.split('-');
+                    const rowDate = new Date(rowDateParts[0], rowDateParts[1]-1, 1);
+                    row.style.display = rowDate >= cutoffDate ? '' : 'none';
                   }
                 });
             }        
-            
 
-                filteredData.forEach(entry => {
-                    console.log(`Adding entry: ${entry.month} - Min: ${entry.min_price_date} R$ ${entry.min_price !== null ? entry.min_price.toFixed(3) : 'N/A'} - Max: ${entry.max_price_date} R$ ${entry.max_price !== null ? entry.max_price.toFixed(3) : 'N/A'}`);
-                    const row = document.createElement('tr');
-                    const monthCell = document.createElement('td');
-                    monthCell.innerText = entry.month;
-                    const minDateCell = document.createElement('td');
-                    minDateCell.innerText = entry.min_price_date !== null ? entry.min_price_date : 'N/A';
-                    const minPriceCell = document.createElement('td');
-                    minPriceCell.innerText = entry.min_price !== null ? `R$ ${entry.min_price.toFixed(3)}` : 'N/A';
-                    const maxDateCell = document.createElement('td');
-                    maxDateCell.innerText = entry.max_price_date !== null ? entry.max_price_date : 'N/A';
-                    const maxPriceCell = document.createElement('td');
-                    maxPriceCell.innerText = entry.max_price !== null ? `R$ ${entry.max_price.toFixed(3)}` : 'N/A';
-                    row.appendChild(monthCell);
-                    row.appendChild(minDateCell);
-                    row.appendChild(minPriceCell);
-                    row.appendChild(maxDateCell);
-                    row.appendChild(maxPriceCell);
-                    tableBody.appendChild(row);
-                });
-
-                // Atualizar a tabela
-                $('#productsTable').DataTable().draw(); 
-
-            }
-            
             $(document).ready(function () {
                 $('#productsTable').DataTable({
                     "language": {
@@ -174,34 +136,33 @@
                     "ordering": true
                 });
 
-                // Disparar filtragem inicial para todos os modais ao abrir
                 $('.modal').on('shown.bs.modal', function () {
                     const productId = $(this).find('table').attr('id').replace('priceHistoryBody', '');
                     const selectElement = document.getElementById(`daysSelect${productId}`);
                     const selectedValue = selectElement.value;
-                    filterPriceHistory(productId, selectedValue); // Filtra com o valor inicial do select
+                    filterPriceHistory(productId, selectedValue);
                 });
             });
         </script>
 
         <style>
             .offer-item {
-                margin-right: 10px;  /* Espaçamento entre as ofertas */
+                margin-right: 10px;
             }
             .btn-link {
                 text-decoration: none;
             }
             .offer-item {
-                font-weight: bold; /* Opcional: Negrito para destacar */
+                font-weight: bold;
             }
             .text-success {
-                color: #28a745 !important; /* Verde */
+                color: #28a745 !important;
             }
             .text-warning {
-                color: #ffc107 !important; /* Amarelo */
+                color: #ffc107 !important;
             }
             .text-danger {
-                color: #dc3545 !important; /* Vermelho */
+                color: #dc3545 !important;
             }
         </style>
     </div>
@@ -216,6 +177,4 @@
 <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 <script src="{% static 'js/bootstrap.bundle.min.js' %}"></script>
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-
-
 {% endblock %}

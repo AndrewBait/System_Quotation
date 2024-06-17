@@ -18,7 +18,7 @@ from django.core.paginator import Paginator
 from django.contrib.auth.models import User
 from django.views.generic import ListView
 from django.http import JsonResponse
-from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 from django.views.generic.edit import FormView
 from .forms import EnviarCotacaoForm
 from suppliers.models import Supplier
@@ -39,7 +39,6 @@ class CotacaoListView(ListView):
     template_name = 'cotacao/cotacao_list.html'
     context_object_name = 'cotacoes'
     paginate_by = 6
-
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -70,27 +69,24 @@ class CotacaoListView(ListView):
             queryset = queryset.filter(prazo=prazo)
 
         return queryset
-    
 
 @method_decorator(login_required(login_url=''), name='dispatch')
 class CotacaoDeleteView(DeleteView):
     model = Cotacao
     template_name = 'cotacao/cotacao_confirm_delete.html'
-    success_url = reverse_lazy('cotacao:cotacao_list')  # Para onde ir após a exclusão
+    success_url = reverse_lazy('cotacao:cotacao_list')
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['title'] = 'Excluir Cotação'
         return context
 
-
 @method_decorator(login_required(login_url=''), name='dispatch')
-class CotacaoCreateView( LoginRequiredMixin,CreateView):
+class CotacaoCreateView(LoginRequiredMixin, CreateView):
     model = Cotacao
     form_class = CotacaoForm
     template_name = 'cotacao/cotacao_create.html'
- 
-    
+
     def get_success_url(self):
         return reverse('cotacao:cotacao_create')
 
@@ -100,15 +96,14 @@ class CotacaoCreateView( LoginRequiredMixin,CreateView):
             context['form'] = self.form_class(self.request.GET)
         return context
 
-    def form_valid(self, form):        
+    def form_valid(self, form):
         response = super().form_valid(form)
-        cotacao = form.save(commit=False)  # Não salva o formulário imediatamente
-        cotacao.usuario_criador = self.request.user  # Atribui o usuário logado
+        cotacao = form.save(commit=False)
+        cotacao.usuario_criador = self.request.user
         cotacao.save()
         form.save_m2m()
         messages.success(self.request, 'Cotação criada com sucesso!')
         return response
-    
 
 @method_decorator(login_required(login_url=''), name='dispatch')
 class CotacaoUpdateView(UpdateView):
@@ -116,18 +111,16 @@ class CotacaoUpdateView(UpdateView):
     form_class = CotacaoForm
     template_name = 'cotacao/cotacao_update.html'
 
-
     def get_success_url(self):
         return reverse('cotacao:edit_cotacao', kwargs={'pk': self.object.pk})
-    
+
     def form_valid(self, form):
-        cotacao = form.save(commit=False) 
-        cotacao.usuario_criador = self.request.user  # Atribui o usuário logado
+        cotacao = form.save(commit=False)
+        cotacao.usuario_criador = self.request.user
         cotacao.save()
         form.save_m2m()
         messages.success(self.request, 'Cotação atualizada com sucesso!')
         return super().form_valid(form)
-
 
 
 class EnviarCotacaoView(FormView):
@@ -202,7 +195,7 @@ class EnviarCotacaoView(FormView):
         return super().form_valid(form)       
 
 
-@method_decorator(login_required(login_url=''), name='dispatch')
+
 class PesquisaFornecedorAjaxView(View):
     def get(self, request, *args, **kwargs):
         busca = request.GET.get('termo', '')
@@ -382,7 +375,7 @@ class DeleteItemCotacaoView(DeleteView):
         return response    
     
 
-@method_decorator(login_required(login_url=''), name='dispatch')  
+@method_decorator(login_required(login_url=''), name='dispatch')
 class AddProductToCotacaoView(CreateView):
     model = ItemCotacao
     form_class = ItemCotacaoForm
@@ -419,12 +412,12 @@ class AddProductToCotacaoView(CreateView):
             if produto.unidade_de_medida == 'Tp':
                 tipos_volume.append(('Tp', 'Take Profit(s)'))
                 tipos_volume.append(('Un', 'Unidade(s)'))
-            
+
             itens_data.append({
                 'item': item,
                 'tipos_volume': tipos_volume,
             })
-        
+
         context['cotacao'] = cotacao
         context['itens_data'] = itens_data
         return context
@@ -442,7 +435,7 @@ class AddProductToCotacaoView(CreateView):
 
     def get_success_url(self):
         return reverse('cotacao:add_product_to_cotacao', kwargs={'cotacao_id': self.kwargs['cotacao_id']})
-    
+
     def post(self, request, cotacao_id):
         produto_id = request.POST.get('produto_id')
         quantidade = request.POST.get('quantidade')

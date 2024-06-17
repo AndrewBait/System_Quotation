@@ -28,7 +28,7 @@ from cotacao.models import Cotacao
 from products.models import ProductPriceHistory
 import re
 from respostas import models
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, permission_required
 from django.utils.decorators import method_decorator
 
 
@@ -315,7 +315,8 @@ from django.db.models import Q
 from .models import PedidoAgrupado, Supplier
 
 
-@method_decorator(login_required(login_url=''), name='dispatch')
+@method_decorator(login_required, name='dispatch')
+@method_decorator(permission_required('respostas.view_pedidoagrupado', raise_exception=True), name='dispatch')
 class ListarPedidosView(ListView):
     model = PedidoAgrupado
     template_name = 'respostas/listar_pedidos.html'
@@ -371,10 +372,11 @@ class ListarPedidosView(ListView):
         return context
     
     
-@method_decorator(login_required(login_url=''), name='dispatch')
+@method_decorator(login_required, name='dispatch')
+@method_decorator(permission_required('respostas.change_pedido', raise_exception=True), name='dispatch')
 class EditarPedidoView(UpdateView):
     model = Pedido
-    fields = ['quantidade', 'preco', 'produto']  # ajuste os campos conforme necessário
+    fields = ['quantidade', 'preco', 'produto']
     template_name = 'respostas/editar_pedido.html'
     success_url = reverse_lazy('respostas:listar_pedidos')
 
@@ -388,7 +390,8 @@ from .models import PedidoAgrupado, Pedido
 from .forms import PedidoFormSet
 
 
-@method_decorator(login_required(login_url=''), name='dispatch')
+@method_decorator(login_required, name='dispatch')
+@method_decorator(permission_required('respostas.view_pedidoagrupado', raise_exception=True), name='dispatch')
 class DetalhesPedidoAgrupadoView(DetailView):
     model = PedidoAgrupado
     template_name = 'respostas/detalhes_pedido.html'
@@ -402,7 +405,6 @@ class DetalhesPedidoAgrupadoView(DetailView):
         else:
             context['formset'] = PedidoFormSet(instance=self.object)
 
-        # Adicionar quantidade por volume ao contexto
         for form in context['formset']:
             produto = form.instance.produto
             if produto:
@@ -473,7 +475,8 @@ from django.urls import reverse_lazy
 from .models import PedidoAgrupado
 
 
-@method_decorator(login_required(login_url=''), name='dispatch')
+@method_decorator(login_required, name='dispatch')
+@method_decorator(permission_required('respostas.delete_pedidoagrupado', raise_exception=True), name='dispatch')
 class DeletarPedidoAgrupadoView(DeleteView):
     model = PedidoAgrupado
     success_url = reverse_lazy('respostas:listar_pedidos')
@@ -492,7 +495,9 @@ class DeletarPedidoAgrupadoView(DeleteView):
         }
         return JsonResponse(response_data)
     
-@method_decorator(login_required(login_url=''), name='dispatch')    
+    
+@method_decorator(login_required, name='dispatch')
+@method_decorator(permission_required('respostas.delete_pedido', raise_exception=True), name='dispatch')
 class DeletarPedidoView(DeleteView):
     model = Pedido
     template_name = 'respostas/deletar_pedido.html'
@@ -502,7 +507,6 @@ class DeletarPedidoView(DeleteView):
         pk = self.kwargs.get('pk')
         logger.debug(f"Tentando deletar Pedido com pk={pk}")
         return get_object_or_404(Pedido, pk=pk)
-
 
     
 from django.core.serializers.json import DjangoJSONEncoder
@@ -791,7 +795,8 @@ from datetime import date
 from .models import PedidoAgrupado
 from products.models import ProductPriceHistory
 
-@method_decorator(login_required(login_url=''), name='dispatch')
+@method_decorator(login_required, name='dispatch')
+@method_decorator(permission_required('respostas.send_pedido', raise_exception=True), name='dispatch')
 class EnviarPedidoEmailView(View):
     def get(self, request, pk):
         pedido_agrupado = get_object_or_404(PedidoAgrupado, pk=pk)

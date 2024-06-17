@@ -5,64 +5,66 @@
 {% block content %}
 <style>
     .badge-ativo {
-    background-color: #28a745; /* Verde para ativo */
-    color: white;
-}
+        background-color: #28a745;
+        color: white;
+    }
 
-.badge-inativo {
-    background-color: #dc3545; /* Vermelho para inativo */
-    color: white;
-}
+    .badge-inativo {
+        background-color: #dc3545;
+        color: white;
+    }
 
-a[href*="toggle_cotacao_status"] {
-    background-color: #007bff; /* Azul padrão para o botão */
-    color: white;
-}
+    a[href*="toggle_cotacao_status"] {
+        background-color: #007bff;
+        color: white;
+    }
 
-a[href*="toggle_cotacao_status"][href*="ativo"] {
-    background-color: #dc3545; /* Vermelho para desativar */
-}
-a[href*="toggle_cotacao_status"] {
-    background-color: #007bff; /* Azul padrão para o botão */
-    color: white;
-}
+    a[href*="toggle_cotacao_status"][href*="ativo"] {
+        background-color: #dc3545;
+    }
 
-a[href*="toggle_cotacao_status"].status-ativo {
-    background-color: #28a745; /* Verde para cotação ativa */
-}
+    a[href*="toggle_cotacao_status"] {
+        background-color: #007bff;
+        color: white;
+    }
 
-a[href*="toggle_cotacao_status"].status-inativo {
-    background-color: #dc3545; /* Vermelho para cotação inativa */
-}
+    a[href*="toggle_cotacao_status"].status-ativo {
+        background-color: #28a745;
+    }
 
-div.card-footer a[href*="toggle_cotacao_status"] {
-    background-color: #007bff; /* Azul padrão para o botão */
-    color: white;
-}
+    a[href*="toggle_cotacao_status"].status-inativo {
+        background-color: #dc3545;
+    }
 
-div.card-footer a[href*="toggle_cotacao_status"].status-ativo {
-    background-color: #28a745; /* Verde para cotação ativa */
-}
+    div.card-footer a[href*="toggle_cotacao_status"] {
+        background-color: #007bff;
+        color: white;
+    }
 
-div.card-footer a[href*="toggle_cotacao_status"].status-inativo {
-    background-color: #dc3545; /* Vermelho para cotação inativa */
-}
+    div.card-footer a[href*="toggle_cotacao_status"].status-ativo {
+        background-color: #28a745;
+    }
 
+    div.card-footer a[href*="toggle_cotacao_status"].status-inativo {
+        background-color: #dc3545;
+    }
 </style>
 
 <div class="container mt-4">
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h2>Cotações</h2>
+        {% if perms.cotacao.add_cotacao %}
         <a href="{% url 'cotacao:cotacao_create' %}" class="btn btn-success">
             <i class="bi bi-plus-lg"></i> Criar Cotação
         </a>
+        {% endif %}
     </div>
 
     <form method="get" class="mb-4">
         <div class="row g-3">
             <div class="col-md-4">
                 <label for="status" class="form-label">Status</label>
-                <select name="status" class="form-control" id="status">                    
+                <select name="status" class="form-control" id="status">
                     <option value="ativo" {% if request.GET.status == 'ativo' or not request.GET.status %}selected{% endif %}>Aberto</option>
                     <option value="inativo" {% if request.GET.status == 'inativo' %}selected{% endif %}>Fechado</option>
                     <option value="" {% if request.GET.status == '' %}selected{% endif %}>Todos os Status</option>
@@ -116,7 +118,6 @@ div.card-footer a[href*="toggle_cotacao_status"].status-inativo {
 
     <div class="row row-cols-1 row-cols-md-3 g-4">
         {% for cotacao in cotacoes %}
-
         <div class="col">
             <div class="card h-100 shadow-sm">
                 <div class="card-header d-flex justify-content-between align-items-center {% if cotacao.status == 'ativo' %}bg-success{% else %}bg-danger{% endif %} text-white">
@@ -125,9 +126,8 @@ div.card-footer a[href*="toggle_cotacao_status"].status-inativo {
                        class="btn {% if cotacao.status == 'ativo' %}btn-danger{% else %}btn-success{% endif %} btn-sm">
                         <i class="bi bi-toggle-on"></i> {% if cotacao.status == 'ativo' %}Fechar{% else %}Abrir{% endif %}
                     </a>
-
                 </div>
-                
+
                 <div class="card-body">
                     <h6 class="card-subtitle mb-2 text-muted">{{ cotacao.departamento.nome }}</h6>
                     <p class="card-text">
@@ -139,22 +139,31 @@ div.card-footer a[href*="toggle_cotacao_status"].status-inativo {
                     </p>
                 </div>
                 <div class="card-footer text-center">
+                    {% if perms.cotacao.change_cotacao %}
                     <a href="{% url 'cotacao:edit_cotacao' cotacao.id %}" class="btn btn-warning btn-sm">
                         <i class="bi bi-pencil-square"> Editar</i>
                     </a>
+                    {% endif %}
+                    {% if perms.cotacao.add_itemcotacao %}
                     <a href="{% url 'cotacao:add_product_to_cotacao' cotacao.id %}" class="btn btn-primary btn-sm">
                         <i class="bi bi-basket"> Adicionar </i>
                     </a>
+                    {% endif %}
+                    {% if perms.cotacao.send_cotacao %}
                     <a href="{% url 'cotacao:enviar_cotacao' cotacao.id %}" class="btn btn-info btn-sm">
                         <i class="bi bi-send"></i> Enviar
                     </a>
+                    {% endif %}
+                    {% if perms.cotacao.view_respostas %}
                     <a href="{% url 'respostas:visualizar_cotacoes' cotacao.uuid %}" class="btn btn-success btn-sm">
                         <i class="bi bi-eyeglasses"> Respostas</i>
                     </a>
-
+                    {% endif %}
+                    {% if perms.cotacao.delete_cotacao %}
                     <a href="{% url 'cotacao:delete_cotacao' cotacao.id %}" class="btn btn-danger btn-sm">
                         <i class="bi bi-trash"></i>
                     </a>
+                    {% endif %}
                 </div>
             </div>
         </div>
@@ -163,35 +172,29 @@ div.card-footer a[href*="toggle_cotacao_status"].status-inativo {
             <p class="text-muted">Não há cotações cadastradas no momento.</p>
         </div>
         {% endfor %}
- 
     </div>
+
     <br>
-<!-- Pagination -->
-<div class="d-flex justify-content-center">
-    {% if is_paginated %}
+    <div class="d-flex justify-content-center">
+        {% if is_paginated %}
         <nav>
             <ul class="pagination">
                 {% if page_obj.has_previous %}
-                    <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.data_inicio %}&data_inicio={{ request.GET.data_inicio }}{% endif %}{% if request.GET.data_fim %}&data_fim={{ request.GET.data_fim }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.usuario %}&usuario={{ request.GET.usuario }}{% endif %}{% if request.GET.departamento %}&departamento={{ request.GET.departamento }}{% endif %}{% if request.GET.prazo %}&prazo={{ request.GET.prazo }}{% endif %}">Anterior</a></li>
+                <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.data_inicio %}&data_inicio={{ request.GET.data_inicio }}{% endif %}{% if request.GET.data_fim %}&data_fim={{ request.GET.data_fim }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.usuario %}&usuario={{ request.GET.usuario }}{% endif %}{% if request.GET.departamento %}&departamento={{ request.GET.departamento }}{% endif %}{% if request.GET.prazo %}&prazo={{ request.GET.prazo }}{% endif %}">Anterior</a></li>
                 {% endif %}
                 {% for i in paginator.page_range %}
-                    {% if page_obj.number == i %}
-                        <li class="page-item active"><a class="page-link">{{ i }}</a></li>
-                    {% else %}
-                        <li class="page-item"><a class="page-link" href="?page={{ i }}{% if request.GET.data_inicio %}&data_inicio={{ request.GET.data_inicio }}{% endif %}{% if request.GET.data_fim %}&data_fim={{ request.GET.data_fim }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.usuario %}&usuario={{ request.GET.usuario }}{% endif %}{% if request.GET.departamento %}&departamento={{ request.GET.departamento }}{% endif %}{% if request.GET.prazo %}&prazo={{ request.GET.prazo }}{% endif %}">{{ i }}</a></li>
-                    {% endif %}
+                {% if page_obj.number == i %}
+                <li class="page-item active"><a class="page-link">{{ i }}</a></li>
+                {% else %}
+                <li class="page-item"><a class="page-link" href="?page={{ i }}{% if request.GET.data_inicio %}&data_inicio={{ request.GET.data_inicio }}{% endif %}{% if request.GET.data_fim %}&data_fim={{ request.GET.data_fim }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.usuario %}&usuario={{ request.GET.usuario }}{% endif %}{% if request.GET.departamento %}&departamento={{ request.GET.departamento }}{% endif %}{% if request.GET.prazo %}&prazo={{ request.GET.prazo }}{% endif %}">{{ i }}</a></li>
+                {% endif %}
                 {% endfor %}
                 {% if page_obj.has_next %}
-                    <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.data_inicio %}&data_inicio={{ request.GET.data_inicio }}{% endif %}{% if request.GET.data_fim %}&data_fim={{ request.GET.data_fim }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.usuario %}&usuario={{ request.GET.usuario }}{% endif %}{% if request.GET.departamento %}&departamento={{ request.GET.departamento }}{% endif %}{% if request.GET.prazo %}&prazo={{ request.GET.prazo }}{% endif %}">Próximo</a></li>
+                <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.data_inicio %}&data_inicio={{ request.GET.data_inicio }}{% endif %}{% if request.GET.data_fim %}&data_fim={{ request.GET.data_fim }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.usuario %}&usuario={{ request.GET.usuario }}{% endif %}{% if request.GET.departamento %}&departamento={{ request.GET.departamento }}{% endif %}{% if request.GET.prazo %}&prazo={{ request.GET.prazo }}{% endif %}">Próximo</a></li>
                 {% endif %}
             </ul>
         </nav>
-    {% endif %}
+        {% endif %}
+    </div>
 </div>
-
-
-
-
-</div>
-
 {% endblock %}
