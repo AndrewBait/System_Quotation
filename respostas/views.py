@@ -602,7 +602,7 @@ from django.shortcuts import get_object_or_404
 from cotacao.models import ItemCotacao
 
 
-@method_decorator(login_required(login_url=''), name='dispatch')
+
 def get_price_history(request, item_id, days):
     print(f'Item ID: {item_id}, Days: {days}')  # Adicionar log para verificar a chamada
     item = get_object_or_404(ItemCotacao, pk=item_id)

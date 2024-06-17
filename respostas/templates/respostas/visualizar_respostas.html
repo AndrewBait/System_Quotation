@@ -70,12 +70,16 @@
                             </td>
                             <td class="d-none d-md-table-cell">
                                 <div>
-                                    R$ {{ item.ultimo_preco }} em {% if item.data_ultimo_preco %}{{ item.data_ultimo_preco|date:"d/m/Y" }}{% else %}N/A{% endif %}
-                                    <button type="button" class="btn btn-link btn-sm text-decoration-none"
-                                            data-bs-toggle="modal" data-bs-target="#priceHistoryModal{{ forloop.counter }}"
-                                            data-product-id="{{ item.id }}">
-                                        Ver Histórico
-                                    </button>
+                                    {% if item.ultimo_preco and item.data_ultimo_preco %}
+                                        R$ {{ item.ultimo_preco }} em {{ item.data_ultimo_preco|date:"d/m/Y" }}
+                                        <button type="button" class="btn btn-link btn-sm text-decoration-none"
+                                                data-bs-toggle="modal" data-bs-target="#priceHistoryModal{{ forloop.counter }}"
+                                                data-product-id="{{ item.id }}">
+                                            Ver Histórico
+                                        </button>
+                                    {% else %}
+                                        Sem preços anteriores
+                                    {% endif %}
                                 </div>
                                 {% include 'modals/price_history_modal.html' %}
                             </td>
