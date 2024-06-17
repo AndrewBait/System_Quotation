@@ -13,10 +13,9 @@
     transform: scale(1.05);
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
   }
-
-
 </style>
-<div class="container" >
+
+<div class="container">
   <h2 class="mb-4">Catálogo de Produtos</h2>
   <div class="row g-3">
     <div class="col-md-15">
@@ -25,89 +24,66 @@
         <button type="submit" class="btn btn-outline-success">Buscar</button>
       </form>
     </div>
-  <form method="GET" action="{% url 'products:products_list' %}"> 
-    <div class="row g-2 ">
-      <div class="col-md-4">
-        <select class="form-select" name="department" onchange="this.form.submit()">
-          <option value="">Departamento/ Seção/ Setor</option>
-          {% for department in departments %}
-          <option value="{{ department.id }}" {% if current_department == department.id|stringformat:"s" %} selected {% endif %}>
-              {{ department.nome }}
-          </option>
-          {% endfor %}
-      </select>
-    </div>
-      <div class="col-md-4">
-        <select class="form-select" name="category" onchange="this.form.submit()">
-          <option value="">Categorias</option>
-          {% for category in categories %}
-          <option value="{{ category.id }}" {% if request.GET.category == category.id|stringformat:"s" %}selected{% endif %}>{{ category.name }}</option>
-          {% endfor %}
-        </select>
-      </div>
-      <div class="col-md-4">
-        <select class="form-select" name="subcategory" onchange="this.form.submit()">
-          <option value="">Subcategorias</option>
-          {% for subcategory in subcategories %}
-          <option value="{{ subcategory.id }}" {% if request.GET.subcategory == subcategory.id|stringformat:"s" %}selected{% endif %}>{{ subcategory.name }}</option>
-          {% endfor %}
-        </select>
-      </div>
-      <div class="col-md-4">
-        <select class="form-select" name="status" onchange="this.form.submit()">
-          <option value="">Qualquer Status</option>
-          <option value="True" {% if request.GET.status == 'True' %}selected{% endif %}>Ativo</option>
-          <option value="False" {% if request.GET.status == 'False' %}selected{% endif %}>Inativo</option>
-        </select>
-      </div>
-      <div class="col-md-4">
-      <select class="form-select" name="brand" onchange="this.form.submit()">
-        <option value="">Marcas</option>
-        {% for brand in brands %} 
-          <option value="{{ brand.id }}" {% if request.GET.brand == brand.id|stringformat:"s" %}selected{% endif %}>{{ brand.name }}</option>
-        {% endfor %}
-      </select>
-    </div>
-      <div class="col-md-4">
-        <select class="form-select" name="product_line" onchange="this.form.submit()">
-          <option value="">Linha de Indústria</option>
-          {% for product_line in product_lines %}
-          <option value="{{ product_line.id }}" {% if request.GET.product_line == product_line.id|stringformat:"s" %}selected{% endif %}>{{ product_line.name }}</option>
-          {% endfor %}
-        </select>
-      </div>
-    </div>
-      <div class="text-end mt-2 ">
-        <a href="{% url 'products:new_product' %}" class="btn btn-primary">
-            <i class="bi bi-plus-lg"></i> Cadastrar Produto
-        </a>
-    </div>
-  </form> 
-    
-{% comment %} 
-  </div>
-  <div class="container">  
-    <div class="row">
-      <div class="col-auto">
-        <div class="d-flex justify-content-start mb-3">
-          <form action="" method="get" class="d-inline">
-            <div class="input-group">
-              <label class="input-group-text " for="items_per_page">Itens por página:</label>
-              <select id="items_per_page" name="items_per_page" class="form-select" onchange="this.form.submit()">  
-                <option value="10" {% if current_items_per_page == "10" %}selected{% endif %}>10</option>              
-                <option value="20" {% if current_items_per_page == "20" %}selected{% endif %}>20</option>
-                <option value="50" {% if current_items_per_page == "50" %}selected{% endif %}>50</option>
-                <option value="100" {% if current_items_per_page == "100" %}selected{% endif %}>100</option>
-              </select>
-            </div>
-          </form>
+    <form method="GET" action="{% url 'products:products_list' %}"> 
+      <div class="row g-2">
+        <div class="col-md-4">
+          <select class="form-select" name="department" onchange="this.form.submit()">
+            <option value="">Departamento/ Seção/ Setor</option>
+            {% for department in departments %}
+              <option value="{{ department.id }}" {% if current_department == department.id|stringformat:"s" %} selected {% endif %}>
+                {{ department.nome }}
+              </option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-md-4">
+          <select class="form-select" name="category" onchange="this.form.submit()">
+            <option value="">Categorias</option>
+            {% for category in categories %}
+              <option value="{{ category.id }}" {% if request.GET.category == category.id|stringformat:"s" %}selected{% endif %}>{{ category.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-md-4">
+          <select class="form-select" name="subcategory" onchange="this.form.submit()">
+            <option value="">Subcategorias</option>
+            {% for subcategory in subcategories %}
+              <option value="{{ subcategory.id }}" {% if request.GET.subcategory == subcategory.id|stringformat:"s" %}selected{% endif %}>{{ subcategory.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-md-4">
+          <select class="form-select" name="status" onchange="this.form.submit()">
+            <option value="">Qualquer Status</option>
+            <option value="True" {% if request.GET.status == 'True' %}selected{% endif %}>Ativo</option>
+            <option value="False" {% if request.GET.status == 'False' %}selected{% endif %}>Inativo</option>
+          </select>
+        </div>
+        <div class="col-md-4">
+          <select class="form-select" name="brand" onchange="this.form.submit()">
+            <option value="">Marcas</option>
+            {% for brand in brands %} 
+              <option value="{{ brand.id }}" {% if request.GET.brand == brand.id|stringformat:"s" %}selected{% endif %}>{{ brand.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-md-4">
+          <select class="form-select" name="product_line" onchange="this.form.submit()">
+            <option value="">Linha de Indústria</option>
+            {% for product_line in product_lines %}
+              <option value="{{ product_line.id }}" {% if request.GET.product_line == product_line.id|stringformat:"s" %}selected{% endif %}>{{ product_line.name }}</option>
+            {% endfor %}
+          </select>
         </div>
       </div>
-      <div class="col">
-         
+      <div class="text-end mt-2">
+        {% if perms.products.add_product %}
+          <a href="{% url 'products:new_product' %}" class="btn btn-primary">
+            <i class="bi bi-plus-lg"></i> Cadastrar Produto
+          </a>
+        {% endif %}
       </div>
-    </div>
-  </div> {% endcomment %}
+    </form> 
 
   <div class="row row-cols-0 row-cols-md-5 g-4">
     {% for product in products %}
@@ -116,32 +92,27 @@
           {% if product.photo %}
             <img src="{{ product.photo.url }}" class="card-img-top" alt="{{ product.name }}" style="max-height: 180px; object-fit: cover;">
           {% else %}
-                <img src="/media/products/sem imagem.gif" alt="Foto padrão" class="card-img-top" style="max-height: 180px; object-fit: cover;">
+            <img src="/media/products/sem imagem.gif" alt="Foto padrão" class="card-img-top" style="max-height: 180px; object-fit: cover;">
           {% endif %}
           <div class="card-body">
             <h5 class="card-title">{{ product.name }}</h5>
             {% if product.ean %}
-            <p class="card-text">Código EAN: {{ product.ean }}</p>
+              <p class="card-text">Código EAN: {{ product.ean }}</p>
             {% endif %}
             {% if product.sku %}
               <p class="card-text">SKU: {{ product.sku }}</p>
             {% endif %}
-            <a href="{% url 'products:product_update' product.pk %}" class="btn btn-warning btn-sm me-2">
-              <i class="bi bi-pencil-square"></i>
+            {% if perms.products.change_product %}
+              <a href="{% url 'products:product_update' product.pk %}" class="btn btn-warning btn-sm me-2">
+                <i class="bi bi-pencil-square"></i>
+              </a>
+            {% endif %}
             <a href="{% url 'products:product_detail' product.pk %}" class="btn btn-info btn-sm">
               <i class="bi bi-eye-fill"></i>
-          </a>
+            </a>
           </div>
         </div>
       </div>
-
-<script>
-        document.querySelectorAll('.clickable').forEach(item => {
-          item.addEventListener('click', event => {
-            window.location.href = item.getAttribute('data-href');
-          });
-        });
-      </script>
     {% endfor %}
   </div>
 
@@ -151,48 +122,45 @@
 
   <nav aria-label="Navegação de página" class="mt-4">
     <ul class="pagination justify-content-center">
-        {% if page_obj.has_previous %}
-            <li class="page-item">
-                <a class="page-link" href="?page={{ page_obj.previous_page_number }}&items_per_page={{ current_items_per_page }}" aria-label="Anterior">
-                    <span aria-hidden="true">«</span>
-                </a>
-            </li>
-        {% else %}
-            <li class="page-item disabled">
-                <a class="page-link" href="#" aria-label="Anterior">
-                    <span aria-hidden="true">«</span>
-                </a>
-            </li>
-        {% endif %}
+      {% if page_obj.has_previous %}
+        <li class="page-item">
+          <a class="page-link" href="?page={{ page_obj.previous_page_number }}&items_per_page={{ current_items_per_page }}" aria-label="Anterior">
+            <span aria-hidden="true">«</span>
+          </a>
+        </li>
+      {% else %}
+        <li class="page-item disabled">
+          <a class="page-link" href="#" aria-label="Anterior">
+            <span aria-hidden="true">«</span>
+          </a>
+        </li>
+      {% endif %}
 
-        {% for num in page_obj.paginator.page_range %}
-            <li class="page-item {% if page_obj.number == num %}active{% endif %}">
-                <a class="page-link" href="?page={{ num }}&items_per_page={{ current_items_per_page }}">{{ num }}</a>
-            </li>
-        {% endfor %}
+      {% for num in page_obj.paginator.page_range %}
+        <li class="page-item {% if page_obj.number == num %}active{% endif %}">
+          <a class="page-link" href="?page={{ num }}&items_per_page={{ current_items_per_page }}">{{ num }}</a>
+        </li>
+      {% endfor %}
 
-        {% if page_obj.has_next %}
-            <li class="page-item">
-                <a class="page-link" href="?page={{ page_obj.next_page_number }}&items_per_page={{ current_items_per_page }}" aria-label="Próximo">
-                    <span aria-hidden="true">»</span>
-                </a>
-            </li>
-        {% else %}
-            <li class="page-item disabled">
-                <a class="page-link" href="#" aria-label="Próximo">
-                    <span aria-hidden="true">»</span>
-                </a>
-            </li>
-        {% endif %}
+      {% if page_obj.has_next %}
+        <li class="page-item">
+          <a class="page-link" href="?page={{ page_obj.next_page_number }}&items_per_page={{ current_items_per_page }}" aria-label="Próximo">
+            <span aria-hidden="true">»</span>
+          </a>
+        </li>
+      {% else %}
+        <li class="page-item disabled">
+          <a class="page-link" href="#" aria-label="Próximo">
+            <span aria-hidden="true">»</span>
+          </a>
+        </li>
+      {% endif %}
     </ul>
-</nav>
+  </nav>
 
-
-  <div class="container">
+  {% comment %} <div class="container">
     <div class="row">
-      <div class="col">
-
-    </div>
+      <div class="col"></div>
       <div class="col-auto">
         <div class="d-flex justify-content-end mb-4">
           <form action="" method="get" class="d-inline">
@@ -210,90 +178,13 @@
       </div>
     </div>
   </div>
-  <script>
-    document.addEventListener("DOMContentLoaded", function() {
-        var departmentSelect = document.querySelector('select[name="department"]');
-        var categorySelect = document.querySelector('select[name="category"]');
-        var subcategorySelect = document.querySelector('select[name="subcategory"]');
-        var productSearchInput = document.getElementById('product-search');
-        var typingTimer; // Timer para aguardar o término da digitação
-        var doneTypingInterval = 500;
-    
-        function doneTyping() {
-            var query = productSearchInput.value.trim();
-    
-            // Verificar se a consulta está vazia
-            if (query === '') {
-                // Limpar os resultados de pesquisa, se necessário
-                return;
-            }
-    
-            // Enviar solicitação AJAX para buscar produtos
-            fetch(`/products/search/?query=${query}`)
-                .then(response => response.json())
-                .then(data => {
-                    // Atualize a visualização com os resultados da pesquisa
-                    console.log(data); // Exemplo: exibir resultados no console para depuração
-                })
-                .catch(error => {
-                    console.error('Ocorreu um erro ao buscar produtos:', error);
-                });
-        }
-    
-        // Adicionar evento de digitação ao campo de pesquisa
-        productSearchInput.addEventListener('keyup', function() {
-            // Limpar o timer anterior, se existir
-            clearTimeout(typingTimer);
-    
-            // Iniciar o timer para esperar o término da digitação
-            typingTimer = setTimeout(doneTyping, doneTypingInterval);
-        });
-    
-        departmentSelect.addEventListener('change', function() {
-            var departmentId = this.value;
-            fetch(`/products/get-categories/?department_id=${departmentId}`)
-                .then(response => response.json())
-                .then(data => {
-                    categorySelect.innerHTML = '<option value="">Todas as Categorias</option>';  
-                    subcategorySelect.innerHTML = '<option value="">Todas as Subcategorias</option>';                  
-                    data.forEach(function(category) {
-                        var option = new Option(category.name, category.id);
-                        categorySelect.add(option);
-                    });
-                });
-        });
-    
-        categorySelect.addEventListener('change', function() {
-            var categoryId = this.value;
-            fetch(`/products/get-subcategories/?category_id=${categoryId}`)
-                .then(response => response.json())
-                .then(data => {
-                    subcategorySelect.innerHTML = '<option value="">Todas as Subcategorias</option>';
-                    data.forEach(function(subcategory) {
-                        var option = new Option(subcategory.name, subcategory.id);
-                        subcategorySelect.appendChild(option);
-                    });
-                });
-        });
+</div> {% endcomment %}
 
-        document.addEventListener('DOMContentLoaded', function() {
-          fetch('/products/list-brands/')
-              .then(response => response.json())
-              .then(data => {
-                  const brandSelect = document.querySelector('select[name="brand"]');
-                  brandSelect.innerHTML = '<option value="">Todas as Marcas</option>';
-                  data.forEach(brand => {
-                      const option = new Option(brand.name, brand.id);
-                      brandSelect.appendChild(option);
-                  });
-              })
-              .catch(error => console.error('Erro ao carregar as marcas:', error));
-});
+<script>
+  document.querySelectorAll('.clickable').forEach(item => {
+    item.addEventListener('click', event => {
+      window.location.href = item.getAttribute('data-href');
     });
-    </script>
-    
-    
-    
-    
-</div>
+  });
+</script>
 {% endblock %}

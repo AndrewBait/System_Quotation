@@ -51,7 +51,9 @@
 <div class="container py-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2>Fornecedores</h2>
+        {% if perms.suppliers.add_supplier %}
         <a href="{% url 'suppliers:supplier_new' %}" class="btn btn-success">Adicionar Novo Fornecedor</a>
+        {% endif %}
     </div>
 
     <form method="GET" action="{% url 'suppliers:supplier_list' %}" id="filterForm">
@@ -130,9 +132,11 @@
                     <a href="{% url 'suppliers:supplier_detail' supplier.id %}" class="btn btn-info btn-sm">
                         <i class="bi bi-eye-fill"></i> Visualizar
                     </a>
+                    {% if perms.suppliers.change_supplier %}
                     <a href="{% url 'suppliers:supplier_update' supplier.id %}" class="btn btn-warning btn-sm">
                         <i class="bi bi-pencil-square"></i> Editar
                     </a>
+                    {% endif %}
                 </div>
             </div>
         </div>

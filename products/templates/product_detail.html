@@ -103,16 +103,14 @@
             <dt class="col-sm-4">Data de Validade:</dt>
             <dd class="col-sm-8">{{ object.data_de_validade }}</dd>
             {% endif %}
-
-            
           </dl>
 
-          {% if user.is_authenticated %}
-            <div class="text-center mt-3">
+          <div class="text-center mt-3">
+            {% if perms.products.change_product %}
               <a href="{% url 'products:product_update' pk=object.pk %}" class="btn btn-primary">Editar</a>
-              <a href="{% url 'products:products_list' %}" class="btn btn-outline-success">Voltar</a>
-            </div>
-          {% endif %}
+            {% endif %}
+            <a href="{% url 'products:products_list' %}" class="btn btn-outline-success">Voltar</a>
+          </div>
         </div>
       </div>
     </div>

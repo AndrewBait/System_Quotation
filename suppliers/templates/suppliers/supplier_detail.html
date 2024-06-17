@@ -96,11 +96,15 @@
                     <p class="card-text"><strong>Prazo Específico de Faturamento:</strong> {{ object.specific_billing_deadline }}</p>
                     {% endif %}
                     <div>
-                        <a href="{% url 'suppliers:supplier_update' object.id %}" class="btn btn-primary" alt="Editar Fornecedor">Editar</a>
+                        {% if perms.suppliers.change_supplier %}
+                          <a href="{% url 'suppliers:supplier_update' object.id %}" class="btn btn-primary" alt="Editar Fornecedor">Editar</a>
+                        {% endif %}
                         <a href="{% url 'suppliers:supplier_list' %}" class="btn btn-secondary" alt="Voltar">Voltar</a>
-                        <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal">
-                            Excluir
-                        </button>
+                        {% if perms.suppliers.delete_supplier %}
+                          <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal">
+                              Excluir
+                          </button>
+                        {% endif %}
                     </div>
                 </div>
             </div>

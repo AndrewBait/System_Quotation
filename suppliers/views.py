@@ -1,29 +1,26 @@
-from pyexpat.errors import messages
-from django.urls import reverse_lazy
+from django.urls import reverse_lazy, reverse  # Corrigido para importar reverse
 from django.views import View
 from django.views.generic import CreateView, ListView, DetailView, UpdateView, DeleteView
 from django.contrib.auth.decorators import login_required
 from django.utils.decorators import method_decorator
 from django.contrib.auth.models import User
-from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 from django.contrib.auth.hashers import make_password
 from django.shortcuts import get_object_or_404, redirect, render
-from django.http import JsonResponse
+from django.http import Http404, JsonResponse, HttpResponseRedirect
 from django.contrib import messages
 from django.core.paginator import Paginator
 from .forms import SupplierForm, SupplierFilterForm, SupplierRatingsForm, SupplierStatusFilterForm
 from .models import Departamento, Supplier, Category, Subcategory
-from django.test import TestCase
-from django.urls import reverse
-from django.http import HttpResponseRedirect
 from django.db.models import Avg
 import logging
-from django.contrib.auth.decorators import login_required
-from django.utils.decorators import method_decorator
-
+import csv
+import xml.etree.ElementTree as ET
+from django.test import TestCase
 
 
 logger = logging.getLogger(__name__) # Cria um logger com o nome do módulo
+
 class SupplierFormMixin: # Mixin para adicionar funcionalidades ao formulário de fornecedor
     def form_valid(self, form):
         self.object = form.save(commit=False)
@@ -57,56 +54,6 @@ def get_categories(request): # Função para retornar as categorias de um depart
     return JsonResponse(list(categories), safe=False)
 
 
-@method_decorator(login_required(login_url=''), name='dispatch')
-def supplier_list(request): # Função para listar fornecedores
-    logger.debug("Dados recebidos: %s", request.GET)
-    queryset = Supplier.objects.all()
-    print("supplier_list view is called")
-    form = SupplierFilterForm(request.GET or None)    
-    status_form = SupplierStatusFilterForm(request.GET or None)
-    suppliers = Supplier.objects.all().order_by('id')
-    
-    paginator = Paginator(suppliers, 3)  # Mostra 10 fornecedores por página
-    page_number = request.GET.get('page')
-    page_obj = paginator.get_page(page_number)
-    
-    
-    if form.is_valid():  
-        suppliers = form.filter(suppliers)
-    
-    if status_form.is_valid():  
-        suppliers = status_form.filter(suppliers)
-
-
-    
-    if form.is_valid(): # Se o formulário for válido
-        if form.cleaned_data['department']: # Se o campo department estiver preenchido
-            queryset = queryset.filter(department=form.cleaned_data['department']) # Filtra os fornecedores pelo departamento
-        if form.cleaned_data['category']:
-            queryset = queryset.filter(category=form.cleaned_data['category'])
-        if form.cleaned_data['subcategory']:
-            queryset = queryset.filter(subcategory=form.cleaned_data['subcategory'])
-        if form.cleaned_data['brand']:
-            queryset = queryset.filter(brand=form.cleaned_data['brand'])
-
-
-    status = request.GET.get('status') # Obtém o valor do parâmetro 'status' da URL
-    if status == 'True': # Se status for 'True'
-        queryset = queryset.filter(active=True)
-    elif status == 'False':
-        queryset = queryset.filter(active=False)
-    
-
-    paginator = Paginator(suppliers_query, 6)   # Mostra 6 fornecedores por página
-    page_number = request.GET.get('page')
-    suppliers_page = paginator.get_page(page_number)
-
-    context = {
-        'form': form,
-        'status_form': status_form,
-        'suppliers': suppliers,  # Adicione a lista de fornecedores ao contexto
-    }
-    return render(request, 'suppliers/supplier_list.html', context)
 
 
 @method_decorator(login_required(login_url=''), name='dispatch') 
@@ -115,15 +62,15 @@ def sua_view_para_o_formulário(request): # Função para exibir o formulário
     return render(request, 'seu_template.html', {'departamentos': departamentos})
 
 
-from django.urls import reverse
-from django.contrib import messages
 
-@method_decorator(login_required(login_url=''), name='dispatch')
-class SupplierCreateView(LoginRequiredMixin, SupplierFormMixin, CreateView): # View para criar um fornecedor
+
+@method_decorator(login_required, name='dispatch')
+class SupplierCreateView(PermissionRequiredMixin, SupplierFormMixin, CreateView):
     model = Supplier
     form_class = SupplierForm
     template_name = 'suppliers/supplier_form.html'
     success_url = reverse_lazy('suppliers:supplier_list')
+    permission_required = 'suppliers.add_supplier'
     
     def form_valid(self, form): # Método para lidar com formulários válidos
         supplier = form.save(commit=False) # Salva o objeto Supplier
@@ -163,12 +110,13 @@ class SupplierCreateView(LoginRequiredMixin, SupplierFormMixin, CreateView): # V
 
 
 
-@method_decorator(login_required(login_url=''), name='dispatch')
-class SupplierListView(ListView):  # View para listar fornecedores
-    model = Supplier # Modelo a ser utilizado
-    template_name = 'suppliers/supplier_list.html' # Template a ser utilizado
-    context_object_name = 'suppliers' # Nome do objeto de contexto
+@method_decorator(login_required, name='dispatch')
+class SupplierListView(PermissionRequiredMixin, ListView):  # View para listar fornecedores
+    model = Supplier
+    template_name = 'suppliers/supplier_list.html'
+    context_object_name = 'suppliers'
     paginate_by = 6
+    permission_required = 'suppliers.view_supplier'
 
     def get_queryset(self): # Método para filtrar os fornecedores
         queryset = super().get_queryset()
@@ -199,10 +147,18 @@ class SupplierListView(ListView):  # View para listar fornecedores
         return context
 
 
-@method_decorator(login_required(login_url=''), name='dispatch')
-class SupplierDetailView(DetailView):
+@method_decorator(login_required, name='dispatch')
+class SupplierDetailView(PermissionRequiredMixin, DetailView):
     model = Supplier
     template_name = 'suppliers/supplier_detail.html'
+    permission_required = 'suppliers.view_supplier'
+    
+    def get_object(self, queryset=None):
+        try:
+            return super().get_object(queryset)
+        except Http404:
+            messages.error(self.request, 'Fornecedor não encontrado ou já excluído.')
+            return redirect('suppliers:supplier_list')
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -211,7 +167,7 @@ class SupplierDetailView(DetailView):
         return context
 
 
-@method_decorator(login_required(login_url=''), name='dispatch')
+
 class RatingsUpdateView(LoginRequiredMixin, View): # View para atualizar as avaliações de um fornecedor
     def post(self, request, *args, **kwargs):
         supplier = get_object_or_404(Supplier, pk=kwargs.get('pk'))
@@ -228,12 +184,20 @@ class RatingsUpdateView(LoginRequiredMixin, View): # View para atualizar as aval
     
 
 
-@method_decorator(login_required(login_url=''), name='dispatch')
-class SupplierUpdateView(LoginRequiredMixin, SupplierFormMixin, UpdateView): # View para atualizar um fornecedor
+@method_decorator(login_required, name='dispatch')
+class SupplierUpdateView(PermissionRequiredMixin, SupplierFormMixin, UpdateView):
     model = Supplier
     form_class = SupplierForm
     template_name = 'suppliers/supplier_form.html'
-    success_url = reverse_lazy('suppliers:supplier_list') 
+    success_url = reverse_lazy('suppliers:supplier_list')
+    permission_required = 'suppliers.change_supplier'
+    
+    def get_object(self, queryset=None):
+        try:
+            return super().get_object(queryset)
+        except Http404:
+            messages.error(self.request, 'Fornecedor não encontrado ou já excluído.')
+            return redirect('suppliers:supplier_list')
 
     def post(self, request, *args, **kwargs): # Método para lidar com requisições POST
         self.object = self.get_object()
@@ -316,15 +280,20 @@ class SupplierUpdateView(LoginRequiredMixin, SupplierFormMixin, UpdateView): # V
         return reverse_lazy('suppliers:supplier_detail', kwargs={'pk': self.object.pk})
 
 
-@method_decorator(login_required(login_url=''), name='dispatch')
-class SupplierDeleteView(DeleteView): # View para deletar um fornecedor
+@method_decorator(login_required, name='dispatch')
+class SupplierDeleteView(PermissionRequiredMixin, DeleteView):
     model = Supplier
     template_name = 'suppliers/supplier_confirm_delete.html'
     success_url = reverse_lazy('suppliers:supplier_list')
+    permission_required = 'suppliers.delete_supplier'
 
     def delete(self, request, *args, **kwargs):
         logging.debug("Tentando deletar o fornecedor com ID: %s", self.kwargs.get('pk'))
-        return super().delete(request, *args, **kwargs) 
+        try:
+            return super().delete(request, *args, **kwargs)
+        except Http404:
+            messages.error(request, 'Fornecedor não encontrado ou já excluído.')
+            return redirect(self.success_url)
 
 
 @method_decorator(login_required(login_url=''), name='dispatch')

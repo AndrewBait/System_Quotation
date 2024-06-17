@@ -1,11 +1,12 @@
 from pyexpat.errors import messages
+from django.urls import reverse, reverse_lazy
+from django.http import Http404 
 from products.models import Product
 from products.forms import ProductModelForm
 from django.urls import reverse_lazy
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, permission_required
 from django.utils.decorators import method_decorator
 from django.views.generic import ListView, CreateView, DetailView, UpdateView, DeleteView
-from django.views.generic.edit import CreateView
 from .models import Brand, Product, Departamento, Category, Subcategory, ProductLine
 import csv
 import xml.etree.ElementTree as ET
@@ -14,22 +15,18 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.http import JsonResponse
 from django.core import serializers
 from dal import autocomplete
-from .models import Category, Subcategory
 from django.http import JsonResponse
 from django.views.decorators.http import require_http_methods
-from .models import Brand
 from django.core.paginator import Paginator
 from django.http import HttpResponse
 from django.db.models import Q
 import re
 from django.contrib import messages
-from django.contrib.auth.decorators import login_required
-from django.utils.decorators import method_decorator
-
-
-
+from django.contrib.auth.mixins import PermissionRequiredMixin
+from django.urls import reverse 
 
 @method_decorator(login_required(login_url=''), name='dispatch')
+@permission_required('products.view_product', raise_exception=True)
 def products_list(request):
     products = Product.objects.all()  # Inicialmente, obtém todos os produtos
     
@@ -40,15 +37,14 @@ def products_list(request):
             Q(sku__icontains=search_query) |
             Q(ean__icontains=search_query)
         )
-        return render(request, 'products.html', {
-            'products': products,
-            'search_query': search_query
-            
-
+    
+    return render(request, 'products.html', {
+        'products': products,
+        'search_query': search_query
     })
 
-
 # Para download do modelo CSV
+@permission_required('products.view_product', raise_exception=True)
 def download_csv_template(request):
     response = HttpResponse(content_type='text/csv')
     response['Content-Disposition'] = 'attachment; filename="template.csv"'
@@ -61,9 +57,8 @@ def download_csv_template(request):
     response.write(csv_template)
     return response
 
-
-
 # Para download do modelo XML
+@permission_required('products.view_product', raise_exception=True)
 def download_xml_template(request):
     response = HttpResponse(content_type='application/xml')
     response['Content-Disposition'] = 'attachment; filename="template.xml"'
@@ -85,13 +80,13 @@ def download_xml_template(request):
     response.write(xml_template)
     return response
 
+@permission_required('products.view_brand', raise_exception=True)
 def list_brands(request):
     brands = list(Brand.objects.all().values('id', 'name'))
     return JsonResponse(brands, safe=False)
 
-
-
 @require_http_methods(["POST"])
+@permission_required('products.add_brand', raise_exception=True)
 def add_brand(request):
     brand_name = request.POST.get('name')
     if not brand_name:
@@ -100,8 +95,7 @@ def add_brand(request):
     brand, created = Brand.objects.get_or_create(name=brand_name)
     return JsonResponse({'id': brand.id, 'name': brand.name}, status=201 if created else 200)
 
-
-
+@permission_required('products.view_brand', raise_exception=True)
 def brand_autocomplete(request):
     qs = Brand.objects.all()
 
@@ -111,39 +105,34 @@ def brand_autocomplete(request):
     brands = list(qs.values('id', 'name'))
     return JsonResponse(brands, safe=False)
 
-
-
-class BrandCreateView(CreateView):
+class BrandCreateView(PermissionRequiredMixin, CreateView):
     model = Brand
     fields = ['name']
     template_name = 'brands/brand_form.html'
     success_url = reverse_lazy('products:new_product')
+    permission_required = 'products.add_brand'
 
+class BrandAutocomplete(PermissionRequiredMixin, autocomplete.Select2QuerySetView):
+    permission_required = 'products.view_brand'
 
-
-class BrandAutocomplete(autocomplete.Select2QuerySetView):
     def get_queryset(self):
         qs = Brand.objects.all()
         if self.q:
             qs = qs.filter(name__icontains=self.q)
         return qs[:10]
 
-
-
 def validate_query(query):
-        # Remova caracteres indesejados ou limite a caracteres alfanuméricos e espaço
-        query = re.sub(r'[^a-zA-Z0-9 ]', '', query)
-        return query
-    
-    
+    # Remova caracteres indesejados ou limite a caracteres alfanuméricos e espaço
+    query = re.sub(r'[^a-zA-Z0-9 ]', '', query)
+    return query
+
 @method_decorator(login_required(login_url=''), name='dispatch')
-class ProductListView(ListView):
+class ProductListView(PermissionRequiredMixin, ListView):
     model = Product
     template_name = 'products.html'
     context_object_name = 'products'
     paginate_by = 10
-    
-    
+    permission_required = 'products.view_product'
 
     def get_queryset(self):
         queryset = super().get_queryset().order_by('name')
@@ -159,7 +148,6 @@ class ProductListView(ListView):
         search_query = validate_query(search_query)
         search_query = ' '.join(search_query.split())
 
-        
         if search_query:
             queryset = queryset.filter(
                 Q(name__icontains=search_query) | 
@@ -215,20 +203,26 @@ class ProductListView(ListView):
         context['current_items_per_page'] = items_per_page
         return context
 
-    
-
 @method_decorator(login_required(login_url=''), name='dispatch')
-class ProductDetailView(DetailView):
+class ProductDetailView(PermissionRequiredMixin, DetailView):
     model = Product
     template_name = 'product_detail.html'
-    
+    permission_required = 'products.view_product'
+
+    def get_object(self, queryset=None):
+        try:
+            return super().get_object(queryset)
+        except Http404:
+            messages.error(self.request, 'Produto não encontrado ou já excluído.')
+            return redirect('products:products_list')
 
 @method_decorator(login_required(login_url=''), name='dispatch')
-class NewProductCreateView(CreateView):
+class NewProductCreateView(PermissionRequiredMixin, CreateView):
     model = Product
     form_class = ProductModelForm
     template_name = 'new_product.html'
     success_url = reverse_lazy('products:new_product')
+    permission_required = 'products.add_product'
 
     def form_valid(self, form):
         new_brand_name = self.request.POST.get('new_brand')
@@ -242,15 +236,20 @@ class NewProductCreateView(CreateView):
     def form_invalid(self, form):
         messages.error(self.request, 'Erro ao cadastrar o produto. Por favor, verifique os campos e tente novamente.')
         return super().form_invalid(form)
-    
-
-from django.urls import reverse
 
 @method_decorator(login_required(login_url=''), name='dispatch')
-class ProductUpdateView(UpdateView):
+class ProductUpdateView(PermissionRequiredMixin, UpdateView):
     model = Product
     form_class = ProductModelForm
     template_name = 'product_update.html'
+    permission_required = 'products.change_product'
+
+    def get_object(self, queryset=None):
+        try:
+            return super().get_object(queryset)
+        except Http404:
+            messages.error(self.request, 'Produto não encontrado ou já excluído.')
+            return redirect('products:products_list')
 
     def form_valid(self, form):
         new_brand_name = self.request.POST.get('new_brand')
@@ -268,17 +267,22 @@ class ProductUpdateView(UpdateView):
     def get_success_url(self):
         return reverse('products:product_update', kwargs={'pk': self.object.pk})
 
-
-
 @method_decorator(login_required(login_url=''), name='dispatch')
-class ProductDeleteView(DeleteView):
+class ProductDeleteView(PermissionRequiredMixin, DeleteView):
     model = Product
     template_name = 'product_delete.html'
-    success_url = '/products/'
-    
+    success_url = reverse_lazy('products:products_list')
+    permission_required = 'products.delete_product'
 
+    def delete(self, request, *args, **kwargs):
+        try:
+            return super().delete(request, *args, **kwargs)
+        except Http404:
+            messages.error(request, 'Produto não encontrado ou já excluído.')
+            return redirect(self.success_url)
 
-
+@method_decorator(login_required(login_url=''), name='dispatch')
+@permission_required('products.add_product', raise_exception=True)
 def import_products(request):
     if request.method == 'POST':
         form = ProductImportForm(request.POST, request.FILES)
@@ -296,9 +300,7 @@ def import_products(request):
         form = ProductImportForm()
     return render(request, 'import_products.html', {'form': form})
 
-
-
-
+@permission_required('products.add_product', raise_exception=True)
 def handle_csv_upload(f):
     reader = csv.DictReader(f.decode('utf-8').splitlines())
     for row in reader:
@@ -318,11 +320,8 @@ def handle_csv_upload(f):
             brand=brand,
             photo=row.get('foto')  # Assume que 'foto' é um URL ou caminho válido para a imagem
         )
-        
-        
 
-
-
+@permission_required('products.add_product', raise_exception=True)
 def handle_xml_upload(f):
     tree = ET.parse(f)
     root = tree.getroot()
@@ -347,23 +346,21 @@ def handle_xml_upload(f):
             photo=elem.find('foto').text if elem.find('foto') is not None else None  # Assume que 'foto' é um URL ou caminho válido para a imagem
         )
 
-
-
+@permission_required('products.view_category', raise_exception=True)
 def get_categories(request):
     department_id = request.GET.get('department_id')
     categories = Category.objects.filter(department_id=department_id).values('id', 'name')
     return JsonResponse(list(categories), safe=False)
 
-
-
+@permission_required('products.view_subcategory', raise_exception=True)
 def get_subcategories(request):
     category_id = request.GET.get('category_id')
     subcategories = Subcategory.objects.filter(category_id=category_id).values('id', 'name')
     return JsonResponse(list(subcategories), safe=False)
 
+class CategoryAutocomplete(PermissionRequiredMixin, autocomplete.Select2QuerySetView):
+    permission_required = 'products.view_category'
 
-
-class CategoryAutocomplete(autocomplete.Select2QuerySetView):
     def get_queryset(self):
         department_id = self.forwarded.get('department', None)
         if department_id:
@@ -371,12 +368,12 @@ class CategoryAutocomplete(autocomplete.Select2QuerySetView):
         else:
             queryset = Category.objects.none()
         if self.q:
-            queryset = queryset.filter(name__istartswith=self.q)
+            queryset = queryset.filter(name__icontains=self.q)
         return queryset
 
+class SubcategoryAutocomplete(PermissionRequiredMixin, autocomplete.Select2QuerySetView):
+    permission_required = 'products.view_subcategory'
 
-
-class SubcategoryAutocomplete(autocomplete.Select2QuerySetView):
     def get_queryset(self):
         category_id = self.forwarded.get('category', None)
         if category_id:
