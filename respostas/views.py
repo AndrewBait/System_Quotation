@@ -27,14 +27,18 @@ from .forms import PedidoFormSet
 from cotacao.models import Cotacao 
 from products.models import ProductPriceHistory
 import re
-
 from respostas import models
+from django.contrib.auth.decorators import login_required
+from django.utils.decorators import method_decorator
 
 
 
+@method_decorator(login_required(login_url=''), name='dispatch')
 def apenas_digitos(cnpj):
     return re.sub(r'\D', '', cnpj)  # Remove tudo que não é dígito
 
+
+@method_decorator(login_required(login_url=''), name='dispatch')
 def criar_item_form(item, resposta_existente, post_data=None, file_data=None):
     item_resposta, created = ItemRespostaCotacao.objects.get_or_create(
         resposta_cotacao=resposta_existente, 
@@ -47,6 +51,8 @@ def criar_item_form(item, resposta_existente, post_data=None, file_data=None):
     else:
         return ItemRespostaForm(prefix=f'item_{item.pk}', **form_kwargs)
 
+
+@method_decorator(login_required(login_url=''), name='dispatch')
 def responder_cotacao(request, cotacao_uuid, fornecedor_id, token):
     cotacao = get_object_or_404(Cotacao, uuid=cotacao_uuid)
     fornecedor = get_object_or_404(Supplier, pk=fornecedor_id)
@@ -121,8 +127,10 @@ def responder_cotacao(request, cotacao_uuid, fornecedor_id, token):
     return render(request, 'respostas/responder_cotacao.html', context)
 
 
+@method_decorator(login_required(login_url=''), name='dispatch')
 def cotacao_respondida_view(request):
     return render(request, 'respostas/cotacao_respondida.html')
+
 
 
 def visualizar_cotacoes(request, cotacao_uuid):
@@ -215,6 +223,8 @@ from .models import Cotacao, ItemCotacao, PedidoAgrupado, Pedido, Supplier
 from datetime import date
 from django.db.models import Sum
 
+
+
 def gerar_pedidos(request):
     cotacao_uuid = request.POST.get('cotacao_uuid', '')
     cotacao = get_object_or_404(Cotacao, uuid=cotacao_uuid)
@@ -305,6 +315,7 @@ from django.db.models import Q
 from .models import PedidoAgrupado, Supplier
 
 
+@method_decorator(login_required(login_url=''), name='dispatch')
 class ListarPedidosView(ListView):
     model = PedidoAgrupado
     template_name = 'respostas/listar_pedidos.html'
@@ -360,7 +371,7 @@ class ListarPedidosView(ListView):
         return context
     
     
-
+@method_decorator(login_required(login_url=''), name='dispatch')
 class EditarPedidoView(UpdateView):
     model = Pedido
     fields = ['quantidade', 'preco', 'produto']  # ajuste os campos conforme necessário
@@ -376,6 +387,8 @@ from django.views.generic import DetailView
 from .models import PedidoAgrupado, Pedido
 from .forms import PedidoFormSet
 
+
+@method_decorator(login_required(login_url=''), name='dispatch')
 class DetalhesPedidoAgrupadoView(DetailView):
     model = PedidoAgrupado
     template_name = 'respostas/detalhes_pedido.html'
@@ -407,8 +420,9 @@ class DetalhesPedidoAgrupadoView(DetailView):
             return redirect('respostas:listar_pedidos')
         else:
             return self.render_to_response(self.get_context_data(form=formset))
+        
 
-
+@method_decorator(login_required(login_url=''), name='dispatch')
 class EditarPedidoAgrupadoView(UpdateView):
     model = PedidoAgrupado
     fields = []
@@ -458,6 +472,8 @@ from django.views.generic import DeleteView
 from django.urls import reverse_lazy
 from .models import PedidoAgrupado
 
+
+@method_decorator(login_required(login_url=''), name='dispatch')
 class DeletarPedidoAgrupadoView(DeleteView):
     model = PedidoAgrupado
     success_url = reverse_lazy('respostas:listar_pedidos')
@@ -476,7 +492,7 @@ class DeletarPedidoAgrupadoView(DeleteView):
         }
         return JsonResponse(response_data)
     
-    
+@method_decorator(login_required(login_url=''), name='dispatch')    
 class DeletarPedidoView(DeleteView):
     model = Pedido
     template_name = 'respostas/deletar_pedido.html'
@@ -585,6 +601,8 @@ from collections import defaultdict
 from django.shortcuts import get_object_or_404
 from cotacao.models import ItemCotacao
 
+
+@method_decorator(login_required(login_url=''), name='dispatch')
 def get_price_history(request, item_id, days):
     print(f'Item ID: {item_id}, Days: {days}')  # Adicionar log para verificar a chamada
     item = get_object_or_404(ItemCotacao, pk=item_id)
@@ -638,6 +656,7 @@ from reportlab.lib.pagesizes import A4
 from reportlab.pdfgen import canvas
 from io import BytesIO
 
+@method_decorator(login_required(login_url=''), name='dispatch')
 def exportar_pedidos_csv(request):
     pedidos = PedidoAgrupado.objects.all()
     response = HttpResponse(content_type='text/csv')
@@ -666,6 +685,8 @@ from io import BytesIO
 from reportlab.lib.pagesizes import letter, landscape
 from reportlab.pdfgen import canvas
 
+
+@method_decorator(login_required(login_url=''), name='dispatch')
 def exportar_pedidos_pdf(request):
     # Aplicar os mesmos filtros usados na view ListarPedidosView
     queryset = PedidoAgrupado.objects.all()
@@ -767,6 +788,8 @@ from reportlab.lib import colors
 from django.conf import settings
 import os
 
+
+@method_decorator(login_required(login_url=''), name='dispatch')
 class EnviarPedidoEmailView(View):
     def get(self, request, pk):
         pedido_agrupado = get_object_or_404(PedidoAgrupado, pk=pk)

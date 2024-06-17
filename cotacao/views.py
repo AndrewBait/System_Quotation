@@ -28,9 +28,12 @@ from django.core.mail import send_mail
 from .models import Cotacao
 from django.db.transaction import atomic
 from django.db import transaction
+from django.contrib.auth.decorators import login_required
+from django.utils.decorators import method_decorator
 
 
 
+@method_decorator(login_required(login_url=''), name='dispatch')
 class CotacaoListView(ListView):
     model = Cotacao
     template_name = 'cotacao/cotacao_list.html'
@@ -69,6 +72,7 @@ class CotacaoListView(ListView):
         return queryset
     
 
+@method_decorator(login_required(login_url=''), name='dispatch')
 class CotacaoDeleteView(DeleteView):
     model = Cotacao
     template_name = 'cotacao/cotacao_confirm_delete.html'
@@ -80,7 +84,7 @@ class CotacaoDeleteView(DeleteView):
         return context
 
 
-
+@method_decorator(login_required(login_url=''), name='dispatch')
 class CotacaoCreateView( LoginRequiredMixin,CreateView):
     model = Cotacao
     form_class = CotacaoForm
@@ -102,6 +106,7 @@ class CotacaoCreateView( LoginRequiredMixin,CreateView):
         return response
     
 
+@method_decorator(login_required(login_url=''), name='dispatch')
 class CotacaoUpdateView(UpdateView):
     model = Cotacao
     form_class = CotacaoForm
@@ -117,6 +122,7 @@ class CotacaoUpdateView(UpdateView):
         return super().form_valid(form)
 
 
+@method_decorator(login_required(login_url=''), name='dispatch')
 class EnviarCotacaoView(FormView):
     template_name = 'cotacao/enviar_cotacao.html'
     form_class = EnviarCotacaoForm
@@ -189,7 +195,7 @@ class EnviarCotacaoView(FormView):
         return super().form_valid(form)       
 
 
-
+@method_decorator(login_required(login_url=''), name='dispatch')
 class PesquisaFornecedorAjaxView(View):
     def get(self, request, *args, **kwargs):
         busca = request.GET.get('termo', '')
@@ -253,6 +259,7 @@ class PesquisaFornecedorAjaxView(View):
 #     template_name = 'cotacao/success_page.html'
 
 
+@method_decorator(login_required(login_url=''), name='dispatch')
 class ListProductsToAddView(TemplateView):
     template_name = 'cotacao/list_products_to_add.html'
 
@@ -302,6 +309,7 @@ class ListProductsToAddView(TemplateView):
         return context
 
 
+@method_decorator(login_required(login_url=''), name='dispatch')
 class ListProductsView(ListView):
     model = Product
     template_name = 'cotacao/list_products_to_add.html'  # Ajuste para o template correto
@@ -319,6 +327,8 @@ class ListProductsView(ListView):
         else:
             return Product.objects.all()
 
+
+@method_decorator(login_required(login_url=''), name='dispatch')
 class UpdateItemCotacaoView(UpdateView):
     model = ItemCotacao
     fields = ['quantidade', 'tipo_volume', 'observacao']
@@ -334,6 +344,8 @@ class UpdateItemCotacaoView(UpdateView):
         cotacao_id = self.object.cotacao.id  # Obtém o ID da cotação do item atualizado
         return reverse('cotacao:add_product_to_cotacao', kwargs={'cotacao_id': cotacao_id})
 
+
+@method_decorator(login_required(login_url=''), name='dispatch')
 class DeleteItemCotacaoView(DeleteView):
     model = ItemCotacao
     success_url = reverse_lazy('cotacao:cotacao_list')  # ajuste para o nome correto da URL de listagem
@@ -343,7 +355,8 @@ class DeleteItemCotacaoView(DeleteView):
         messages.success(request, "Item removido com sucesso!")
         return response    
     
-  
+
+@method_decorator(login_required(login_url=''), name='dispatch')  
 class AddProductToCotacaoView(CreateView):
     model = ItemCotacao
     form_class = ItemCotacaoForm
@@ -422,7 +435,8 @@ class AddProductToCotacaoView(CreateView):
 
         return JsonResponse({"message": "Produto adicionado com sucesso!"}, status=200)
     
-    
+
+@method_decorator(login_required(login_url=''), name='dispatch')    
 class ProductAutocomplete(autocomplete.Select2QuerySetView):
     def get_queryset(self):
         qs = Product.objects.all()
@@ -431,6 +445,7 @@ class ProductAutocomplete(autocomplete.Select2QuerySetView):
         return qs
 
 
+@method_decorator(login_required(login_url=''), name='dispatch')
 class ToggleCotacaoStatusView(RedirectView):
 
     def get_redirect_url(self, *args, **kwargs):
@@ -444,6 +459,7 @@ class ToggleCotacaoStatusView(RedirectView):
         return reverse('cotacao:cotacao_list')
 
 
+@method_decorator(login_required(login_url=''), name='dispatch')
 class ProdutoAPI(View):
     def get(self, request, *args, **kwargs):
         q = request.GET.get('q', '')
@@ -468,24 +484,29 @@ class ProdutoAPI(View):
         return JsonResponse(data, safe=False)
 
 
+@method_decorator(login_required(login_url=''), name='dispatch')
 class DepartamentoAPI(View):
     def get(self, request, *args, **kwargs):
         departamentos = Departamento.objects.all().values('id', 'nome')  # Alterado de 'name' para 'nome'
         print(get_resolver().url_patterns)
         return JsonResponse(list(departamentos), safe=False)
-    
+  
+
+@method_decorator(login_required(login_url=''), name='dispatch')    
 class CategoriaAPI(View):
     def get(self, request, *args, **kwargs):
         categorias = Category.objects.all().values('id', 'name')
         return JsonResponse(list(categorias), safe=False)
     
+@method_decorator(login_required(login_url=''), name='dispatch')    
 class SubcategoriaAPI(View):
     def get(self, request, *args, **kwargs):
         category_id = kwargs.get('category_id')
         subcategorias = Subcategory.objects.filter(category_id=category_id).values('id', 'name')
         return JsonResponse(list(subcategorias), safe=False) 
     
-    
+
+@method_decorator(login_required(login_url=''), name='dispatch')    
 class ItensCotacaoAPI(View):
     def get(self, request, *args, **kwargs):
         cotacao_id = kwargs.get('cotacao_id')

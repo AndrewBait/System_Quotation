@@ -18,6 +18,8 @@ from django.urls import reverse
 from django.http import HttpResponseRedirect
 from django.db.models import Avg
 import logging
+from django.contrib.auth.decorators import login_required
+from django.utils.decorators import method_decorator
 
 
 
@@ -39,6 +41,8 @@ class SupplierFormMixin: # Mixin para adicionar funcionalidades ao formulário d
         return super().form_invalid(form)
 
 
+
+
 def get_categories(request): # Função para retornar as categorias de um departamento
     department_id = request.GET.get('department_id')
     if department_id:  # Verifica se department_id não está vazio
@@ -53,6 +57,7 @@ def get_categories(request): # Função para retornar as categorias de um depart
     return JsonResponse(list(categories), safe=False)
 
 
+@method_decorator(login_required(login_url=''), name='dispatch')
 def supplier_list(request): # Função para listar fornecedores
     logger.debug("Dados recebidos: %s", request.GET)
     queryset = Supplier.objects.all()
@@ -103,24 +108,22 @@ def supplier_list(request): # Função para listar fornecedores
     }
     return render(request, 'suppliers/supplier_list.html', context)
 
- 
+
+@method_decorator(login_required(login_url=''), name='dispatch') 
 def sua_view_para_o_formulário(request): # Função para exibir o formulário
     departamentos = Departamento.objects.all()
     return render(request, 'seu_template.html', {'departamentos': departamentos})
 
 
-@method_decorator(login_required(login_url='login'), name='dispatch') # Decorador para exigir login
+from django.urls import reverse
+from django.contrib import messages
+
+@method_decorator(login_required(login_url=''), name='dispatch')
 class SupplierCreateView(LoginRequiredMixin, SupplierFormMixin, CreateView): # View para criar um fornecedor
     model = Supplier
     form_class = SupplierForm
     template_name = 'suppliers/supplier_form.html'
     success_url = reverse_lazy('suppliers:supplier_list')
-
-    
-    def form_invalid(self, form): # Método para lidar com formulários inválidos
-        # Retorna para o template com o formulário preenchido e os erros
-        return self.render_to_response(self.get_context_data(form=form))
-
     
     def form_valid(self, form): # Método para lidar com formulários válidos
         supplier = form.save(commit=False) # Salva o objeto Supplier
@@ -131,7 +134,17 @@ class SupplierCreateView(LoginRequiredMixin, SupplierFormMixin, CreateView): # V
         supplier.user = self.request.user  # Associa o fornecedor ao usuário atual
         supplier.save() # Salva o objeto Supplier com todos os dados atualizados
         form.save_m2m() # Salva as relações ManyToMany
-        return super().form_valid(form)
+        messages.success(self.request, 'Fornecedor cadastrado com sucesso!')
+        return redirect('suppliers:supplier_new')
+
+    
+    def form_invalid(self, form):
+        for field, errors in form.errors.items():
+            for error in errors:
+                messages.error(self.request, f'{field}: {error}')
+        return super().form_invalid(form)                   
+    
+
     
     def get_context_data(self, **kwargs): # Adiciona os dias de entrega ao contexto
         context = super().get_context_data(**kwargs)
@@ -150,7 +163,7 @@ class SupplierCreateView(LoginRequiredMixin, SupplierFormMixin, CreateView): # V
 
 
 
-@method_decorator(login_required(login_url='login'), name='dispatch') # Decorador para exigir login
+@method_decorator(login_required(login_url=''), name='dispatch')
 class SupplierListView(ListView):  # View para listar fornecedores
     model = Supplier # Modelo a ser utilizado
     template_name = 'suppliers/supplier_list.html' # Template a ser utilizado
@@ -186,7 +199,7 @@ class SupplierListView(ListView):  # View para listar fornecedores
         return context
 
 
-@method_decorator(login_required(login_url='login'), name='dispatch')
+@method_decorator(login_required(login_url=''), name='dispatch')
 class SupplierDetailView(DetailView):
     model = Supplier
     template_name = 'suppliers/supplier_detail.html'
@@ -197,6 +210,8 @@ class SupplierDetailView(DetailView):
         context['delivery_days_list'] = supplier.delivery_days.split(',') if supplier.delivery_days else []
         return context
 
+
+@method_decorator(login_required(login_url=''), name='dispatch')
 class RatingsUpdateView(LoginRequiredMixin, View): # View para atualizar as avaliações de um fornecedor
     def post(self, request, *args, **kwargs):
         supplier = get_object_or_404(Supplier, pk=kwargs.get('pk'))
@@ -213,7 +228,7 @@ class RatingsUpdateView(LoginRequiredMixin, View): # View para atualizar as aval
     
 
 
-@method_decorator(login_required(login_url='login'), name='dispatch')
+@method_decorator(login_required(login_url=''), name='dispatch')
 class SupplierUpdateView(LoginRequiredMixin, SupplierFormMixin, UpdateView): # View para atualizar um fornecedor
     model = Supplier
     form_class = SupplierForm
@@ -301,7 +316,7 @@ class SupplierUpdateView(LoginRequiredMixin, SupplierFormMixin, UpdateView): # V
         return reverse_lazy('suppliers:supplier_detail', kwargs={'pk': self.object.pk})
 
 
-@method_decorator(login_required(login_url='login'), name='dispatch')
+@method_decorator(login_required(login_url=''), name='dispatch')
 class SupplierDeleteView(DeleteView): # View para deletar um fornecedor
     model = Supplier
     template_name = 'suppliers/supplier_confirm_delete.html'
@@ -311,11 +326,14 @@ class SupplierDeleteView(DeleteView): # View para deletar um fornecedor
         logging.debug("Tentando deletar o fornecedor com ID: %s", self.kwargs.get('pk'))
         return super().delete(request, *args, **kwargs) 
 
+
+@method_decorator(login_required(login_url=''), name='dispatch')
 def create_supplier(request): # Função para criar um fornecedor
     if request.method == 'POST':
         user = User.objects.create_user(username=request.POST['email'], password=request.POST['senha'])
         supplier = Supplier(user=user)
         supplier.save()
+
 
 
 def get_categories(request): # Função para retornar as categorias de um departamento
@@ -332,10 +350,13 @@ def get_categories(request): # Função para retornar as categorias de um depart
         return JsonResponse({'error': 'Department ID is missing'}, status=400)
     
 
+
 def get_subcategories(request): # Função para retornar as subcategorias de uma categoria
     category_id = request.GET.get('category_id')
     subcategories = list(Subcategory.objects.filter(category_id=category_id).values('id', 'name'))
     return JsonResponse(subcategories, safe=False)
+
+
 
 class TestCategoryView(TestCase): # Classe de teste para a view de categorias
     def test_get_categories(self):

@@ -4,7 +4,6 @@
 
 {% block extrahead %}
 {{ block.super }}
-
 <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-select@1.13.14/dist/css/bootstrap-select.min.css">
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
@@ -43,11 +42,8 @@
 </style>
 {% endblock %}
 
-
 {% block content %}
-
-<div class="container-fluid mt-4"> 
-     
+<div class="container-fluid mt-4">
     <form action="" method="post" enctype="multipart/form-data" class="needs-validation" novalidate>
         {% csrf_token %}
         
@@ -59,10 +55,6 @@
             {% endfor %}
         {% endif %}
 
-        <!-- <h1 style="font-size: 2rem; margin-bottom: 20px;">Cadastro de Fornecedor</h1> -->
-        <!-- <p>* Campos obrigatórios</p> Legenda para campos obrigatórios -->
-
-        <!-- Nav tabs -->
         <ul class="nav nav-tabs" id="myTab" role="tablist">
           <li class="nav-item" role="presentation">
             <button class="nav-link active" id="info-tab" data-bs-toggle="tab" data-bs-target="#info" type="button" role="tab" aria-controls="info" aria-selected="true">Cadastro</button>
@@ -71,14 +63,13 @@
             <button class="nav-link" id="vinculos-tab" data-bs-toggle="tab" data-bs-target="#vinculos" type="button" role="tab" aria-controls="vinculos" aria-selected="false">Vínculos</button>
           </li> {% endcomment %}
         </ul>
-        
-        <!-- Tab panes -->
+
         <div class="tab-content">
           <div class="tab-pane active" id="info" role="tabpanel" aria-labelledby="info-tab">
             <div class="row g-3">
                 <div class="col-lg-6">
                     <br>
-                    <h4>Informaçoes Básicas</h4>
+                    <h4>Informações Básicas</h4>
                     <div class="mb-3 required-field">
                         <label for="id_name" class="form-label">Nome do Vendedor:</label>
                         {{ form.name|add_class:'form-control' }}
@@ -123,9 +114,7 @@
                     <div class="mb-3">
                       <label for="id_cnpj" class="form-label">CNPJ:</label>
                       {{ form.cnpj|add_class:'form-control' }}
-                      <!-- <small class="text-muted">Formato: 00.000.000/0000-00</small> -->
                   </div>
-                    <!-- Endereço -->
                     <h4>Endereço</h4>
                     <div class="mb-3">
                       <label for="id_zip_code" class="form-label">CEP:</label>
@@ -151,12 +140,8 @@
                         <label for="id_state" class="form-label">Estado:</label>
                         {{ form.state|add_class:'form-control' }}
                     </div>
-
-                    
-
                 </div>
                 <div class="col-lg-6">
-                    <!-- Detalhes Adicionais -->
                     <br>
                     <h4>Detalhes Adicionais</h4>
 
@@ -181,8 +166,8 @@
                         <label for="id_order_response_deadline" class="form-label">Prazo de Resposta para Pedidos:</label>
                         {{ form.order_response_deadline|add_class:'form-control' }}
                     </div>
-                    <!-- Repita para TER, QUA, QUI, SEX, SAB, DOM com seus respectivos IDs e valores -->
-                        {% include 'isolated/_delivery_days.html' %}                    
+
+                    {% include 'isolated/_delivery_days.html' %}
                     <br> 
                     <div class="mb-3">
                         <label for="id_billing_deadline" class="form-label">Prazo de Faturamento:</label>
@@ -190,76 +175,27 @@
                     </div>
                     <div class="mb-3">
                         <label for="id_specific_billing_deadline" class="form-label">Prazo Específico de Faturamento:</label>
-                        {{ form.specific_billing_deadline }}
+                        {{ form.specific_billing_deadline|add_class:'form-control' }}
                     </div>
-
-                    {% comment %} <h4>Cobrir Férias</h4>
-                    <div class="mb-3">
-                        <label for="id_holiday_cover_name" class="form-label">Nome do Fornecedor:</label>
-                        {{ form.holiday_cover_name|add_class:'form-control' }}
-                    </div>
-                    
-                    <!-- Campo Email do Fornecedor de Férias -->
-                    <div class="mb-3">
-                        <label for="id_holiday_cover_email" class="form-label">Email do Fornecedor</label>
-                        {{ form.holiday_cover_email|add_class:'form-control' }}
-                    </div>
-
-                    <div class="mb-3">
-                        <label for="id_holiday_cover_phone" class="form-label">Telefone do Fornecedor</label>
-                        {{ form.holiday_cover_phone|add_class:'form-control' }}
-                    </div> {% endcomment %}
 
                     <div class="mb-3">
                         <label for="id_observation" class="form-label">Observação:</label>
                         {{ form.observation|add_class:'form-control' }}
-                    </div>   
+                    </div>
                     <div class="text-end mt-4">
                         <button type="submit" class="btn btn-primary">Salvar</button>
                         <a href="{% url 'suppliers:supplier_list' %}" class="btn btn-secondary">Voltar</a>
-                    </div>             
+                    </div>
                 </div>
-
             </div>
           </div>
 
-
-        <div class="tab-pane" id="vinculos" role="tabpanel" aria-labelledby="vinculos-tab">
+          <div class="tab-pane" id="vinculos" role="tabpanel" aria-labelledby="vinculos-tab">
             {% include 'isolated/_vinculos_tab.html' %}
-        </div>
-            
-                    
-                </div>
-            </div>
           </div>
         </div>
-
-
-
-        <div class="modal fade" id="confirmationModal" tabindex="-1" aria-labelledby="confirmationModalLabel" aria-hidden="true">
-            <div class="modal-dialog">
-              <div class="modal-content">
-                <div class="modal-header">
-                  <h5 class="modal-title" id="confirmationModalLabel">Cadastro Realizado</h5>
-                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                  O cadastro foi realizado com sucesso!
-                </div>
-                <div class="modal-footer">
-                  <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
-                </div>
-              </div>
-            </div>
-          </div>
-                
     </form>
 </div>
-  <!-- Modal de Confirmação -->
-
-
-
-  
 {% endblock %}
 
 {% block javascript %}
@@ -272,18 +208,17 @@
         $('#id_phone').mask('+55(00)00000-0000');
         $('#id_minimum_order_value').mask('000.000.000.000.000,00', {reverse: true});
         $('.rating').each(function() {
-        const fieldName = $(this).data('field-name');
-        $(this).raty({
-            score: function() {
-                return $(this).attr('data-score');
-            },
-            scoreName: fieldName,
-            click: function(score, evt) {
-                $('#' + fieldName).val(score);
-            }
+            const fieldName = $(this).data('field-name');
+            $(this).raty({
+                score: function() {
+                    return $(this).attr('data-score');
+                },
+                scoreName: fieldName,
+                click: function(score, evt) {
+                    $('#' + fieldName).val(score);
+                }
+            });
         });
-    });
     });
 </script>
 {% endblock %}
-

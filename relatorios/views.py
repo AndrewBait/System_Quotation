@@ -16,14 +16,21 @@ from reportlab.lib.units import mm
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
 import io
+from django.contrib.auth.decorators import login_required
+from django.utils.decorators import method_decorator
+
 
 
 def gerar_relatorios(request):
     return render(request, 'relatorios/gerar_relatorios.html')
 
+
+@method_decorator(login_required(login_url=''), name='dispatch')
 class ManualUsuarioView(TemplateView):
     template_name = 'relatorios/manual_usuario.html'
+    
 
+@method_decorator(login_required(login_url=''), name='dispatch')
 class ResumoCotacoesView(TemplateView):
     template_name = 'relatorios/resumo_cotacoes.html'
 
@@ -146,9 +153,10 @@ class ResumoCotacoesView(TemplateView):
         page_num = canvas.getPageNumber()
         text = f"Page {page_num}"
         canvas.drawRightString(200*mm, 20*mm, text)
+       
         
         
-    
+@method_decorator(login_required(login_url=''), name='dispatch')   
 class CotacoesDepartamentoCategoriaView(TemplateView):
     template_name = 'relatorios/cotacoes_departamento_categoria.html'
 
@@ -269,6 +277,8 @@ class CotacoesDepartamentoCategoriaView(TemplateView):
         text = f"Page {page_num}"
         canvas.drawRightString(200*mm, 20*mm, text)
 
+
+@method_decorator(login_required(login_url=''), name='dispatch')
 class ComparativoPrecosFornecedorView(TemplateView):
     template_name = 'relatorios/comparativo_precos_fornecedor.html'
 
@@ -386,6 +396,8 @@ class ComparativoPrecosFornecedorView(TemplateView):
         text = f"Page {page_num}"
         canvas.drawRightString(200*mm, 20*mm, text)
 
+
+@method_decorator(login_required(login_url=''), name='dispatch')
 class DesempenhoFornecedoresView(TemplateView):
     template_name = 'relatorios/desempenho_fornecedores.html'
 
@@ -531,6 +543,8 @@ class DesempenhoFornecedoresView(TemplateView):
         text = f"Page {page_num}"
         canvas.drawRightString(200*mm, 20*mm, text)
 
+
+@method_decorator(login_required(login_url=''), name='dispatch')
 class ProdutosMaisCotadosView(TemplateView):
     template_name = 'relatorios/produtos_mais_cotados.html'
 
@@ -645,6 +659,8 @@ class ProdutosMaisCotadosView(TemplateView):
 from django.db.models import Min, Max, F
 from products.models import ProductPriceHistory
 
+
+@method_decorator(login_required(login_url=''), name='dispatch')
 class ProdutosMaiorVariacaoPrecoView(TemplateView):
     template_name = 'relatorios/produtos_maior_variacao_preco.html'
 
@@ -771,6 +787,7 @@ class ProdutosMaiorVariacaoPrecoView(TemplateView):
         text = f"Page {page_num}"
         canvas.drawRightString(200 * mm, 20 * mm, text)
 
+@method_decorator(login_required(login_url=''), name='dispatch')
 class ProdutosSemFornecedorView(TemplateView):
     template_name = 'relatorios/produtos_sem_fornecedor.html'
 
@@ -870,7 +887,7 @@ class ProdutosSemFornecedorView(TemplateView):
         canvas.drawRightString(200 * mm, 20 * mm, text)
 
 
-
+@method_decorator(login_required(login_url=''), name='dispatch')
 class PedidosAgrupadosFornecedorView(TemplateView):
     template_name = 'relatorios/pedidos_agrupados_fornecedor.html'
 
@@ -977,6 +994,8 @@ class PedidosAgrupadosFornecedorView(TemplateView):
         text = f"Page {page_num}"
         canvas.drawRightString(200 * mm, 20 * mm, text)
 
+
+@method_decorator(login_required(login_url=''), name='dispatch')
 class HistoricoPedidosAgrupadosView(TemplateView):
     template_name = 'relatorios/historico_pedidos_agrupados.html'
 
