@@ -53,10 +53,10 @@
                 </tr>
             </thead>
             <tbody id="productTableBody">
-                {% for produto in produtos %}
+                {% for produto in produtos_data %}
                 <tr>
-                    <td>{{ produto.sku }}</td>
-                    <td>{{ produto.ean }}</td>
+                    <td>{{ produto.sku|default:"N/I" }}</td>
+                    <td>{{ produto.ean|default:"N/I" }}</td>
                     <td>{{ produto.nome }}</td>
                     <td><input type="number" name="quantidade_{{ produto.id }}" min="1" class="form-control" value="1"></td>
                     <td>
@@ -73,6 +73,34 @@
             </tbody>
         </table>
     </div>
+    <!-- Paginação -->
+    <nav aria-label="Page navigation">
+        <ul class="pagination">
+            {% if page_obj.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?page=1{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}">&laquo;&laquo;</a>
+            </li>
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}">&laquo;</a>
+            </li>
+            {% endif %}
+            {% for num in page_obj.paginator.page_range %}
+            {% if page_obj.number == num %}
+            <li class="page-item active"><a class="page-link" href="#">{{ num }}</a></li>
+            {% elif num > page_obj.number|add:'-5' and num < page_obj.number|add:'5' %}
+            <li class="page-item"><a class="page-link" href="?page={{ num }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}">{{ num }}</a></li>
+            {% endif %}
+            {% endfor %}
+            {% if page_obj.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}">&raquo;</a>
+            </li>
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}">&raquo;&raquo;</a>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
 </div>
 
 <script>
@@ -90,38 +118,11 @@
 
     function fetchProducts() {
         const searchValue = document.getElementById('searchField').value;
-        fetch(`{% url 'cotacao:produtos_api' %}?q=${searchValue}`)
-            .then(response => response.json())
-            .then(data => {
-                const tbody = document.getElementById('productTableBody');
-                tbody.innerHTML = ''; // Limpa a tabela
-                data.forEach(prod => {
-                    const row = document.createElement('tr');
-                    row.innerHTML = `
-                        <td>${prod.sku}</td>
-                        <td>${prod.ean}</td>
-                        <td>${prod.nome}</td>
-                        <td><input type="number" name="quantidade_${prod.id}" min="1" class="form-control" value="1"></td>
-                        <td>
-                            <select name="tipo_volume_${prod.id}" class="form-control">
-                                <option value="Un">Unidade(s)</option>
-                                <option value="Kg">Kilograma(s)</option> 
-                                <option value="Dp">Display(s)</option>
-                                <option value="Cx">Caixa(s)</option>
-                                <option value="Fd">Fardo(s)</option>  
-                                <option value="Pc">Pacote(s)</option>
-                                <option value="Sc">Sache(s)</option>
-                                <option value="Tp">Take Profit</option>                                
-                            </select>
-                        </td>
-                        <td><input type="text" name="observacao_${prod.id}" class="form-control"></td>
-                        <td><button onclick="addProduct(${prod.id})" class="btn btn-primary">Adicionar</button></td>
-                    `;
-                    tbody.appendChild(row);
-                });
-            })
-            .catch(error => console.error('Error fetching data: ', error));
+        const url = new URL(window.location.href);
+        url.searchParams.set('q', searchValue);
+        window.location.href = url.href;
     }
+
     function showStatusMessage(type, message) {
         const messageContainer = document.getElementById('messageContainer');
         messageContainer.className = `alert alert-${type}`;
@@ -155,7 +156,7 @@
         })
         .catch(error => {
             console.error('Error adding product: ', error);
-            showStatusMessage('danger', 'Produto já adicionado.');
+            showStatusMessage('danger', 'Erro ao adicionar produto.');
         });
     }
 </script>

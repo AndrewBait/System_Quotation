@@ -129,7 +129,7 @@ class CotacaoUpdateView(UpdateView):
         return super().form_valid(form)
 
 
-@method_decorator(login_required(login_url=''), name='dispatch')
+
 class EnviarCotacaoView(FormView):
     template_name = 'cotacao/enviar_cotacao.html'
     form_class = EnviarCotacaoForm
@@ -265,6 +265,7 @@ class PesquisaFornecedorAjaxView(View):
 # class SuccessView(TemplateView):
 #     template_name = 'cotacao/success_page.html'
 
+from django.views.generic import ListView
 
 @method_decorator(login_required(login_url=''), name='dispatch')
 class ListProductsToAddView(TemplateView):
@@ -274,10 +275,23 @@ class ListProductsToAddView(TemplateView):
         context = super().get_context_data(**kwargs)
         cotacao = get_object_or_404(Cotacao, pk=self.kwargs['cotacao_id'])
         produtos_ja_adicionados = ItemCotacao.objects.filter(cotacao=cotacao).values_list('produto', flat=True)
-        produtos = Product.objects.exclude(id__in=produtos_ja_adicionados)
+        
+        query = self.request.GET.get('q', '')
+        produtos = Product.objects.exclude(id__in=produtos_ja_adicionados).order_by('name')
+        
+        if query:
+            produtos = produtos.filter(
+                Q(name__icontains=query) | 
+                Q(sku__icontains=query) | 
+                Q(ean__icontains=query)
+            )
+        
+        paginator = Paginator(produtos, 10)  # Mostrar 15 produtos por página
+        page_number = self.request.GET.get('page')
+        page_obj = paginator.get_page(page_number)
 
         produtos_data = []
-        for produto in produtos:
+        for produto in page_obj:
             tipos_volume = []
             if produto.unidade_de_medida == 'Un':
                 tipos_volume.append(('Un', 'Unidade(s)'))
@@ -301,20 +315,25 @@ class ListProductsToAddView(TemplateView):
             if produto.unidade_de_medida == 'Tp':
                 tipos_volume.append(('Tp', 'Take Profit(s)'))
                 tipos_volume.append(('Un', 'Unidade(s)'))
+
+            # Adiciona "Não Informado" caso tipos_volume esteja vazio
+            if not tipos_volume:
+                tipos_volume.append(('NI', 'Não Informado'))
             
             produtos_data.append({
                 'id': produto.id,
-                'sku': produto.sku,
-                'ean': produto.ean,
+                'sku': produto.sku or 'N/I',
+                'ean': produto.ean or 'N/I',
                 'nome': produto.name,
                 'tipos_volume': tipos_volume,
             })
         
         context['form'] = ItemCotacaoForm()
-        context['produtos'] = produtos_data
+        context['produtos_data'] = produtos_data
         context['cotacao'] = cotacao
+        context['page_obj'] = page_obj  # Passar o objeto de página para o template
         return context
-
+    
 
 @method_decorator(login_required(login_url=''), name='dispatch')
 class ListProductsView(ListView):
@@ -443,7 +462,7 @@ class AddProductToCotacaoView(CreateView):
         return JsonResponse({"message": "Produto adicionado com sucesso!"}, status=200)
     
 
-@method_decorator(login_required(login_url=''), name='dispatch')    
+  
 class ProductAutocomplete(autocomplete.Select2QuerySetView):
     def get_queryset(self):
         qs = Product.objects.all()
@@ -452,7 +471,7 @@ class ProductAutocomplete(autocomplete.Select2QuerySetView):
         return qs
 
 
-@method_decorator(login_required(login_url=''), name='dispatch')
+
 class ToggleCotacaoStatusView(RedirectView):
 
     def get_redirect_url(self, *args, **kwargs):
@@ -466,7 +485,7 @@ class ToggleCotacaoStatusView(RedirectView):
         return reverse('cotacao:cotacao_list')
 
 
-@method_decorator(login_required(login_url=''), name='dispatch')
+
 class ProdutoAPI(View):
     def get(self, request, *args, **kwargs):
         q = request.GET.get('q', '')
@@ -491,7 +510,7 @@ class ProdutoAPI(View):
         return JsonResponse(data, safe=False)
 
 
-@method_decorator(login_required(login_url=''), name='dispatch')
+
 class DepartamentoAPI(View):
     def get(self, request, *args, **kwargs):
         departamentos = Departamento.objects.all().values('id', 'nome')  # Alterado de 'name' para 'nome'
@@ -499,13 +518,13 @@ class DepartamentoAPI(View):
         return JsonResponse(list(departamentos), safe=False)
   
 
-@method_decorator(login_required(login_url=''), name='dispatch')    
+    
 class CategoriaAPI(View):
     def get(self, request, *args, **kwargs):
         categorias = Category.objects.all().values('id', 'name')
         return JsonResponse(list(categorias), safe=False)
     
-@method_decorator(login_required(login_url=''), name='dispatch')    
+   
 class SubcategoriaAPI(View):
     def get(self, request, *args, **kwargs):
         category_id = kwargs.get('category_id')
@@ -513,7 +532,7 @@ class SubcategoriaAPI(View):
         return JsonResponse(list(subcategorias), safe=False) 
     
 
-@method_decorator(login_required(login_url=''), name='dispatch')    
+  
 class ItensCotacaoAPI(View):
     def get(self, request, *args, **kwargs):
         cotacao_id = kwargs.get('cotacao_id')

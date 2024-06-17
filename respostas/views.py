@@ -33,12 +33,12 @@ from django.utils.decorators import method_decorator
 
 
 
-@method_decorator(login_required(login_url=''), name='dispatch')
+
 def apenas_digitos(cnpj):
     return re.sub(r'\D', '', cnpj)  # Remove tudo que não é dígito
 
 
-@method_decorator(login_required(login_url=''), name='dispatch')
+
 def criar_item_form(item, resposta_existente, post_data=None, file_data=None):
     item_resposta, created = ItemRespostaCotacao.objects.get_or_create(
         resposta_cotacao=resposta_existente, 
@@ -52,7 +52,7 @@ def criar_item_form(item, resposta_existente, post_data=None, file_data=None):
         return ItemRespostaForm(prefix=f'item_{item.pk}', **form_kwargs)
 
 
-@method_decorator(login_required(login_url=''), name='dispatch')
+
 def responder_cotacao(request, cotacao_uuid, fornecedor_id, token):
     cotacao = get_object_or_404(Cotacao, uuid=cotacao_uuid)
     fornecedor = get_object_or_404(Supplier, pk=fornecedor_id)
@@ -127,7 +127,7 @@ def responder_cotacao(request, cotacao_uuid, fornecedor_id, token):
     return render(request, 'respostas/responder_cotacao.html', context)
 
 
-@method_decorator(login_required(login_url=''), name='dispatch')
+
 def cotacao_respondida_view(request):
     return render(request, 'respostas/cotacao_respondida.html')
 
@@ -656,7 +656,7 @@ from reportlab.lib.pagesizes import A4
 from reportlab.pdfgen import canvas
 from io import BytesIO
 
-@method_decorator(login_required(login_url=''), name='dispatch')
+
 def exportar_pedidos_csv(request):
     pedidos = PedidoAgrupado.objects.all()
     response = HttpResponse(content_type='text/csv')
@@ -686,7 +686,7 @@ from reportlab.lib.pagesizes import letter, landscape
 from reportlab.pdfgen import canvas
 
 
-@method_decorator(login_required(login_url=''), name='dispatch')
+
 def exportar_pedidos_pdf(request):
     # Aplicar os mesmos filtros usados na view ListarPedidosView
     queryset = PedidoAgrupado.objects.all()
