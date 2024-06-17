@@ -107,11 +107,11 @@ document.addEventListener('DOMContentLoaded', function() {
             let totalProduto = quantidadeTotal * preco;
 
             row.querySelector('.quantidade-total').textContent = quantidadeTotal.toFixed(0);
-            row.querySelector('.product-total').textContent = totalProduto.toFixed(2);
+            row.querySelector('.product-total').textContent = totalProduto.toFixed(3);
 
             totalGeral += totalProduto;
         });
-        document.getElementById('total-geral').textContent = totalGeral.toFixed(2);
+        document.getElementById('total-geral').textContent = totalGeral.toFixed(3);
 
         let minimumOrderValue = parseFloat("{{ pedido_agrupado.fornecedor.minimum_order_value }}") || 0;
         if (totalGeral < minimumOrderValue) {

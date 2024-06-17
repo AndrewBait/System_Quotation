@@ -386,13 +386,12 @@ class EditarPedidoView(UpdateView):
 
 
 
-from django.shortcuts import redirect
-from django.views.generic import DetailView
-from django.utils.decorators import method_decorator
-from django.contrib.auth.decorators import login_required, permission_required
 from django import forms
+from django.shortcuts import render, get_object_or_404, redirect
+from django.views.generic import DetailView
 from .models import PedidoAgrupado, Pedido
-from .forms import PedidoForm
+from .forms import PedidoFormSet
+
 
 @method_decorator(login_required, name='dispatch')
 @method_decorator(permission_required('respostas.view_pedidoagrupado', raise_exception=True), name='dispatch')
@@ -410,11 +409,10 @@ class DetalhesPedidoAgrupadoView(DetailView):
             context['formset'] = PedidoFormSet(instance=self.object)
 
         for form in context['formset']:
-            if form.instance.pk:
-                produto = form.instance.produto
-                form.fields['quantidade'].widget.attrs['data-quantidade-por-volume'] = produto.quantidade_por_volume or 1
-            else:
-                form.fields['quantidade'].widget.attrs['data-quantidade-por-volume'] = 1
+            produto = form.instance.produto
+            if produto:
+                form.instance.quantidade_por_volume = produto.quantidade_por_volume or 1
+                form.fields['quantidade'].widget.attrs['data-quantidade-por-volume'] = form.instance.quantidade_por_volume
 
         return context
 
@@ -427,7 +425,6 @@ class DetalhesPedidoAgrupadoView(DetailView):
             return redirect('respostas:listar_pedidos')
         else:
             return self.render_to_response(self.get_context_data())
-        
 
 @method_decorator(login_required(login_url=''), name='dispatch')
 class EditarPedidoAgrupadoView(UpdateView):
@@ -899,6 +896,8 @@ class EnviarPedidoEmailView(View):
         
         try:
             email.send()
+            pedido_agrupado.status = 'enviado'
+            pedido_agrupado.save()
             if logo_loaded:
                 messages.success(request, 'Pedido enviado com sucesso!')
             else:
@@ -907,3 +906,34 @@ class EnviarPedidoEmailView(View):
             messages.error(request, f'Erro ao enviar o pedido: {e}')
 
         return redirect(reverse('respostas:listar_pedidos'))
+
+
+@method_decorator(login_required, name='dispatch')
+@method_decorator(permission_required('respostas.change_pedidoagrupado', raise_exception=True), name='dispatch')
+class ConcluirPedidoView(View):
+    def post(self, request, pk):
+        pedido_agrupado = get_object_or_404(PedidoAgrupado, pk=pk)
+        pedido_agrupado.status = 'concluido'
+        pedido_agrupado.save()
+        messages.success(request, 'Pedido concluído com sucesso!')
+        return redirect('respostas:listar_pedidos')
+
+@method_decorator(login_required, name='dispatch')
+@method_decorator(permission_required('respostas.change_pedidoagrupado', raise_exception=True), name='dispatch')
+class CancelarPedidoView(View):
+    def post(self, request, pk):
+        pedido_agrupado = get_object_or_404(PedidoAgrupado, pk=pk)
+        pedido_agrupado.status = 'cancelado'
+        pedido_agrupado.save()
+        messages.success(request, 'Pedido cancelado com sucesso!')
+        return redirect('respostas:listar_pedidos')
+
+@method_decorator(login_required, name='dispatch')
+@method_decorator(permission_required('respostas.change_pedidoagrupado', raise_exception=True), name='dispatch')
+class MarcarPedidoPendenteView(View):
+    def post(self, request, pk):
+        pedido_agrupado = get_object_or_404(PedidoAgrupado, pk=pk)
+        pedido_agrupado.status = 'pendente'
+        pedido_agrupado.save()
+        messages.success(request, 'Pedido marcado como pendente com sucesso!')
+        return redirect('respostas:listar_pedidos')

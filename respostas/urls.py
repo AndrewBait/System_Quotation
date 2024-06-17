@@ -13,7 +13,10 @@ from .views import (
     DeletarPedidoAgrupadoView,
     exportar_pedidos_csv,
     exportar_pedidos_pdf,
-    EnviarPedidoEmailView
+    EnviarPedidoEmailView,
+    ConcluirPedidoView, 
+    CancelarPedidoView,
+    MarcarPedidoPendenteView,
 )
 
 app_name = 'respostas'
@@ -33,4 +36,7 @@ urlpatterns = [
     path('exportar-pedidos/', exportar_pedidos_csv, name='exportar_pedidos'),
     path('exportar-pedidos-pdf/', exportar_pedidos_pdf, name='exportar_pedidos_pdf'),
     path('pedidos/enviar/<int:pk>/', EnviarPedidoEmailView.as_view(), name='enviar_pedido'),
+    path('pedidos/concluir/<int:pk>/', ConcluirPedidoView.as_view(), name='concluir_pedido'),
+    path('pedidos/cancelar/<int:pk>/', CancelarPedidoView.as_view(), name='cancelar_pedido'),
+    path('pedidos/pendente/<int:pk>/', MarcarPedidoPendenteView.as_view(), name='marcar_pedido_pendente'),
 ]

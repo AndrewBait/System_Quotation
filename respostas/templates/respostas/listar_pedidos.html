@@ -116,6 +116,7 @@
                 <th>Prazo</th>
                 <th>Status</th>
                 <th>Ações</th>
+                <th>Alterar Status</th>
             </tr>
         </thead>
         <tbody>
@@ -162,6 +163,24 @@
                         {% if perms.respostas.send_pedido_email %}
                         <button type="button" class="btn btn-outline-success btn-sm" data-bs-toggle="modal" data-bs-target="#confirmSendModal" data-url="{% url 'respostas:enviar_pedido' pedido_agrupado.pk %}" data-bs-placement="top" title="Enviar Pedido"><i class="bi bi-send"></i></button>
                         {% endif %}
+                        {% endif %}
+                    </div>
+                </td>
+                <td>
+                    <div class="d-flex justify-content-center">
+                        {% if perms.respostas.change_pedidoagrupado %}
+                        <form method="post" action="{% url 'respostas:concluir_pedido' pedido_agrupado.pk %}" class="d-inline">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-outline-success btn-sm me-1" data-bs-toggle="tooltip" data-bs-placement="top" title="Concluir Pedido"><i class="bi bi-check"></i></button>
+                        </form>
+                        <form method="post" action="{% url 'respostas:cancelar_pedido' pedido_agrupado.pk %}" class="d-inline">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-outline-danger btn-sm me-1" data-bs-toggle="tooltip" data-bs-placement="top" title="Cancelar Pedido"><i class="bi bi-x"></i></button>
+                        </form>
+                        <form method="post" action="{% url 'respostas:marcar_pedido_pendente' pedido_agrupado.pk %}" class="d-inline">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-outline-warning btn-sm me-1" data-bs-toggle="tooltip" data-bs-placement="top" title="Marcar como Pendente"><i class="bi bi-exclamation-circle"></i></button>
+                        </form>
                         {% endif %}
                     </div>
                 </td>
@@ -224,8 +243,8 @@
 
     // Adiciona a URL ao botão de confirmação da modal de envio
     document.getElementById('confirmSendModal').addEventListener('show.bs.modal', function (event) {
-        var button = event.relatedTarget; // Botão que acionou a modal
-        var url = button.getAttribute('data-url'); // Extrai a URL dos atributos data
+        var button = event.relatedTarget; 
+        var url = button.getAttribute('data-url'); 
         var confirmButton = document.getElementById('confirmSendButton');
         confirmButton.href = url;
     });
@@ -246,13 +265,10 @@
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    // Fecha a modal
                     var deleteModal = bootstrap.Modal.getInstance(document.getElementById('confirmDeleteModal'));
                     deleteModal.hide();
-                    // Recarrega a página
                     location.reload();
                 } else {
-                    // Exibe uma mensagem de erro
                     var alertPlaceholder = document.querySelector('.alert-dismissible');
                     var alert = document.createElement('div');
                     alert.className = 'alert alert-danger';
