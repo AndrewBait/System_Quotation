@@ -780,6 +780,7 @@ from django.urls import reverse
 from django.views import View
 from django.contrib import messages
 from io import BytesIO
+from reportlab.lib.pagesizes import landscape, letter
 from reportlab.lib.pagesizes import A4
 from reportlab.pdfgen import canvas
 from .models import PedidoAgrupado
@@ -796,8 +797,8 @@ class EnviarPedidoEmailView(View):
         
         # Buffer para criar o PDF
         buffer = BytesIO()
-        p = canvas.Canvas(buffer, pagesize=A4)
-        width, height = A4
+        p = canvas.Canvas(buffer, pagesize=landscape(letter))
+        width, height = landscape(letter)
         
         # Margens
         margin = 0.5 * inch
@@ -824,7 +825,7 @@ class EnviarPedidoEmailView(View):
         # Cabeçalho da tabela
         y = height - margin - 3.5 * inch
         headers = ['Produto', 'Quantidade', 'Tipo de Volume', 'Preço Unitário', 'Preço Total']
-        x_positions = [margin, margin + 1.5 * inch, margin + 3 * inch, margin + 4.5 * inch, margin + 6 * inch]
+        x_positions = [margin, margin + 3.5 * inch, margin + 5.5 * inch, margin + 7.0 * inch, margin + 8.5 * inch]
         
         p.setFont("Helvetica-Bold", 10)
         for i, header in enumerate(headers):
@@ -844,11 +845,11 @@ class EnviarPedidoEmailView(View):
                 y = height - margin - 1 * inch
 
             data = [
-                pedido.produto.name,
-                str(pedido.quantidade),
+                pedido.produto.name[:40],  # Limita o nome do produto a 40 caracteres
+                str(int(pedido.quantidade)),  # Quantidade como inteiro
                 pedido.get_tipo_volume_display(),
-                f'R$ {pedido.preco}',
-                f'R$ {pedido.preco_total}'
+                f'R$ {pedido.preco:.3f}',
+                f'R$ {pedido.preco_total:.3f}'
             ]
             for i, item in enumerate(data):
                 p.drawString(x_positions[i], y, item)
@@ -856,12 +857,12 @@ class EnviarPedidoEmailView(View):
 
         # Total Geral
         p.setFont("Helvetica-Bold", 12)
-        p.drawString(margin, y, f'Total Geral: R$ {pedido_agrupado.preco_total}')
+        p.drawString(margin, y, f'Total Geral: R$ {pedido_agrupado.preco_total:.3f}')
 
         # Rodapé
         p.setFont("Helvetica", 10)
         p.setFillColor(colors.grey)
-        p.drawString(margin, margin, 'Empresa XYZ - Endereço: Rua Exemplo, 123 - Tel: (11) 1234-5678 - Email: contato@empresa.com')
+        p.drawString(margin, margin, 'Empresa Supimpa - Endereço: Rua Exemplo, 123 - Tel: (12) 99788-6488 - Email: andrewssilba811@gmail.com')
         
         p.showPage()
         p.save()
