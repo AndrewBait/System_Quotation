@@ -78,16 +78,19 @@ class Pedido(models.Model):
 
     @property
     def preco_total(self):
-        if self.tipo_volume in ['Cx', 'Dp', 'Fd', 'Pct', 'Tp']:  # Tipos de volume que consideram quantidade por volume
-            quantidade_unitaria = self.produto.quantidade_por_volume or 1
-            return self.preco * self.quantidade * quantidade_unitaria
-        elif self.tipo_volume == 'Kg':  # Considerando que 'Kg' representa quilo
-            return self.preco * self.quantidade
-        else:
-            return self.preco * self.quantidade
+        quantidade_total = self.quantidade
+        if self.tipo_volume in ['Display', 'Caixa', 'Fardo', 'Pacote', 'Take Profit']:
+            quantidade_por_volume = self.produto.quantidade_por_volume or 1
+            quantidade_total = self.quantidade * quantidade_por_volume
+        return self.preco * quantidade_total
+    
+    
+    def is_volume_unit(self):
+        return self.get_tipo_volume_display() in ['Display', 'Caixa', 'Fardo', 'Pacote', 'Take Profit']
 
+    def is_volume_kg(self):
+        return self.get_tipo_volume_display() == 'Quilograma'
 
     class Meta:
         verbose_name = "Pedido"
         verbose_name_plural = "Pedidos"
-

@@ -402,12 +402,13 @@ class DetalhesPedidoAgrupadoView(DetailView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        PedidoFormSet = forms.inlineformset_factory(PedidoAgrupado, Pedido, form=PedidoForm, extra=0)
+        PedidoFormSet = forms.inlineformset_factory(PedidoAgrupado, Pedido, fields=('quantidade', 'preco'), extra=0)
         if self.request.method == 'POST':
             context['formset'] = PedidoFormSet(self.request.POST, instance=self.object)
         else:
             context['formset'] = PedidoFormSet(instance=self.object)
 
+        # Adicionar quantidade por volume ao contexto
         for form in context['formset']:
             produto = form.instance.produto
             if produto:
@@ -424,7 +425,7 @@ class DetalhesPedidoAgrupadoView(DetailView):
             formset.save()
             return redirect('respostas:listar_pedidos')
         else:
-            return self.render_to_response(self.get_context_data())
+            return self.render_to_response(self.get_context_data(form=formset))
 
 @method_decorator(login_required(login_url=''), name='dispatch')
 class EditarPedidoAgrupadoView(UpdateView):

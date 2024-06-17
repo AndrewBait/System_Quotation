@@ -292,7 +292,7 @@ class ListProductsToAddView(TemplateView):
                 tipos_volume.append(('Cx', 'Caixa(s)'))
                 tipos_volume.append(('Un', 'Unidade(s)'))
             if produto.unidade_de_medida == 'Kg':
-                tipos_volume.append(('Kg', 'Kilograma(s)'))
+                tipos_volume.append(('Kg', 'quilograma(s)'))
             if produto.unidade_de_medida == 'Dp':
                 tipos_volume.append(('Dp', 'Display(s)'))
                 tipos_volume.append(('Un', 'Unidade(s)'))
@@ -396,7 +396,7 @@ class AddProductToCotacaoView(CreateView):
                 tipos_volume.append(('Cx', 'Caixa(s)'))
                 tipos_volume.append(('Un', 'Unidade(s)'))
             if produto.unidade_de_medida == 'Kg':
-                tipos_volume.append(('Kg', 'Kilograma(s)'))
+                tipos_volume.append(('Kg', 'quilograma(s)'))
             if produto.unidade_de_medida == 'Dp':
                 tipos_volume.append(('Dp', 'Display(s)'))
                 tipos_volume.append(('Un', 'Unidade(s)'))

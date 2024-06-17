@@ -16,31 +16,23 @@
                     O valor mínimo do pedido não foi atingido. O valor mínimo é R$ {{ pedido_agrupado.fornecedor.minimum_order_value }}.
                 </div>
 
+
                 <div class="table-responsive">
                     <table class="table table-hover table-sm align-middle">
                         <thead>
                             <tr>
                                 <th>Item</th>
-                                <th>Qtd. por Fardo</th>
-                                <th>Fornecedor</th>
-                                <th>Vendedor</th>
                                 <th>Prazo</th>
-                                <th>Tipo de Volume</th>
-                                <th>Quantidade</th>
+                                <th>Quantidade (Und / Kg)</th>
                                 <th>Qtd. Total</th>
-                                <th>Preço</th>
+                                <th>Preço (Und / Kg)</th>
                                 <th>Total por Produto</th>
                             </tr>
                         </thead>
                         <tbody>
                             {% for form in formset %}
                             <tr data-quantidade-por-volume="{{ form.instance.produto.quantidade_por_volume|default_if_none:1 }}">
-                                <td>{{ form.instance.produto.name|default:'-' }}</td> 
-                                <td class="quantidade-por-fardo">
-                                    {{ form.instance.produto.quantidade_por_volume|default:'-' }} und
-                                </td>
-                                <td>{{ pedido_agrupado.fornecedor.company }}</td>
-                                <td>{{ pedido_agrupado.fornecedor.name }}</td>
+                                <td>{{ form.instance.produto.name|default:'-' }}</td>
                                 <td>
                                     {% if pedido_agrupado.pedidos.first.prazo_alternativo_selecionado and pedido_agrupado.pedidos.first.prazo_alternativo %}
                                         {{ pedido_agrupado.pedidos.first.prazo_alternativo }} dias (Alternativo)
@@ -48,7 +40,6 @@
                                         {{ pedido_agrupado.cotacao.prazo }} dias
                                     {% endif %}
                                 </td>
-                                <td>{{ form.instance.get_tipo_volume_display|default:"-" }}</td>
                                 <td>
                                     <div class="form-floating">
                                         {{ form.quantidade }}
@@ -70,7 +61,7 @@
                         </tbody>
                         <tfoot>
                             <tr>
-                                <td colspan="9" class="text-end fw-bold">Total Geral:</td>
+                                <td colspan="5" class="text-end fw-bold">Total Geral:</td>
                                 <td id="total-geral" class="fw-bold">0</td>
                             </tr>
                         </tfoot>
@@ -89,7 +80,7 @@
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     function calculateTotal() {
-        let totalGeral = 0;
+        let totalGeral = 0.000;
         document.querySelectorAll('tbody tr').forEach(function(row) {
             let quantidadeInput = row.querySelector('[name$="quantidade"]');
             let precoInput = row.querySelector('[name$="preco"]');
@@ -98,8 +89,18 @@ document.addEventListener('DOMContentLoaded', function() {
             let quantidade = parseFloat(quantidadeInput ? quantidadeInput.value : 0) || 0;
             let preco = parseFloat(precoInput ? precoInput.value : 0) || 0;
 
+            // Impedir valores negativos
+            if (quantidade < 0) {
+                quantidade = 0;
+                quantidadeInput.value = 0;
+            }
+            if (preco < 0) {
+                preco = 0;
+                precoInput.value = 0;
+            }
+
             let quantidadeTotal = quantidade;
-            if (!['Unidade', 'Quilo', 'Un'].includes(tipoVolume)) {
+            if (['Display', 'Caixa', 'Fardo', 'Pacote', 'Take Profit'].includes(tipoVolume)) {
                 let quantidadePorVolume = parseFloat(row.dataset.quantidadePorVolume) || 1;
                 quantidadeTotal = quantidade * quantidadePorVolume;
             }
