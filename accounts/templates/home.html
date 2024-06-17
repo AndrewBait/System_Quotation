@@ -1,88 +1,270 @@
 {% extends 'base.html' %}
 
-{% block title %}Dashboard de Cotações{% endblock %}
+{% block title %}Dashboard SISC{% endblock %}
 
 {% block content %}
-<div class="container-fluid">
-    <h1 class="text-center mt-3 mb-4">Dashboard de Cotações</h1>
-
-    <div class="row text-center">
-        <div class="col-lg-4 mb-4">
-            <div class="card bg-primary text-white">
-                <div class="card-body">
-                    <h5 class="card-title">Cotações Abertas</h5>
-                    <p class="card-text" id="cotacoesAbertas"></p>
-                    <canvas id="cotacoesAbertasChart"></canvas>
-                </div>
-            </div>
-        </div>
-        <div class="col-lg-4 mb-4">
-            <div class="card bg-success text-white">
-                <div class="card-body">
-                    <h5 class="card-title">Cotações Fechadas</h5>
-                    <p class="card-text" id="cotacoesFechadas"></p>
-                    <canvas id="cotacoesFechadasChart"></canvas>
-                </div>
-            </div>
-        </div>
-        <div class="col-lg-4 mb-4">
-            <div class="card bg-info text-white">
-                <div class="card-body">
-                    <h5 class="card-title">Fornecedores Respondentes</h5>
-                    <ul class="list-group bg-transparent border-0" id="listaFornecedores"></ul>
-                </div>
-            </div>
-        </div>
-    </div>
-
+<div class="container mt-5">
+    <h1 class="text-white">Dashboard SISC</h1>
+    
     <div class="row">
-        <div class="col-md-6 mb-4">
-            <div class="card bg-warning text-white">
+        <div class="col-md-4">
+            <div class="card bg-dark text-white mb-3">
                 <div class="card-body">
-                    <h5 class="card-title">Cotações por Departamento</h5>
-                    <canvas id="cotacoesDepartamentosChart"></canvas>
+                    <h5 class="card-title">Total de Produtos</h5>
+                    <p class="card-text">{{ total_products }}</p>
                 </div>
             </div>
         </div>
-        <div class="col-md-6 mb-4">
-            <div class="card bg-danger text-white">
+        <div class="col-md-4">
+            <div class="card bg-dark text-white mb-3">
                 <div class="card-body">
-                    <h5 class="card-title">Evolução de Cotações</h5>
-                    <canvas id="evolucaoCotacoesChart"></canvas>
+                    <h5 class="card-title">Total de Fornecedores</h5>
+                    <p class="card-text">{{ total_suppliers }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-dark text-white mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">Total de Cotações</h5>
+                    <p class="card-text">{{ total_cotacoes }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+    <div class="row mt-4">
+        <div class="col-md-6">
+            <div class="card bg-dark text-white mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">Produtos por Categoria</h5>
+                    <canvas id="productsByCategoryChart" style="max-height: 400px;"></canvas>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card bg-dark text-white mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">Fornecedores por Departamento</h5>
+                    <canvas id="suppliersByDepartmentChart" style="max-height: 400px;"></canvas>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="row">
-        <div class="col-lg-6 mb-4">
-            <div class="card bg-dark text-white">
+    <div class="row mt-4">
+        <div class="col-md-6">
+            <div class="card bg-dark text-white mb-3">
                 <div class="card-body">
-                    <h5 class="card-title">Top Fornecedores</h5>
-                    <table class="table table-dark table-hover">
-                        <thead>
-                            <tr>
-                                <th>Fornecedor</th>
-                                <th>Cotações Respondidas</th>
-                                <th>Avaliação</th>
-                            </tr>
-                        </thead>
-                        <tbody id="tabelaTopFornecedores"></tbody>
-                    </table>
+                    <h5 class="card-title">Cotações por Status</h5>
+                    <canvas id="cotacoesByStatusChart" style="max-height: 400px;"></canvas>
                 </div>
             </div>
         </div>
-        <div class="col-lg-6 mb-4">
-            <div class="card bg-secondary text-white">
+
+        <div class="col-md-6">
+            <div class="card bg-dark text-white mb-3">
                 <div class="card-body">
-                    <h5 class="card-title">Alertas de Prazos</h5>
-                    <ul class="list-group bg-transparent border-0" id="listaAlertas"></ul>
+                    <h5 class="card-title">Cotações Abertas, Respondidas e Não Respondidas</h5>
+                    <ul class="list-group">
+                        <li class="list-group-item d-flex justify-content-between align-items-center bg-dark text-white">
+                            Abertas
+                            <span class="badge bg-primary rounded-pill">{{ cotacoes_abertas }}</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center bg-dark text-white">
+                            Respondidas
+                            <span class="badge bg-primary rounded-pill">{{ cotacoes_respondidas }}</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center bg-dark text-white">
+                            Não Respondidas
+                            <span class="badge bg-primary rounded-pill">{{ cotacoes_nao_respondidas }}</span>
+                        </li>
+                    </ul>
                 </div>
             </div>
         </div>
     </div>
-</div>
 
-{% include "dashboard_scripts.html" %}
 
+
+
+
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    // Produtos por Categoria
+    const productsByCategoryCtx = document.getElementById('productsByCategoryChart').getContext('2d');
+    new Chart(productsByCategoryCtx, {
+        type: 'pie',
+        data: {
+            labels: [{% for category in products_by_category %}'{{ category.name }}',{% endfor %}],
+            datasets: [{
+                label: 'Produtos por Categoria',
+                data: [{% for category in products_by_category %}{{ category.num_products }},{% endfor %}],
+                backgroundColor: [
+                    'rgba(255, 99, 132, 0.2)',
+                    'rgba(54, 162, 235, 0.2)',
+                    'rgba(255, 206, 86, 0.2)',
+                    'rgba(75, 192, 192, 0.2)',
+                    'rgba(153, 102, 255, 0.2)',
+                    'rgba(255, 159, 64, 0.2)'
+                ],
+                borderColor: [
+                    'rgba(255, 99, 132, 1)',
+                    'rgba(54, 162, 235, 1)',
+                    'rgba(255, 206, 86, 1)',
+                    'rgba(75, 192, 192, 1)',
+                    'rgba(153, 102, 255, 1)',
+                    'rgba(255, 159, 64, 1)'
+                ],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false
+        }
+    });
+
+    // Fornecedores por Departamento
+    const suppliersByDepartmentCtx = document.getElementById('suppliersByDepartmentChart').getContext('2d');
+    new Chart(suppliersByDepartmentCtx, {
+        type: 'bar',
+        data: {
+            labels: [{% for department in suppliers_by_department %}'{{ department.departments__nome|default:"Sem Departamento" }}',{% endfor %}],
+            datasets: [{
+                label: 'Fornecedores por Departamento',
+                data: [{% for department in suppliers_by_department %}{{ department.num_suppliers }},{% endfor %}],
+                backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                borderColor: 'rgba(75, 192, 192, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+
+    // Cotações por Status
+    const cotacoesByStatusCtx = document.getElementById('cotacoesByStatusChart').getContext('2d');
+    new Chart(cotacoesByStatusCtx, {
+        type: 'doughnut',
+        data: {
+            labels: [{% for status in cotacoes_by_status %}'{{ status.status }}',{% endfor %}],
+            datasets: [{
+                label: 'Cotações por Status',
+                data: [{% for status in cotacoes_by_status %}{{ status.num_cotacoes }},{% endfor %}],
+                backgroundColor: [
+                    'rgba(255, 99, 132, 0.2)',
+                    'rgba(54, 162, 235, 0.2)',
+                    'rgba(255, 206, 86, 0.2)'
+                ],
+                borderColor: [
+                    'rgba(255, 99, 132, 1)',
+                    'rgba(54, 162, 235, 1)',
+                    'rgba(255, 206, 86, 1)'
+                ],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false
+        }
+    });
+
+    // Histórico de Preços dos Produtos (Mensal)
+    const priceHistoryCtx = document.getElementById('priceHistoryChart').getContext('2d');
+    new Chart(priceHistoryCtx, {
+        type: 'line',
+        data: {
+            labels: [{% for entry in price_history %}'{{ entry.month }}',{% endfor %}],
+            datasets: [{
+                label: 'Histórico de Preços (Média Mensal)',
+                data: [{% for entry in price_history %}{{ entry.avg_price }},{% endfor %}],
+                backgroundColor: 'rgba(153, 102, 255, 0.2)',
+                borderColor: 'rgba(153, 102, 255, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: false
+                }
+            }
+        }
+    });
+
+    // Cotações por Mês (últimos 12 meses)
+    const cotacoesPorMesCtx = document.getElementById('cotacoesPorMesChart').getContext('2d');
+    new Chart(cotacoesPorMesCtx, {
+        type: 'bar',
+        data: {
+            labels: [{% for month in cotacoes_por_mes %}'{{ month.month }}',{% endfor %}],
+            datasets: [{
+                label: 'Cotações por Mês',
+                data: [{% for month in cotacoes_por_mes %}{{ month.total }},{% endfor %}],
+                backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                borderColor: 'rgba(75, 192, 192, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+
+    // Desempenho dos Fornecedores
+    const suppliersPerformanceCtx = document.getElementById('suppliersPerformanceChart').getContext('2d');
+    new Chart(suppliersPerformanceCtx, {
+        type: 'radar',
+        data: {
+            labels: ['Qualidade', 'Tempo de Entrega', 'Preço', 'Confiabilidade', 'Flexibilidade', 'Parceria'],
+            datasets: [{
+                label: 'Desempenho dos Fornecedores',
+                data: [
+                    {{ suppliers_performance.avg_quality_rating }},
+                    {{ suppliers_performance.avg_delivery_time_rating }},
+                    {{ suppliers_performance.avg_price_rating }},
+                    {{ suppliers_performance.avg_reliability_rating }},
+                    {{ suppliers_performance.avg_flexibility_rating }},
+                    {{ suppliers_performance.avg_partnership_rating }}
+                ],
+                backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                borderColor: 'rgba(54, 162, 235, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                r: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+});
+</script>
 {% endblock %}
