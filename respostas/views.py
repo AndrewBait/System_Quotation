@@ -780,15 +780,16 @@ from django.urls import reverse
 from django.views import View
 from django.contrib import messages
 from io import BytesIO
-from reportlab.lib.pagesizes import landscape, letter
-from reportlab.lib.pagesizes import A4
+from reportlab.lib.pagesizes import landscape, letter, A4
 from reportlab.pdfgen import canvas
 from .models import PedidoAgrupado
 from reportlab.lib.units import inch
 from reportlab.lib import colors
 from django.conf import settings
 import os
-
+from datetime import date
+from .models import PedidoAgrupado
+from products.models import ProductPriceHistory
 
 @method_decorator(login_required(login_url=''), name='dispatch')
 class EnviarPedidoEmailView(View):
@@ -854,6 +855,14 @@ class EnviarPedidoEmailView(View):
             for i, item in enumerate(data):
                 p.drawString(x_positions[i], y, item)
             y -= 15
+            
+            # Salvar histórico de preços
+            ProductPriceHistory.objects.create(
+                product=pedido.produto,
+                price=pedido.preco,
+                date=date.today(),
+                supplier=pedido_agrupado.fornecedor
+            )
 
         # Total Geral
         p.setFont("Helvetica-Bold", 12)
@@ -873,7 +882,7 @@ class EnviarPedidoEmailView(View):
         email = EmailMessage(
             subject=f'Pedido #{pedido_agrupado.pk}',
             body=f'Olá {pedido_agrupado.fornecedor.name},\n\nSegue o pedido #{pedido_agrupado.pk} em anexo.',
-            from_email='seuemail@dominio.com',
+            from_email='andrewsilva811@gmail.com',
             to=[pedido_agrupado.fornecedor.email],
         )
         email.attach(f'pedido_{pedido_agrupado.pk}.pdf', pdf, 'application/pdf')
