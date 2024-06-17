@@ -140,7 +140,7 @@ class RespostaCotacaoForm(forms.ModelForm):
 class PedidoForm(forms.ModelForm):
     class Meta:
         model = Pedido
-        fields = ['quantidade', 'preco', 'produto']
+        fields = ['quantidade', 'preco', 'produto', 'tipo_volume']
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

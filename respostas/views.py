@@ -30,6 +30,9 @@ import re
 from respostas import models
 from django.contrib.auth.decorators import login_required, permission_required
 from django.utils.decorators import method_decorator
+from .models import Pedido, PedidoAgrupado
+from .forms import PedidoForm  # Certifique-se de que o formulário está importado
+
 
 
 
@@ -383,12 +386,13 @@ class EditarPedidoView(UpdateView):
 
 
 
-from django import forms
-from django.shortcuts import render, get_object_or_404, redirect
+from django.shortcuts import redirect
 from django.views.generic import DetailView
+from django.utils.decorators import method_decorator
+from django.contrib.auth.decorators import login_required, permission_required
+from django import forms
 from .models import PedidoAgrupado, Pedido
-from .forms import PedidoFormSet
-
+from .forms import PedidoForm
 
 @method_decorator(login_required, name='dispatch')
 @method_decorator(permission_required('respostas.view_pedidoagrupado', raise_exception=True), name='dispatch')
@@ -399,17 +403,18 @@ class DetalhesPedidoAgrupadoView(DetailView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        PedidoFormSet = forms.inlineformset_factory(PedidoAgrupado, Pedido, fields=('quantidade', 'preco'), extra=0)
+        PedidoFormSet = forms.inlineformset_factory(PedidoAgrupado, Pedido, form=PedidoForm, extra=0)
         if self.request.method == 'POST':
             context['formset'] = PedidoFormSet(self.request.POST, instance=self.object)
         else:
             context['formset'] = PedidoFormSet(instance=self.object)
 
         for form in context['formset']:
-            produto = form.instance.produto
-            if produto:
-                form.instance.quantidade_por_volume = produto.quantidade_por_volume or 1
-                form.fields['quantidade'].widget.attrs['data-quantidade-por-volume'] = form.instance.quantidade_por_volume
+            if form.instance.pk:
+                produto = form.instance.produto
+                form.fields['quantidade'].widget.attrs['data-quantidade-por-volume'] = produto.quantidade_por_volume or 1
+            else:
+                form.fields['quantidade'].widget.attrs['data-quantidade-por-volume'] = 1
 
         return context
 
@@ -421,7 +426,7 @@ class DetalhesPedidoAgrupadoView(DetailView):
             formset.save()
             return redirect('respostas:listar_pedidos')
         else:
-            return self.render_to_response(self.get_context_data(form=formset))
+            return self.render_to_response(self.get_context_data())
         
 
 @method_decorator(login_required(login_url=''), name='dispatch')

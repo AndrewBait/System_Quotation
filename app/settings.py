@@ -48,7 +48,7 @@ INSTALLED_APPS = [
     #minhas libs
     
     'crispy_forms',
-    "crispy_bootstrap5",
+    'crispy_bootstrap5',
     'widget_tweaks',
     'dal',
     'dal_select2',
@@ -71,8 +71,8 @@ INSTALLED_APPS = [
 # }
 
 CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
-
 CRISPY_TEMPLATE_PACK = "bootstrap5"
+
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
